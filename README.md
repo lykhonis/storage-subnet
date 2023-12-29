@@ -438,6 +438,36 @@ Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
 Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
 ```
 
+#### Redis troubleshooting
+If you have problems with connecting to redis or it is not active for some reason, try:
+
+(1) Look for existing processes on the default redis port (6379)
+```
+sudo lsof -i:6379
+```
+
+If anything displays, like in the example below:
+
+```bash
+COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
+python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
+
+```
+
+Look for the process ID under `PID` and kill it
+
+```bash
+kill -9 <PID>
+
+#e.g.
+kill -9 961206
+```
+
+(2) Restarting the service
+```bash
+systemctl restart redis
+```
+
 ### Install PM2
 This will allow you to use the process manager `pm2` for easily setting up your miner or validator.
 
