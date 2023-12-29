@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0 / 2023-12-29
+
+## What's Changed
+* hotfix challenge adjustment and reduce rewards vector size by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/47
+* Validator fix block hash selection by @Rubberbandits in https://github.com/ifrit98/storage-subnet/pull/48
+* Exploring storage/miner/run and setting weights logic. Enhacing logic to control more scenarios by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/51
+* Package by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/49
+* Improve miner stats visibility in logging by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/44
+* add migration script and database func to move filepaths of data index by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/50
+
+## New Contributors
+* @Rubberbandits made their first contribution in https://github.com/ifrit98/storage-subnet/pull/20
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/commits/v1.2.0
+
+
 ## 1.1.1 / 2023-12-23
 
 ## What's Changed
