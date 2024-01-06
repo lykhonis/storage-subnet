@@ -19,18 +19,8 @@ import time
 import wandb
 import bittensor as bt
 import traceback
-<<<<<<< HEAD
-from .set_weights import set_weights
-from .utils import update_storage_stats
-
-
-def should_wait_until_next_epoch(current_block, last_epoch_block, epoch_lenght):
-    diff_blocks = current_block - last_epoch_block
-    return diff_blocks < epoch_lenght
-=======
 from .set_weights import set_weights, should_wait_to_set_weights
 from .utils import update_storage_stats
->>>>>>> main
 
 
 def run(self):
@@ -111,23 +101,12 @@ def run(self):
 
                 if (
                     presence_message_seconds_count
-<<<<<<< HEAD
-                    % seconds_to_wait_to_log_presence_message
-                    == 0
-                ):
-                    self.current_block = self.subtensor.get_current_block()
-
-                bt.logging.info(
-                    f"Miner UID {self.my_subnet_uid} running at block {self.current_block}..."
-                )
-=======
                     % self.config.miner.seconds_to_wait_to_log_presence_message
                     == 0
                 ):
                     bt.logging.info(
                         f"Miner UID {self.my_subnet_uid} running at block {self.current_block}..."
                     )
->>>>>>> main
 
                 # --- Check if we should exit.
                 if self.should_exit:
@@ -180,11 +159,7 @@ def run(self):
                     wandb.log(log)
             else:
                 self.current_block = self.subtensor.get_current_block()
-<<<<<<< HEAD
-                num_blocks_to_wait = 3
-=======
                 num_blocks_to_wait = 1
->>>>>>> main
                 bt.logging.info(
                     f"Weights were not set. Waiting {num_blocks_to_wait} blocks to set weights again."
                 )
