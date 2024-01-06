@@ -3,6 +3,9 @@ import hashlib
 import multibase
 import multihash
 import multicodec
+
+from py_ipfs_cid import compute_cid as compute_cidv0
+from ipfs_cid import cid_sha256_hash as compute_cidv1
 from morphys import ensure_bytes, ensure_unicode
 
 
@@ -98,6 +101,46 @@ class BaseCID(object):
         )
 
 
+class CIDv0(BaseCID):
+    """CID version 0 object"""
+
+    CODEC = "dag-pb"
+
+    def __init__(self, multihash):
+        """
+        :param bytes multihash: multihash for the CID
+        """
+        super(CIDv0, self).__init__(0, self.CODEC, multihash)
+
+    @property
+    def buffer(self):
+        """
+        The raw representation that will be encoded.
+
+        :return: the multihash
+        :rtype: bytes
+        """
+        return self.multihash
+
+    def encode(self):
+        """
+        base58-encoded buffer
+
+        :return: encoded representation or CID
+        :rtype: bytes
+        """
+        return ensure_bytes(base58.b58encode(self.buffer))
+
+    def to_v1(self):
+        """
+        Get an equivalent :py:class:`cid.CIDv1` object.
+
+        :return: :py:class:`cid.CIDv1` object
+        :rtype: :py:class:`cid.CIDv1`
+        """
+        return CIDv1(self.CODEC, self.multihash)
+
+
 class CIDv1(BaseCID):
     """CID version 1 object"""
 
@@ -128,49 +171,80 @@ class CIDv1(BaseCID):
         return multibase.encode(encoding, self.buffer)
 
 
-def make_cid(raw_data, codec_name="sha2-256"):
+def make_cid(data, version=0):
     """
-    Creates a CIDv1 object from raw data using the specified codec.
+    Creates a CIDv0 or CIDv1 object from raw data using the specified codec.
 
     :param raw_data: The raw data to create a CID for.
-    :param codec_name: The name of the codec to use.
-    :return: A CIDv1 object.
+    :return: A CID object.
     """
-    _multihash = generate_multihash(raw_data)
+    raw_data = ensure_bytes(data)
 
-    if not multicodec.is_codec(codec_name):
-        raise ValueError("Invalid codec")
+    if version == 0:
+        cid = compute_cidv0(raw_data)
+        return CIDv0(cid)
+    elif version == 1:
+        cid = compute_cidv1(raw_data)
+        return CIDv1("sha2-256", cid)
+    else:
+        raise ValueError("Invalid CID version")
 
-    return CIDv1(codec_name, _multihash)
+
+# def decode_cid(cid_input):
+#     """
+#     Decodes a CID to extract the original hash of the data.
+
+#     :param cid_input: The CID object or its string representation.
+#     :return: The original hash of the data.
+#     """
+#     if isinstance(cid_input, str):
+#         if cid_input.startswith("Qm"):  # CIDv0
+#             # Decode the base58 encoding directly for CIDv0
+#             decoded_multihash = multihash.decode(base58.b58decode(cid_input))
+#             return decoded_multihash.digest
+#         else:
+#             # For CIDv1, decode using multibase
+#             cid_bytes = multibase.decode(ensure_bytes(cid_input))
+#             # Extract the multihash part
+#             i = 1
+#             while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
+#                 i += 1
+#             multihash_bytes = cid_bytes[i + 1:]
+#             decoded_multihash = multihash.decode(multihash_bytes)
+#             return decoded_multihash.digest
+#     elif isinstance(cid_input, BaseCID):
+#         # Handle BaseCID objects
+#         if cid_input.version == 0:  # CIDv0
+#             return multihash.decode(cid_input.multihash).digest
+#         elif cid_input.version == 1:  # CIDv1
+#             return multihash.decode(cid_input.multihash[1:]).digest
+#     else:
+#         raise ValueError("Invalid CID input type. Must be a CID object or a string.")
 
 
 def decode_cid(cid_input):
-    """
-    Decodes a CID to extract the original hash of the data.
-
-    :param cid_input: The CID object or its string representation.
-    :return: The original hash of the data.
-    """
     if isinstance(cid_input, str):
-        cid_bytes = multibase.decode(ensure_bytes(cid_input))
+        if cid_input.startswith("Qm"):  # CIDv0
+            decoded_multihash = multihash.decode(base58.b58decode(cid_input))
+            return decoded_multihash.digest
+        else:  # CIDv1
+            cid_bytes = multibase.decode(ensure_bytes(cid_input))
+            i = 1
+            while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
+                i += 1
+            multihash_bytes = cid_bytes[i + 1 :]
+            decoded_multihash = multihash.decode(multihash_bytes)
+            return decoded_multihash.digest
     elif isinstance(cid_input, BaseCID):
         cid_bytes = cid_input.buffer
+        print("CID Bytes:", cid_bytes)  # Debug
+        if cid_input.version == 0:  # CIDv0
+            decoded_multihash = multihash.decode(cid_bytes)
+        elif cid_input.version == 1:  # CIDv1
+            decoded_multihash = multihash.decode(cid_bytes[1:])
+        else:
+            raise ValueError("Unknown CID version")
+        print("Decoded Multihash:", decoded_multihash)  # Debug
+        return decoded_multihash.digest
     else:
         raise ValueError("Invalid CID input type. Must be a CID object or a string.")
-
-    # Extract the multihash part directly from the CID bytes.
-    # Assuming that the first byte is the version (1 byte) and the next bytes are the codec.
-    # The rest is the multihash.
-    if cid_bytes[0] == 1:  # CIDv1
-        # Find the end of the codec varint
-        i = 1
-        while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
-            i += 1
-        multihash_bytes = cid_bytes[i + 1 :]
-    elif cid_bytes[0] == 0:  # CIDv0 (just a multihash)
-        multihash_bytes = cid_bytes[1:]
-    else:
-        raise ValueError("Unknown CID version")
-
-    decoded_multihash = multihash.decode(multihash_bytes)
-    return decoded_multihash.digest
