@@ -19,6 +19,7 @@
 import os
 import torch
 import argparse
+import datetime
 import bittensor as bt
 from loguru import logger
 
@@ -30,6 +31,7 @@ def check_config(cls, config: "bt.Config"):
     if config.mock:
         config.wallet._mock = True
 
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     full_path = os.path.expanduser(
         "{}/{}/{}/netuid{}/{}".format(
             config.logging.logging_dir,
@@ -39,21 +41,60 @@ def check_config(cls, config: "bt.Config"):
             config.miner.name,
         )
     )
+    log_path = os.path.join(full_path, "logs", timestamp)
+
+    config.miner.log_path = os.path.expanduser(log_path)
     config.miner.full_path = os.path.expanduser(full_path)
+
     if not os.path.exists(config.miner.full_path):
         os.makedirs(config.miner.full_path, exist_ok=True)
+    if not os.path.exists(config.miner.log_path):
+        os.makedirs(config.miner.log_path, exist_ok=True)
 
     if not config.miner.dont_save_events:
         # Add custom event logger for the events.
         logger.level("EVENTS", no=38, icon="📝")
         logger.add(
-            config.miner.full_path + "/" + "completions.log",
+            config.miner.full_path + "/" + "EVENTS.log",
             rotation=config.miner.events_retention_size,
             serialize=True,
             enqueue=True,
             backtrace=False,
             diagnose=False,
             level="EVENTS",
+            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
+        )
+
+        logger.add(
+            config.miner.full_path + "/" + "INFO.log",
+            rotation=config.miner.events_retention_size,
+            serialize=True,
+            enqueue=True,
+            backtrace=False,
+            diagnose=False,
+            level="INFO",
+            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
+        )
+
+        logger.add(
+            config.miner.full_path + "/" + "DEBUG.log",
+            rotation=config.miner.events_retention_size,
+            serialize=True,
+            enqueue=True,
+            backtrace=False,
+            diagnose=False,
+            level="DEBUG",
+            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
+        )
+
+        logger.add(
+            config.miner.full_path + "/" + "TRACE.log",
+            rotation=config.miner.events_retention_size,
+            serialize=True,
+            enqueue=True,
+            backtrace=False,
+            diagnose=False,
+            level="TRACE",
             format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
         )
 
@@ -98,28 +139,22 @@ def add_args(cls, parser):
 
     # Run config.
     parser.add_argument(
-        "--miner.set_weights_epoch_length",
-        type=int,
-        help="Blocks until the miner sets weights on chain",
-        default=100,
-    )
-    parser.add_argument(
         "--miner.set_weights_wait_for_inclusion",
         action="store_true",
-        help="Wether to wait for the extrinsic to enter a block",
+        help="Wether to wait for the set_weights extrinsic to enter a block",
         default=False,
     )
     parser.add_argument(
         "--miner.set_weights_wait_for_finalization",
         action="store_true",
-        help="Wether to wait for the extrinsic to be finalized on the chain",
+        help="Wether to wait for the set_weights extrinsic to be finalized on the chain",
         default=False,
     )
     parser.add_argument(
-        "--miner.set_weights_at_start",
-        action="store_true",
-        help="Wether to set weights when the miner starts",
-        default=False,
+        "--miner.seconds_to_wait_to_log_presence_message",
+        type=int,
+        help="How many seconds to wait before logging a presence message.",
+        default=4,
     )
 
     # Blacklist.
