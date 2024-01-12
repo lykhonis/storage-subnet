@@ -10,4 +10,4 @@ py-multibase==1.0.3
 py-multicodec==0.2.1
 py-multihash==2.0.1
 ipfs-cid==1.0.0
-ipfs-cid-v0==0.1.0
+git+https://github.com/ifrit98/ipfs-cid-v0.git
