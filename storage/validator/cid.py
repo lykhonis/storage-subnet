@@ -4,7 +4,8 @@ import multibase
 import multihash
 import multicodec
 
-from py_ipfs_cid import compute_cid as compute_cidv0
+from ipfs_cid_v0 import compute_hash as compute_hashv0
+from ipfs_cid_v0 import compute_cid as compute_cidv0
 from ipfs_cid import cid_sha256_hash as compute_cidv1
 from morphys import ensure_bytes, ensure_unicode
 
@@ -120,7 +121,7 @@ class CIDv0(BaseCID):
         :return: the multihash
         :rtype: bytes
         """
-        return self.multihash
+        return base58.b58decode(self.multihash)
 
     def encode(self):
         """
@@ -190,44 +191,16 @@ def make_cid(data, version=0):
         raise ValueError("Invalid CID version")
 
 
-# def decode_cid(cid_input):
-#     """
-#     Decodes a CID to extract the original hash of the data.
-
-#     :param cid_input: The CID object or its string representation.
-#     :return: The original hash of the data.
-#     """
-#     if isinstance(cid_input, str):
-#         if cid_input.startswith("Qm"):  # CIDv0
-#             # Decode the base58 encoding directly for CIDv0
-#             decoded_multihash = multihash.decode(base58.b58decode(cid_input))
-#             return decoded_multihash.digest
-#         else:
-#             # For CIDv1, decode using multibase
-#             cid_bytes = multibase.decode(ensure_bytes(cid_input))
-#             # Extract the multihash part
-#             i = 1
-#             while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
-#                 i += 1
-#             multihash_bytes = cid_bytes[i + 1:]
-#             decoded_multihash = multihash.decode(multihash_bytes)
-#             return decoded_multihash.digest
-#     elif isinstance(cid_input, BaseCID):
-#         # Handle BaseCID objects
-#         if cid_input.version == 0:  # CIDv0
-#             return multihash.decode(cid_input.multihash).digest
-#         elif cid_input.version == 1:  # CIDv1
-#             return multihash.decode(cid_input.multihash[1:]).digest
-#     else:
-#         raise ValueError("Invalid CID input type. Must be a CID object or a string.")
-
-
 def decode_cid(cid_input):
-    if isinstance(cid_input, str):
-        if cid_input.startswith("Qm"):  # CIDv0
+    if isinstance(cid_input, BaseCID):
+        cid_input = cid_input.multihash
+
+    if isinstance(cid_input, bytes):
+        if cid_input.startswith(b"Qm"):
             decoded_multihash = multihash.decode(base58.b58decode(cid_input))
             return decoded_multihash.digest
-        else:  # CIDv1
+
+        elif cid_input.startswith(b"b"):
             cid_bytes = multibase.decode(ensure_bytes(cid_input))
             i = 1
             while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
@@ -235,16 +208,20 @@ def decode_cid(cid_input):
             multihash_bytes = cid_bytes[i + 1 :]
             decoded_multihash = multihash.decode(multihash_bytes)
             return decoded_multihash.digest
-    elif isinstance(cid_input, BaseCID):
-        cid_bytes = cid_input.buffer
-        print("CID Bytes:", cid_bytes)  # Debug
-        if cid_input.version == 0:  # CIDv0
-            decoded_multihash = multihash.decode(cid_bytes)
-        elif cid_input.version == 1:  # CIDv1
-            decoded_multihash = multihash.decode(cid_bytes[1:])
-        else:
-            raise ValueError("Unknown CID version")
-        print("Decoded Multihash:", decoded_multihash)  # Debug
-        return decoded_multihash.digest
+
+    elif isinstance(cid_input, str):
+        if cid_input.startswith("Qm"):  # CIDv0
+            decoded_multihash = multihash.decode(base58.b58decode(cid_input))
+            return decoded_multihash.digest
+
+        elif cid_input.startswith("b"):  # CIDv1
+            cid_bytes = multibase.decode(ensure_bytes(cid_input))
+            i = 1
+            while i < len(cid_bytes) and (cid_bytes[i] & 0x80) != 0:
+                i += 1
+            multihash_bytes = cid_bytes[i + 1 :]
+            decoded_multihash = multihash.decode(multihash_bytes)
+            return decoded_multihash.digest
+
     else:
         raise ValueError("Invalid CID input type. Must be a CID object or a string.")

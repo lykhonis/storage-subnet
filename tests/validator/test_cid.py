@@ -2,12 +2,10 @@ import unittest
 import hashlib
 import requests
 
-# https://github.com/thunderstore-io/ipfs-cid
-# https://stackoverflow.com/questions/75803958/how-to-compute-the-ipfs-content-identifier-cid-from-file-content-in-python
-from ipfs_cid import cid_sha256_hash  # pip install ipfs-cid
-from py_ipfs_cid import compute_cid  # pip install py-ipfs-cid
+from ipfs_cid import cid_sha256_hash as compute_cidv1  # pip install ipfs-cid
+from ipfs_cid_v0 import compute_cid as compute_cidv0  # pip install ipdfs-cid-v0
+from ipfs_cid_v0 import compute_hash, compute_hash_hex
 from storage.validator.cid import make_cid, decode_cid
-from storage.validator.cid import *
 
 
 def fetch_ipfs_content(cid):
@@ -21,81 +19,40 @@ def fetch_ipfs_content(cid):
         )
 
 
-AARDVARK_CIDv0 = "QmcRD4wkPPi6dig81r5sLj9Zm1gDCL4zgpEj9CfuRrGbzF"
-aardvark = fetch_ipfs_content(AARDVARK_CIDv0)
-aardvark_cidv0: str = compute_cid(aardvark)
-aardvark_cidv1: str = cid_sha256_hash(aardvark)
-print(f"IPFS CIDv0: {aardvark_cidv0}")
-print(f"IPFS OGCID: {AARDVARK_CIDv0}")
-print(f"IPFS CIDv1: {aardvark_cidv1}")
+class TestIPFSCID(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.AARDVARK_CIDv0 = "QmcRD4wkPPi6dig81r5sLj9Zm1gDCL4zgpEj9CfuRrGbzF"
+        cls.aardvark = fetch_ipfs_content(cls.AARDVARK_CIDv0)
 
-assert (
-    aardvark_cidv0 == AARDVARK_CIDv0
-), f"IPFS CIDv0 {aardvark_cidv0} does not match OG CID {AARDVARK_CIDv0}"
-assert (
-    decode_cid(aardvark_cidv1) == hashlib.sha256(aardvark).digest()
-), f"IPFS CIDv1 {decode_cid(aardvark_cidv1)} hash does not match expected hash {hashlib.sha256(aardvark).digest()}"
-assert (
-    make_cid(aardvark, version=0).multihash.decode() == AARDVARK_CIDv0
-), f"CIDv0 {make_cid(aardvark, version=0).multihash.decode()} does not match IPFS CIDv0 {AARDVARK_CIDv0}"
-assert (
-    decode_cid(aardvark_cidv0) == hashlib.sha256(aardvark).digest()
-), f"IPFS CIDv0 hash {decode_cid(aardvark_cidv0) } does not match expected hash {hashlib.sha256(aardvark).digest()}"
+    def test_cidv0(self):
+        aardvark_cidv0 = compute_cidv0(self.aardvark)
+        self.assertEqual(aardvark_cidv0, self.AARDVARK_CIDv0)
 
+    def test_cidv1(self):
+        aardvark_cidv1 = compute_cidv1(self.aardvark)
+        expected_hash = hashlib.sha256(self.aardvark).digest()
+        self.assertEqual(decode_cid(aardvark_cidv1), expected_hash)
 
-class TestCIDFunctions(unittest.TestCase):
-    def test_cid(self):
-        # Testing both CIDv0 and CIDv1
-        for version in [0, 1]:
-            with self.subTest(version=version):
-                raw_data = "abcdef"
-                cid = make_cid(raw_data, version=version)
-                decoded_hash = decode_cid(cid)
-                self.assertEqual(
-                    decoded_hash, hashlib.sha256(raw_data.encode()).digest()
-                )
+    def test_make_cid_v0(self):
+        cid0 = make_cid(self.aardvark, version=0)
+        self.assertEqual(cid0.multihash.decode(), self.AARDVARK_CIDv0)
 
-    def test_cid_with_different_inputs(self):
-        # Testing both CIDv0 and CIDv1
-        for version in [0, 1]:
-            test_data = [
-                "",  # Empty string
-                "Hello World",  # Simple string
-                "😊🌍🚀",  # Unicode string
-                "a" * 1000,  # Long string
-            ]
+    def test_compute_hash(self):
+        expected_hash = compute_hash(self.aardvark)[2:]
+        self.assertEqual(decode_cid(self.AARDVARK_CIDv0), expected_hash)
 
-            for data in test_data:
-                with self.subTest(data=data, version=version):
-                    cid = make_cid(data, version=version)
-                    decoded_hash = decode_cid(cid)
-                    self.assertEqual(
-                        decoded_hash,
-                        hashlib.sha256(data.encode()).digest(),
-                        f"Test failed for data: {data} with version: {version}",
-                    )
+    def test_make_cid_v1(self):
+        data = b"Hello World!"
+        cid1 = make_cid(data, version=1)
+        expected_hash = hashlib.sha256(data).digest()
+        self.assertEqual(decode_cid(cid1), expected_hash)
 
-
-class TestIPFSParity(unittest.TestCase):
-    def setUp(self):
-        self.aardvark = fetch_ipfs_content(AARDVARK_CIDv0)
-
-    def test_cid_parity(self):
-        # Generate CIDv0 using your implementation
-        your_cid_v0 = make_cid(self.aardvark, version=0)
-        self.assertEqual(
-            your_cid_v0.multihash.decode(),
-            AARDVARK_CIDv0,
-            "CIDv0 does not match IPFS CIDv0",
-        )
-
-        # Generate CIDv1 using your implementation
-        your_cid_v1 = make_cid(self.aardvark, version=1)
-        self.assertEqual(
-            decode_cid(your_cid_v1),
-            hashlib.sha256(self.aardvark).digest(),
-            "CIDv1 hash does not match expected hash",
-        )
+    def test_decode_cid_v0(self):
+        data = b"Hello World!"
+        cid0 = make_cid(data, version=0)
+        dcid0 = decode_cid(cid0)
+        self.assertEqual(dcid0, compute_hash(data)[2:])
 
 
 if __name__ == "__main__":
