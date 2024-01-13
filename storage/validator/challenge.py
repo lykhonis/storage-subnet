@@ -34,6 +34,7 @@ from pprint import pformat
 from Crypto.Random import get_random_bytes, random
 
 from storage import protocol
+from storage.validator import CHALLENGE_FAILURE_REWARD
 from storage.validator.event import EventSchema
 from storage.shared.ecc import setup_CRS, ecc_point_to_hex
 from storage.validator.utils import get_random_chunksize, get_available_query_miners
@@ -213,7 +214,7 @@ async def challenge_data(self):
 
         # Apply reward for this challenge
         tier_factor = await get_tier_factor(hotkey, self.database)
-        rewards[idx] = 1.0 * tier_factor if verified else 0.0
+        rewards[idx] = 1.0 * tier_factor if verified else CHALLENGE_FAILURE_REWARD
 
         # Log the event data for this specific challenge
         event.uids.append(uid)
