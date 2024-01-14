@@ -54,6 +54,28 @@ class TestIPFSCID(unittest.TestCase):
         dcid0 = decode_cid(cid0)
         self.assertEqual(dcid0, compute_hash(data)[2:])
 
+    def test_consistent_v0_hashing(self):
+        data = b"Hello World!"
+        expected_v0_hash = compute_hash(data)[2:]
+        cid0_1 = make_cid(data, version=0)
+        self.assertEqual(decode_cid(cid0_1), expected_v0_hash)
+        cid0_2 = make_cid(data, version=0)
+        self.assertEqual(decode_cid(cid0_2), expected_v0_hash)
+        cid0_3 = make_cid(data, version=0)
+        self.assertEqual(decode_cid(cid0_3), expected_v0_hash)
+        cid0_4 = make_cid(data, version=0)
+        self.assertEqual(decode_cid(cid0_4), expected_v0_hash)
+
+    def test_consistent_v1_hashing(self):
+        data = b"Hello World!"
+        expected_v1_hash = hashlib.sha256(data).digest()
+        cid1_1 = make_cid(data, version=1)
+        self.assertEqual(decode_cid(cid1_1), expected_v1_hash)
+        cid1_2 = make_cid(data, version=1)
+        self.assertEqual(decode_cid(cid1_2), expected_v1_hash)
+        cid1_3 = make_cid(data, version=1)
+        self.assertEqual(decode_cid(cid1_3), expected_v1_hash)
+        cid1_4 = make_cid(data, version=1)
 
 if __name__ == "__main__":
     unittest.main()
