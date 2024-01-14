@@ -248,7 +248,7 @@ class RetrieveData:
             config.wallet.hotkey = str(wallet_hotkey)
 
         if not config.is_set("data_hash") and not config.no_prompt:
-            config.data_hash = Prompt.ask("Enter hash of data to retrieve")
+            config.data_hash = Prompt.ask("Enter CID of data to retrieve")
 
     @staticmethod
     def add_args(parser: argparse.ArgumentParser):
@@ -256,9 +256,9 @@ class RetrieveData:
             "get", help="""Retrieve data from the Bittensor network."""
         )
         retrieve_parser.add_argument(
-            "--data_hash",
+            "--cid",
             type=str,
-            help="Data hash to retrieve in the Bittensor network.",
+            help="Data content id to retrieve from= the Bittensor network.",
         )
         retrieve_parser.add_argument(
             "--hash_basepath",

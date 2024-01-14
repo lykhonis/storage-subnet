@@ -25,6 +25,7 @@ import argparse
 
 import storage
 from storage.validator.encryption import encrypt_data
+from storage.validator.cid import generate_cid_string
 from storage.shared.ecc import hash_data
 
 import bittensor
@@ -155,6 +156,8 @@ class StoreData:
         else:
             encrypted_data = raw_data
             encryption_payload = "{}"
+
+        expected_cid = generate_cid_string(encrypted_data)
         encoded_data = base64.b64encode(encrypted_data)
         bittensor.logging.trace(f"CLI encrypted_data : {encrypted_data[:100]}")
         bittensor.logging.trace(f"CLI encryption_pay : {encryption_payload}")
@@ -172,14 +175,14 @@ class StoreData:
         try:
             sub = bittensor.subtensor(network=cli.config.subtensor.network)
             bittensor.logging.debug("subtensor:", sub)
-            StoreData._run(cli, synapse, sub, wallet, hash_filepath)
+            StoreData._run(cli, synapse, sub, wallet, hash_filepath, expected_cid)
         finally:
             if "subtensor" in locals():
                 subtensor.close()
                 bittensor.logging.debug("closing subtensor connection")
 
     @staticmethod
-    def _run(cli, synapse, subtensor, wallet, hash_filepath):
+    def _run(cli, synapse, subtensor, wallet, hash_filepath, expected_cid):
         r"""Store data from local disk on the Bittensor network."""
         dendrite = bittensor.dendrite(wallet=wallet)
         bittensor.logging.debug("dendrite:", dendrite)
@@ -218,6 +221,11 @@ class StoreData:
                     else response.data_hash
                 )
                 bittensor.logging.debug("received data hash: {}".format(data_hash))
+
+                if data_hash != expected_cid:
+                    bittensor.logging.warning(
+                        f"Received CID {data_hash} does not match expected CID {expected_cid}."
+                    )
                 success = True
                 break
 

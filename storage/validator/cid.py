@@ -1,4 +1,5 @@
 import base58
+import typing
 import hashlib
 import multibase
 import multihash
@@ -192,6 +193,12 @@ def make_cid(data, version=0):
 
 
 def decode_cid(cid_input):
+    """
+    Decodes a CID string or object into a multihash.
+
+    :param cid_input: A CID string or object.
+    :return: A multihash.
+    """
     if isinstance(cid_input, BaseCID):
         cid_input = cid_input.multihash
 
@@ -225,3 +232,21 @@ def decode_cid(cid_input):
 
     else:
         raise ValueError("Invalid CID input type. Must be a CID object or a string.")
+
+
+def generate_cid_string(data: typing.Union[str, bytes], version: int = 1):
+    """
+    Generates a CID string for the given data using the specified CID version.
+
+    :param data: Data to hash. Can be a string or bytes.
+    :param version: CID version to use. Must be 0 or 1.
+    :return: A CID string.
+    """
+    data_bytes = ensure_bytes(data)
+
+    if version == 0:
+        return compute_cidv0(data_bytes)
+    elif version == 1:
+        return compute_cidv1(data_bytes)
+    else:
+        raise ValueError("Invalid CID version")
