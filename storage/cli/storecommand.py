@@ -134,7 +134,7 @@ class StoreData:
         bittensor.logging.debug("wallet:", wallet)
 
         # Unlock the wallet
-        if not cli.config.noencrypt:
+        if cli.config.encrypt:
             wallet.hotkey
             wallet.coldkey
 
@@ -148,7 +148,7 @@ class StoreData:
         with open(cli.config.filepath, "rb") as f:
             raw_data = f.read()
 
-        if not cli.config.noencrypt:
+        if cli.config.encrypt:
             encrypted_data, encryption_payload = encrypt_data(
                 bytes(raw_data, "utf-8") if isinstance(raw_data, str) else raw_data,
                 wallet,
@@ -311,9 +311,9 @@ class StoreData:
             help="Tao limit for the validator permit.",
         )
         store_parser.add_argument(
-            "--noencrypt",
+            "--encrypt",
             action="store_true",
-            help="Do not encrypt the data before storing it on the Bittensor network.",
+            help="Encrypt the data before storing it on the Bittensor network with bittensor wallet coldkey.",
         )
 
         bittensor.wallet.add_args(store_parser)
