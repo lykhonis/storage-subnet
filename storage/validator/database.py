@@ -902,3 +902,36 @@ async def purge_challenges_for_all_hotkeys(database: aioredis.Redis):
     async for hotkey in database.scan_iter(match="hotkey:*"):
         hotkey = hotkey.decode().split(":")[1]
         await purge_challenges_for_hotkey(hotkey, database)
+
+
+async def delete_file_from_database(file_hash: str, database: aioredis.Redis):
+    """
+    Deletes all data related to a file from the database.
+
+    This function is used for housekeeping purposes in the database, allowing for the
+    removal of all data related to a particular file. This can be useful for clearing
+    outdated or irrelevant data from the database.
+
+    Parameters:
+    - file_hash (str): The hash of the file to be deleted.
+    - database (aioredis.Redis): An instance of the Redis database used for data storage.
+    """
+    bt.logging.debug(f"deleting file {file_hash} from database...")
+
+    chunk_data = await get_all_chunks_for_file(file_hash, database)
+    if chunk_data is None:
+        bt.logging.debug(f"file {file_hash} not found in database.")
+        return
+
+    # Delete all chunk hashes
+    for idx, chunk_dict in chunk_data.items():
+        chunk_hash = chunk_dict["chunk_hash"]
+        await database.delete(f"chunk:{chunk_hash}")
+
+    # Test getting the chunk hash back
+    chunk_data = await get_all_chunks_for_file(file_hash, database)
+    if chunk_data == {}:
+        bt.logging.debug(f"all chunks deleted for file {file_hash}.")
+        await database.delete(f"file:{file_hash}")
+
+    # TODO: call delete on miners to remove the file from their storage!

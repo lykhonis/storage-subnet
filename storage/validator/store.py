@@ -326,13 +326,14 @@ async def store_broadband(
         b64_encoded_chunk = await asyncio.to_thread(base64.b64encode, chunk)
         b64_encoded_chunk = b64_encoded_chunk.decode("utf-8")
         bt.logging.debug(f"b64_encoded_chunk: {b64_encoded_chunk[:100]}")
+        random_seed = get_random_bytes(32).hex()
 
         synapse = protocol.Store(
             encrypted_data=b64_encoded_chunk,
             curve=self.config.neuron.curve,
             g=ecc_point_to_hex(g),
             h=ecc_point_to_hex(h),
-            seed=get_random_bytes(32).hex(),
+            seed=random_seed,
         )
 
         uids = [
@@ -395,14 +396,18 @@ async def store_broadband(
             self.database,
         )
 
-        return responses
+        return responses, b64_encoded_chunk, random_seed
 
-    async def handle_uid_operations(uid, response, chunk_hash, chunk_size):
+    async def handle_uid_operations(
+        uid, response, b64_encoded_chunk, random_seed, chunk_hash, chunk_size
+    ):
         ss = time.time()
         start = time.time()
 
         # Offload the CPU-intensive verification to a separate thread
-        verified = await asyncio.to_thread(verify_store_with_seed, response)
+        verified = await asyncio.to_thread(
+            verify_store_with_seed, response, b64_encoded_chunk, random_seed
+        )
 
         end = time.time()
         bt.logging.debug(f"verify_store_with_seed time for uid {uid} : {end-start}")
@@ -460,11 +465,20 @@ async def store_broadband(
                 tasks.append(task)
 
         bt.logging.debug(f"gathering broadband tasks: {pformat(tasks)}")
-        responses_nested = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
+        bt.logging.debug(f"store_chunk_group() results: {pformat(results)}")
+        # Grab the responses and relevant data necessary for verify from the results
+        for i, result_group in enumerate(results):
+            responses, b64_encoded_chunk, random_seed = result_group
+            bt.logging.debug(f"-- responses_nested: {pformat(responses)}")
+            bt.logging.debug(f"-- b64_encoded_chunk: {b64_encoded_chunk[:100]}")
+            bt.logging.debug(f"-- random_seed: {random_seed}")
 
-        # Update the distributions with respones
-        for i, responses in enumerate(responses_nested):
+            # Update the distributions with respones
             distributions[i]["responses"] = responses
+            distributions[i]["b64_encoded_chunk"] = b64_encoded_chunk
+            distributions[i]["random_seed"] = random_seed
+
         return distributions
 
     async def semaphore_query_uid_operations(distributions):
@@ -472,9 +486,18 @@ async def store_broadband(
         for dist in distributions:
             chunk_hash = dist["chunk_hash"]
             chunk_size = dist["chunk_size"]
+            random_seed = dist["random_seed"]
+            b64_encoded_chunk = dist["b64_encoded_chunk"]
             for uid, response in zip(dist["uids"], dist["responses"]):
                 task = asyncio.create_task(
-                    handle_uid_operations(uid, response, chunk_hash, chunk_size)
+                    handle_uid_operations(
+                        uid,
+                        response,
+                        b64_encoded_chunk,
+                        random_seed,
+                        chunk_hash,
+                        chunk_size,
+                    )
                 )
                 tasks.append(task)
         uid_verified_dict_list = await asyncio.gather(*tasks)

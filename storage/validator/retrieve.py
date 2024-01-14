@@ -50,7 +50,7 @@ from storage.validator.database import (
 from storage.validator.encryption import decrypt_data_with_private_key
 from storage.validator.bonding import update_statistics, get_tier_factor
 
-from .network import ping_and_retry_uids
+from .network import ping_uids, ping_and_retry_uids
 from .reward import create_reward_vector
 
 
@@ -180,13 +180,15 @@ async def retrieve_data(
             bt.logging.debug(f"No response: skipping retrieve for uid {uid}")
             continue  # We don't have any data for this hotkey, skip it.
 
+        # Get the tier factor for this miner to determine the total reward
+        tier_factor = await get_tier_factor(hotkey, self.database)
         try:
             decoded_data = base64.b64decode(response.data)
         except Exception as e:
             bt.logging.error(
                 f"retrieve() Failed to decode data from UID: {uids[idx]} with error {e}"
             )
-            rewards[idx] = RETRIEVAL_FAILURE_REWARD
+            rewards[idx] = RETRIEVAL_FAILURE_REWARD * tier_factor
 
             # Update the retrieve statistics
             await update_statistics(
@@ -201,7 +203,7 @@ async def retrieve_data(
             bt.logging.error(
                 f"retrieve() Hash of received data does not match expected hash! {str(hash_data(decoded_data))} != {data_hash}"
             )
-            rewards[idx] = RETRIEVAL_FAILURE_REWARD
+            rewards[idx] = RETRIEVAL_FAILURE_REWARD * tier_factor
 
             # Update the retrieve statistics
             await update_statistics(
@@ -217,13 +219,12 @@ async def retrieve_data(
             bt.logging.error(
                 f"data verification failed! {pformat(response.axon.dict())}"
             )
-            rewards[
-                idx
-            ] = RETRIEVAL_FAILURE_REWARD  # Losing use data is unacceptable, harsh punishment
+            rewards[idx] = (
+                RETRIEVAL_FAILURE_REWARD * tier_factor
+            )  # Losing use data is unacceptable, harsh punishment
         else:
             # Success. Reward based on miner tier
             bt.logging.trace("Getting tier factor for hotkey {}".format(hotkey))
-            tier_factor = await get_tier_factor(hotkey, self.database)
             rewards[idx] = 1.0 * tier_factor
 
         bt.logging.trace(
@@ -262,6 +263,7 @@ async def retrieve_data(
     return decoded_data, event
 
 
+# TODO: apply ping before retries to ensure that the miner is online and not wait around for a timeout
 async def retrieve_broadband(self, full_hash: str):
     """
     Asynchronously retrieves and verifies data from the network based on a given hash, ensuring
@@ -366,12 +368,16 @@ async def retrieve_broadband(self, full_hash: str):
     async with semaphore:
         for chunk_metadata in ordered_metadata:
             bt.logging.debug(f"chunk metadata: {chunk_metadata}")
+
+            # Ensure still registered before trying to retrieve
             uids = [
                 self.metagraph.hotkeys.index(hotkey)
                 for hotkey in chunk_metadata["hotkeys"]
-                if hotkey
-                in self.metagraph.hotkeys  # TODO: more efficient check for this
+                if hotkey in self.metagraph.hotkeys
             ]
+
+            # Don't waste time waiting on UIDs that are nonresponsive anyway
+            uids, _ = await ping_uids(self, uids=uids)
             total_size += chunk_metadata["size"]
             tasks.append(
                 asyncio.create_task(

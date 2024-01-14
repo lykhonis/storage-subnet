@@ -143,14 +143,14 @@ class RetrieveData:
         try:
             sub = bittensor.subtensor(network=cli.config.subtensor.network)
             bittensor.logging.debug("subtensor:", sub)
-            RetrieveData.run(cli, sub)
+            RetrieveData._run(cli, sub, outpath, wallet)
         finally:
             if "subtensor" in locals():
                 subtensor.close()
                 bittensor.logging.debug("closing subtensor connection")
 
     @staticmethod
-    def _run(cli, sub):
+    def _run(cli, sub, outpath, wallet):
         r"""Retrieve data from the Bittensor network for the given data_hash."""
         dendrite = bittensor.dendrite(wallet=wallet)
         bittensor.logging.debug("dendrite:", dendrite)

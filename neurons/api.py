@@ -36,8 +36,7 @@ from storage.shared.ecc import hash_data
 from storage.shared.subtensor import get_current_block
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import should_checkpoint
-from storage.validator.encryption import encrypt_data
-
+from storage.validator.encryption import encrypt_data, setup_encryption_wallet
 from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
 from storage.validator.network import (
@@ -119,12 +118,13 @@ class neuron:
         bt.logging.debug(f"wallet: {str(self.wallet)}")
 
         # Setup dummy wallet for encryption purposes. No password needed.
-        self.encryption_wallet = bt.wallet(
-            name=self.config.neuron.encryption_wallet_name,
-            hotkey=self.config.neuron.encryption_hotkey,
+        self.encryption_wallet = setup_encryption_wallet(
+            wallet_name=self.config.encryption.wallet_name,
+            wallet_hotkey=self.config.encryption.hotkey,
+            password=self.config.encryption.password,
         )
-        self.encryption_wallet.create_if_non_existent(coldkey_use_password=False)
         self.encryption_wallet.coldkey  # Unlock the coldkey.
+        bt.logging.info(f"loading encryption wallet {self.encryption_wallet}")
 
         # Init metagraph.
         bt.logging.debug("loading metagraph")
@@ -374,7 +374,7 @@ class neuron:
 
         bt.logging.debug(f"returning user data: {decrypted_data[:100]}")
         bt.logging.debug(f"returning user payload: {user_encryption_payload}")
-        synapse.encrypted_data = base64.b64encode(user_encryption_payload)
+        synapse.encrypted_data = base64.b64encode(decrypted_data)
         synapse.encryption_payload = (
             json.dumps(user_encryption_payload)
             if isinstance(user_encryption_payload, dict)
@@ -461,7 +461,7 @@ class neuron:
         # After all we have to ensure subtensor connection is closed properly
         finally:
             if hasattr(self, "subtensor"):
-                bittensor.logging.debug("Closing subtensor connection")
+                bt.logging.debug("Closing subtensor connection")
                 self.subtensor.close()
 
     def run_in_background_thread(self):

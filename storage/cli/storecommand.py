@@ -172,19 +172,19 @@ class StoreData:
         try:
             sub = bittensor.subtensor(network=cli.config.subtensor.network)
             bittensor.logging.debug("subtensor:", sub)
-            StoreData.run(cli, sub)
+            StoreData._run(cli, synapse, sub, wallet, hash_filepath)
         finally:
             if "subtensor" in locals():
                 subtensor.close()
                 bittensor.logging.debug("closing subtensor connection")
 
     @staticmethod
-    def _run(cli, sub):
+    def _run(cli, synapse, subtensor, wallet, hash_filepath):
         r"""Store data from local disk on the Bittensor network."""
         dendrite = bittensor.dendrite(wallet=wallet)
         bittensor.logging.debug("dendrite:", dendrite)
 
-        mg = sub.metagraph(cli.config.netuid)
+        mg = subtensor.metagraph(cli.config.netuid)
         bittensor.logging.debug("metagraph:", mg)
 
         self = argparse.Namespace()

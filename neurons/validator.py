@@ -131,7 +131,6 @@ class neuron:
             wallet_hotkey=self.config.encryption.hotkey,
             password=self.config.encryption.password,
         )
-        self.encryption_wallet.create_if_non_existent(coldkey_use_password=False)
         self.encryption_wallet.coldkey  # Unlock the coldkey.
         bt.logging.info(f"loading encryption wallet {self.encryption_wallet}")
 

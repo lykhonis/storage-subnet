@@ -1,5 +1,9 @@
 # FileTAO
 
+[![Latest Version](https://img.shields.io/pypi/v/substrate-interface.svg)](https://pypi.org/project/filetao/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/filetao)](https://pypi.org/project/filetao)
+[![License](https://img.shields.io/pypi/l/filetao.svg)](https://github.com/ifrit98/storage-subnet/blob/master/LICENSE)
+
 ![Subnet21](assets/Subnet21.png)
 
 FileTAO (Bittensor Subnet 21) implements a novel, multi-layered zero-knowledge interactive proof-of-spacetime algorithm by cleverly using Pedersen commitments, random challenges leveraging elliptic curve cryptography, sequential seed-based chained hash verification, and merkle proofs to achieve an efficient, robust, secure, and highly available decetralized storage system on the Bittensor network. The system validates on encrypted user data, such that miners are unaware of what data they are storing, and only end-users may encrypt/decrypt the data they provide with their bittensor wallet coldkey.
@@ -8,7 +12,7 @@ We consider this system to be an important stepping stone so that bittensor can 
 
 **NOTICE**: Using this software, you **must** agree to the Terms and Agreements provided in the [terms and conditions](TERMS.md) document. By downloading and running this software, you implicitly agree to these terms and conditions.
 
-Currently supporting `python>=3.8,<3.11`.
+Currently supporting `python>=3.9,<3.11`.
 
 > Note: The storage subnet is in an alpha stage and is subject to rapid development.
 
