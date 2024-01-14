@@ -22,7 +22,7 @@ import bittensor as bt
 
 from storage.validator.utils import get_available_query_miners
 from storage.validator.bonding import update_statistics
-from storage.validator import MONITOR_FAILURE_REWARD
+from storage.constants import MONITOR_FAILURE_REWARD
 
 
 async def ping_uids(self, uids):

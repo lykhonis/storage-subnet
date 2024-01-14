@@ -75,12 +75,9 @@ from storage.miner.config import (
 )
 
 from storage.miner.database import (
-    store_or_update_chunk_metadata,
     store_chunk_metadata,
     update_seed_info,
     get_chunk_metadata,
-    get_all_filepaths,
-    get_total_storage_used,
 )
 
 
@@ -565,7 +562,7 @@ class miner:
             await store_chunk_metadata(
                 self.database,
                 data_hash,
-                filepath,
+                self.wallet.hotkey.ss58_address,
                 sys.getsizeof(encrypted_byte_data),
                 synapse.seed,
             )
@@ -648,8 +645,10 @@ class miner:
         bt.logging.debug(f"retrieved data: {pformat(data)}")
 
         # Chunk the data according to the specified (random) chunk size
-        filepath = data.get(b"filepath", None)
-        if filepath is None:
+        filepath = os.path.expanduser(
+            f"{self.config.database.directory}/{synapse.challenge_hash}"
+        )
+        if not os.path.isfile(filepath):
             bt.logging.error(f"No file found for {synapse.challenge_hash}")
             return synapse
 
@@ -759,8 +758,10 @@ class miner:
         bt.logging.debug(f"retrieved data: {pformat(data)}")
 
         # load the data from the filesystem
-        filepath = data.get(b"filepath", None)
-        if filepath == None:
+        filepath = os.path.expanduser(
+            f"{self.config.database.directory}/{synapse.data_hash}"
+        )
+        if not os.path.isfile(filepath):
             bt.logging.error(f"No file found for {synapse.data_hash}")
             return synapse
 

@@ -34,7 +34,7 @@ from pprint import pformat
 from Crypto.Random import get_random_bytes, random
 
 from storage import protocol
-from storage.validator import CHALLENGE_FAILURE_REWARD
+from storage.constants import CHALLENGE_FAILURE_REWARD
 from storage.validator.event import EventSchema
 from storage.shared.ecc import setup_CRS, ecc_point_to_hex
 from storage.validator.utils import get_random_chunksize, get_available_query_miners
@@ -236,13 +236,7 @@ async def challenge_data(self):
         return event
 
     # Remove UIDs without hashes (don't punish new miners that have no challenges yet)
-    uids, responses = zip(
-        *[
-            (uid, response[0])
-            for (uid, (verified, response)) in zip(uids, responses)
-            if verified != None
-        ]
-    )
+    uids, responses = _filter_verified_responses(uids, responses)
     bt.logging.debug(
         f"challenge_data() full rewards: {rewards} | uids {uids} | uids to remove {remove_reward_idxs}"
     )
@@ -266,3 +260,17 @@ async def challenge_data(self):
         event.best_hotkey = self.metagraph.hotkeys[event.best_uid]
 
     return event
+
+
+def _filter_verified_responses(uids, responses):
+    not_none_responses = [
+        (uid, response[0])
+        for (uid, (verified, response)) in zip(uids, responses)
+        if verified != None
+    ]
+
+    if len(not_none_responses) == 0:
+        return (), ()
+
+    uids, responses = zip(*not_none_responses)
+    return uids, responses

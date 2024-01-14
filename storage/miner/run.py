@@ -19,7 +19,9 @@ import time
 import wandb
 import bittensor as bt
 import traceback
-from .set_weights import set_weights, should_wait_to_set_weights
+
+from storage.shared.weights import should_wait_to_set_weights
+from .set_weights import set_weights_for_miner
 from .utils import update_storage_stats
 
 
@@ -120,7 +122,7 @@ def run(self):
                 bt.logging.info(f"Setting weights on chain.")
                 # if both 'wait_for_*' args are False, weights_were_set = True
                 # even if they are not set yet or the extrinsic has failed
-                weights_were_set = set_weights(
+                weights_were_set = set_weights_for_miner(
                     self.subtensor,
                     self.config.netuid,
                     self.my_subnet_uid,
@@ -179,3 +181,9 @@ def run(self):
     # In case of unforeseen errors, the miner will log the error and continue operations.
     except Exception as e:
         bt.logging.error(traceback.format_exc())
+
+    # After all we have to ensure subtensor connection is closed properly
+    finally:
+        if hasattr(self, "subtensor"):
+            bittensor.logging.debug("Closing subtensor connection")
+            self.subtensor.close()

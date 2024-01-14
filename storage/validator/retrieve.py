@@ -29,7 +29,7 @@ from pprint import pformat
 from Crypto.Random import get_random_bytes, random
 
 from storage import protocol
-from storage.validator import RETRIEVAL_FAILURE_REWARD
+from storage.constants import RETRIEVAL_FAILURE_REWARD
 from storage.validator.event import EventSchema
 from storage.shared.ecc import hash_data
 from storage.shared.utils import (
@@ -40,7 +40,6 @@ from storage.shared.utils import (
 )
 from storage.validator.verify import verify_retrieve_with_seed
 from storage.validator.reward import apply_reward_scores
-from storage.validator.weights import should_set_weights, set_weights
 from storage.validator.database import (
     get_metadata_for_hotkey,
     get_metadata_for_hotkey_and_hash,

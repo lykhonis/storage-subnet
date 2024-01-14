@@ -35,7 +35,7 @@ from .database import add_metadata_to_hotkey
 from .bonding import update_statistics, get_tier_factor
 from .event import EventSchema
 
-from storage.validator import (
+from storage.constants import (
     STORE_FAILURE_REWARD,
     RETRIEVAL_FAILURE_REWARD,
     CHALLENGE_FAILURE_REWARD,
@@ -289,7 +289,7 @@ async def create_reward_vector(
 
         # Apply reward for this task
         tier_factor = await get_tier_factor(hotkey, self.database)
-        rewards[idx] = 1.0 * tier_factor if success else failure_reward
+        rewards[idx] = 1.0 * tier_factor if success else failure_reward * tier_factor
 
         event.successful.append(success)
         event.uids.append(uid)
