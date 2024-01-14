@@ -87,14 +87,22 @@ cid1
 > CIDv1(version=1, codec=sha2-256, multihash=b'bafkreif2pall7dybz7v..')
 
 # Get the multihash out
-multihash = make_cid("abc", 1).multihash
+multihash = make_cid("abc", 0).multihash
 multihash
 > b'QmQpeUrxtQE5N2SVog1ZCxd7c7RN4fBNQu5aLwkk5RY9ER'
 
 from storage.validator.cid import decode_cid
-# Decode a CID to get the original data hash, produced by either `dag-pb` (CIDv0) or `sha256` (CIDv1)
-decode_cid(cid0)
-> b'$\xe3`\xd8\xdc\n\xd4\x8c\x92\r\xa2!\xe7?c\xdet\xce\xe1\xb4WF\\\x1f\xe3\xf7\xb3O\x15\x8b\x7fB'
+# Decode a CIDv1 object to get the original data hash, produced by `sha256` (CIDv1)
+decoded_hash = decode_cid(cid1)
+decoded_hash
+> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
+
+expected_hash = hashlib.sha256("abc".encode()).digest()
+expected_hash
+> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
+
+decoded_hash == expected_hash
+> True
 ```
 
 ## Prerequisites
