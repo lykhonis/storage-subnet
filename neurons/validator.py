@@ -334,9 +334,6 @@ class neuron:
         )
 
         def neuron_registered_subscription_handler(obj, update_nr, subscription_id):
-            self.log(f"New block #: {obj['header']['number']}\n")
-            bt.logging.debug(obj)
-
             block_no = obj["header"]["number"]
             block_hash = substrate.get_block_hash(block_id=block_no)
             bt.logging.debug(f"subscription block hash: {block_hash}")
@@ -363,7 +360,7 @@ class neuron:
                 hotkeys = deepcopy(self.rebalance_queue)
                 self.rebalance_queue.clear()
 
-                bt.logging.debug(
+                self.log(
                     f"Running rebalance in background on hotkeys {hotkeys}"
                 )
                 self.loop.run_until_complete(
