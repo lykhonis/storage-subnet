@@ -16,19 +16,12 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
 import sys
-import json
 import argparse
 import storage
 import bittensor
 from rich import print
-from rich.console import Console
-from rich.tree import Tree
 from typing import List, Optional
-from rich.align import Align
-from rich.table import Table
-from tqdm import tqdm
 
 from .retrievecommand import RetrieveData
 from .storecommand import StoreData
