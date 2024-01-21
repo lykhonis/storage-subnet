@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import asyncio
 import argparse
 import bittensor as bt
