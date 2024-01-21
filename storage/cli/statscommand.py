@@ -109,7 +109,7 @@ class ListMinerStats:
         asyncio.run(coro)
 
     @staticmethod
-    def check_config(config: "bittensor.config"):
+    def check_config(config: "bt.config"):
         pass
 
     @staticmethod
