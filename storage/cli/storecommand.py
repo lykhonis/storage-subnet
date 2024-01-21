@@ -174,8 +174,8 @@ class StoreData:
             bittensor.logging.debug("subtensor:", sub)
             StoreData._run(cli, synapse, sub, wallet, hash_filepath)
         finally:
-            if "subtensor" in locals():
-                subtensor.close()
+            if "sub" in locals():
+                sub.close()
                 bittensor.logging.debug("closing subtensor connection")
 
     @staticmethod
