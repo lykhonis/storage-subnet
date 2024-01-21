@@ -27,7 +27,6 @@ import aioredis
 import threading
 import traceback
 import bittensor as bt
-from Crypto.Random import get_random_bytes
 from typing import Dict
 
 from pprint import pformat
