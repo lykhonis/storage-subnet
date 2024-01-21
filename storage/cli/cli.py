@@ -94,7 +94,7 @@ class cli:
         bittensor.turn_console_on()
 
         # If no config is provided, create a new one from args.
-        if config == None:
+        if config is None:
             config = cli.create_config(args)
 
         self.config = config
@@ -166,7 +166,7 @@ class cli:
         parser = cli.__create_parser__()
 
         # If no arguments are passed, print help text and exit the program.
-        if args == None or len(args) == 0:
+        if args is None or len(args) == 0:
             parser.print_help()
             sys.exit()
 
