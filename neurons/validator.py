@@ -261,11 +261,11 @@ class neuron:
                 )
                 bt.logging.debug(f"should checkpoint ? {should_checkpoint_validator}")
                 if should_checkpoint_validator:
-                    bt.logging.info(f"Checkpointing...")
+                    bt.logging.info("Checkpointing...")
                     checkpoint(self)
 
                 # Set the weights on chain.
-                bt.logging.info(f"Checking if should set weights")
+                bt.logging.info("Checking if should set weights")
                 validator_should_set_weights = should_set_weights(
                     get_current_block(self.subtensor),
                     prev_set_weights_block,
@@ -290,7 +290,7 @@ class neuron:
 
                 # Rollover wandb to a new run.
                 if should_reinit_wandb(self):
-                    bt.logging.info(f"Reinitializing wandb")
+                    bt.logging.info("Reinitializing wandb")
                     reinit_wandb(self)
 
                 self.prev_step_block = get_current_block(self.subtensor)
