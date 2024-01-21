@@ -229,7 +229,7 @@ class neuron:
                     current_block = self.subtensor.get_current_block()
 
                 time.sleep(5)
-                if not self.wallet.hotkey.ss58_address in self.metagraph.hotkeys:
+                if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
                     raise Exception(
                         f"Validator is not registered - hotkey {self.wallet.hotkey.ss58_address} not in metagraph"
                     )
