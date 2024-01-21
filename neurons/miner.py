@@ -537,7 +537,7 @@ class miner:
         data_hash = hash_data(encrypted_byte_data)
 
         # If already storing this hash, simply update the validator seeds and return challenge
-        bt.logging.trace(f"checking if data already exists...")
+        bt.logging.trace("checking if data already exists...")
         if await self.database.exists(data_hash):
             # update the validator seed challenge hash in storage
             await update_seed_info(
@@ -658,7 +658,7 @@ class miner:
                 )
                 return synapse
 
-        bt.logging.trace(f"entering load_from_filesystem()")
+        bt.logging.trace("entering load_from_filesystem()")
         try:
             encrypted_data_bytes = load_from_filesystem(filepath)
         except Exception as e:
@@ -674,7 +674,7 @@ class miner:
             bt.logging.error(f"No seed found for {synapse.challenge_hash}")
             return synapse
 
-        bt.logging.trace(f"entering comput_subsequent_commitment()...")
+        bt.logging.trace("entering comput_subsequent_commitment()...")
         new_seed = synapse.seed.encode()
         next_commitment, proof = compute_subsequent_commitment(
             encrypted_data_bytes, prev_seed, new_seed, verbose=self.config.miner.verbose
@@ -707,7 +707,7 @@ class miner:
         # Commit the data chunks based on the provided curve points
         bt.logging.trace("entering ECCcommitment()")
         committer = ECCommitment(g, h)
-        bt.logging.trace(f"entering commit_data_with_seed()")
+        bt.logging.trace("entering commit_data_with_seed()")
         randomness, chunks, commitments, merkle_tree = commit_data_with_seed(
             committer,
             data_chunks,
@@ -806,7 +806,7 @@ class miner:
             return synapse
 
         # incorporate a final seed challenge to verify they still have the data at retrieval time
-        bt.logging.trace(f"entering compute_subsequent_commitment()")
+        bt.logging.trace("entering compute_subsequent_commitment()")
         commitment, proof = compute_subsequent_commitment(
             encrypted_data_bytes,
             data[b"seed"].encode(),
