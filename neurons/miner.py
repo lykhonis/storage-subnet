@@ -18,43 +18,33 @@
 
 import os
 import sys
-import copy
-import json
 import time
 import torch
 import typing
 import base64
 import asyncio
 import aioredis
-import argparse
 import threading
 import traceback
 import bittensor as bt
-from collections import defaultdict
 from Crypto.Random import get_random_bytes
 from typing import Dict
 
-from pprint import pprint, pformat
+from pprint import pformat
 
 # import this repo
 import storage
 from storage.shared.ecc import (
     hash_data,
-    setup_CRS,
     ECCommitment,
     ecc_point_to_hex,
     hex_to_ecc_point,
 )
 
-from storage.shared.merkle import (
-    MerkleTree,
-)
-
-from storage.shared.utils import b64_encode, b64_decode, chunk_data, safe_key_search
+from storage.shared.utils import b64_encode, chunk_data, safe_key_search
 
 from storage.miner import (
     run,
-    set_weights,
 )
 
 from storage.miner.utils import (
@@ -63,8 +53,6 @@ from storage.miner.utils import (
     load_from_filesystem,
     commit_data_with_seed,
     init_wandb,
-    get_directory_size,
-    get_free_disk_space,
     update_storage_stats,
 )
 
