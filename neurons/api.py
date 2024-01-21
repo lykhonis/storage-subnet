@@ -414,8 +414,6 @@ class neuron:
             )
         try:
             while not self.should_exit:
-                start_epoch = time.time()
-
                 # --- Wait until next epoch.
                 current_block = self.subtensor.get_current_block()
                 while (
@@ -446,7 +444,7 @@ class neuron:
             exit()
 
         # In case of unforeseen errors, the API will log the error and continue operations.
-        except Exception as e:
+        except Exception:
             bt.logging.error(traceback.format_exc())
 
         # After all we have to ensure subtensor connection is closed properly
