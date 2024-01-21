@@ -17,15 +17,112 @@
 # DEALINGS IN THE SOFTWARE.
 
 import json
+import time
 import aioredis
 import asyncio
 import bittensor as bt
 from typing import Dict, List, Any, Union, Optional, Tuple
 
 
-# Function to add metadata to a hash in Redis
+async def set_ttl_for_hash_and_hotkey(
+    data_hash: str,
+    ss58_address: str,
+    database: aioredis.Redis,
+    ttl: int = 60 * 60 * 24 * 30,
+):
+    """
+    Sets the TTL for a hash in Redis.
+
+    Parameters:
+        data_hash (str): The key representing the hash.
+        database (aioredis.Redis): The Redis client instance.
+        ttl (int): The TTL in seconds. (Default 30 days)
+    """
+    key = f"hotkey:{ss58_address}"
+    ttl_metadata = {
+        "generated": time.time(),  # This is required to compare against later
+        "ttl": ttl,
+    }
+    ttl_metadata_json = json.dumps(ttl_metadata)
+    await database.hset(key, f"ttl:{data_hash}", ttl_metadata_json)
+    bt.logging.trace(f"Set TTL for {data_hash} to {ttl} seconds.")
+
+
+async def get_ttl_for_hash_and_hotkey(
+    data_hash: str, ss58_address: str, database: aioredis.Redis
+) -> Optional[int]:
+    """
+    Retrieves the TTL for a hash in Redis.
+
+    Parameters:
+        data_hash (str): The key representing the hash.
+        database (aioredis.Redis): The Redis client instance.
+
+    Returns:
+        The TTL in seconds, or None if not found.
+    """
+    key = f"hotkey:{ss58_address}"
+    ttl_metadata = await database.hget(key, f"ttl:{data_hash}")
+    if ttl_metadata:
+        ttl_metadata = json.loads(ttl_metadata)
+        ttl = int(ttl_metadata["ttl"])
+        return ttl
+    else:
+        return None
+
+
+async def get_time_since_generation_for_hash_and_hotkey(
+    data_hash: str, ss58_address: str, database: aioredis.Redis
+) -> Optional[int]:
+    """
+    Retrieves the TTL for a hash in Redis.
+
+    Parameters:
+        data_hash (str): The key representing the hash.
+        database (aioredis.Redis): The Redis client instance.
+
+    Returns:
+        The TTL in seconds, or None if not found.
+    """
+    key = f"hotkey:{ss58_address}"
+    ttl_metadata = await database.hget(key, f"ttl:{data_hash}")
+    if ttl_metadata:
+        ttl_metadata = json.loads(ttl_metadata)
+        generated = float(ttl_metadata["generated"])
+        return time.time() - generated
+    else:
+        return None
+
+
+async def is_ttl_expired_for_hash_and_hotkey(
+    data_hash: str, ss58_address: str, database: aioredis.Redis
+) -> bool:
+    """
+    Checks if the TTL for a hash has expired.
+
+    Parameters:
+        data_hash (str): The key representing the hash.
+        database (aioredis.Redis): The Redis client instance.
+
+    Returns:
+        True if the TTL has expired, False otherwise.
+    """
+    key = f"hotkey:{ss58_address}"
+    generated = await get_time_since_generation_for_hash_and_hotkey(
+        data_hash, ss58_address, database
+    )
+    if generated + ttl < time.time():
+        return True
+    else:
+        return False
+
+
 async def add_metadata_to_hotkey(
-    ss58_address: str, data_hash: str, metadata: Dict, database: aioredis.Redis
+    ss58_address: str,
+    data_hash: str,
+    metadata: Dict,
+    database: aioredis.Redis,
+    ttl: typing.Optional[int] = None,
 ):
     """
     Associates a data hash and its metadata with a hotkey in Redis.
@@ -44,6 +141,9 @@ async def add_metadata_to_hotkey(
     await database.hset(key, data_hash, metadata_json)
     bt.logging.trace(f"Associated data hash {data_hash} with hotkey {ss58_address}.")
 
+    if ttl:
+        await set_ttl_for_hash_and_hotkey(data_hash, ss58_address, database, ttl)
+
 
 async def remove_metadata_from_hotkey(
     ss58_address: str, data_hash: str, database: aioredis.Redis
@@ -59,6 +159,7 @@ async def remove_metadata_from_hotkey(
     # Use HDEL to remove the data hash from the hotkey
     key = f"hotkey:{ss58_address}"
     await database.hdel(key, data_hash)
+    await database.hdel(key, f"ttl:{data_hash}")  # delete the TTL as well
     bt.logging.trace(f"Removed data hash {data_hash} from hotkey {ss58_address}.")
 
 
@@ -77,15 +178,19 @@ async def get_metadata_for_hotkey(
     """
     # Fetch all fields (data hashes) and values (metadata) for the hotkey
     all_data_hashes = await database.hgetall(f"hotkey:{ss58_address}")
-    bt.logging.trace(
-        f"get_metadata_for_hotkey() # hashes found for hotkey {ss58_address}: {len(all_data_hashes)}"
-    )
 
     # Deserialize the metadata for each data hash
-    return {
+    data_hash_metadata = {
         data_hash.decode("utf-8"): json.loads(metadata.decode("utf-8"))
         for data_hash, metadata in all_data_hashes.items()
+        if not data_hash.startswith(b"ttl:")
     }
+
+    # TODO: include the TTL in this metadata as a unified dict?
+    bt.logging.trace(
+        f"get_metadata_for_hotkey() # hashes found for hotkey {ss58_address}: {len(data_hash_metadata)}"
+    )
+    return data_hash_metadata
 
 
 async def get_hashes_for_hotkey(
