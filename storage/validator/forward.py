@@ -26,7 +26,6 @@ from pprint import pformat
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import log_event
 from storage.validator.bonding import compute_all_tiers
-from storage.validator.reward import apply_reward_scores
 from storage.validator.database import (
     total_validator_storage,
     get_all_chunk_hashes,

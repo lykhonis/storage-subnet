@@ -171,6 +171,7 @@ async def retrieve_data(
     ).to(self.device)
 
     decoded_data = b""
+    total_batch_size = 0
     for idx, (uid, (response, data_hash, seed)) in enumerate(
         zip(uids, response_tuples)
     ):
@@ -179,6 +180,9 @@ async def retrieve_data(
         if response == None:
             bt.logging.debug(f"No response: skipping retrieve for uid {uid}")
             continue  # We don't have any data for this hotkey, skip it.
+
+        # Collect data sizes from responses
+        total_batch_size += sys.getsizeof(response.data)
 
         # Get the tier factor for this miner to determine the total reward
         tier_factor = await get_tier_factor(hotkey, self.database)
@@ -250,6 +254,7 @@ async def retrieve_data(
         uids,
         [response_tuple[0] for response_tuple in response_tuples],
         rewards,
+        total_batch_size,
         timeout=self.config.neuron.retrieve_timeout,
         mode=self.config.neuron.reward_mode,
     )
@@ -340,6 +345,7 @@ async def retrieve_broadband(self, full_hash: str):
             uids,
             responses,
             rewards,
+            total_batch_size=1,
             timeout=self.config.neuron.retrieve_timeout,
             mode=self.config.neuron.reward_mode,
         )

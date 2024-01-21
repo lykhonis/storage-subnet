@@ -192,7 +192,13 @@ def scale_rewards(uids, responses, rewards, timeout: float, mode: str):
 
 
 def apply_reward_scores(
-    self, uids, responses, rewards, timeout: float, mode: str = "sigmoid"
+    self,
+    uids,
+    responses,
+    rewards,
+    total_batch_size: int,
+    timeout: float,
+    mode: str = "sigmoid",
 ):
     """
     Adjusts the moving average scores for a set of UIDs based on their response times and reward values.
@@ -203,6 +209,9 @@ def apply_reward_scores(
         uids (List[int]): A list of UIDs for which rewards are being applied.
         responses (List[Response]): A list of response objects received from the nodes.
         rewards (torch.FloatTensor): A tensor containing the computed reward values.
+        total_batch_size (int): The total batch size used for the forward pass.
+        timeout (float): The timeout value used for response time calculations.
+        mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
     """
     if mode not in ["sigmoid", "minmax"]:
         raise ValueError(f"Invalid mode: {mode}")
@@ -212,6 +221,10 @@ def apply_reward_scores(
         bt.logging.debug(f"Reward shape: {rewards.shape}")
         bt.logging.debug(f"UIDs: {uids}")
 
+    # Normalize rewards based on total batch size
+    rewards = [reward / total_batch_size for reward in rewards]
+
+    # Scale rewards based on response times
     scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout, mode=mode)
     bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
