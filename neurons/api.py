@@ -234,7 +234,7 @@ class neuron:
             - This property employs lazy loading and caching to efficiently manage the retrieval of top N validators.
             - The cache is updated based on specific conditions, such as crossing a checkpoint in the network.
         """
-        if self._top_n_validators == None or should_checkpoint(
+        if self._top_n_validators is None or should_checkpoint(
             get_current_block(self.subtensor),
             self.prev_step_block,
             self.config.neuron.checkpoint_block_length,
@@ -408,7 +408,7 @@ class neuron:
 
     def run(self):
         bt.logging.info("run()")
-        if not self.wallet.hotkey.ss58_address in self.metagraph.hotkeys:
+        if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
             raise Exception(
                 f"API is not registered - hotkey {self.wallet.hotkey.ss58_address} not in metagraph"
             )
