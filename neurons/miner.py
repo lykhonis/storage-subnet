@@ -176,7 +176,7 @@ class miner:
         bt.logging.info(f"Axon {self.axon}")
 
         # Attach determiners which functions are called when servicing a request.
-        bt.logging.info(f"Attaching forward functions to axon.")
+        bt.logging.info("Attaching forward functions to axon.")
         self.axon.attach(
             forward_fn=self.store,
             blacklist_fn=self.store_blacklist_fn,
@@ -533,7 +533,7 @@ class miner:
         bt.logging.trace(f"store b64decrypted data: {encrypted_byte_data[:24]}")
 
         # Store the data with the hash as the key in the filesystem
-        bt.logging.trace(f"entering hash_data()")
+        bt.logging.trace("entering hash_data()")
         data_hash = hash_data(encrypted_byte_data)
 
         # If already storing this hash, simply update the validator seeds and return challenge
@@ -560,12 +560,12 @@ class miner:
             )
 
         # Commit to the entire data block
-        bt.logging.trace(f"entering ECCommitment()")
+        bt.logging.trace("entering ECCommitment()")
         committer = ECCommitment(
             hex_to_ecc_point(synapse.g, synapse.curve),
             hex_to_ecc_point(synapse.h, synapse.curve),
         )
-        bt.logging.trace(f"entering commit()")
+        bt.logging.trace("entering commit()")
         c, m_val, r = committer.commit(encrypted_byte_data + str(synapse.seed).encode())
         if self.config.miner.verbose:
             bt.logging.debug(f"committer: {committer}")
@@ -633,7 +633,7 @@ class miner:
         bt.logging.info(f"received challenge hash: {synapse.challenge_hash}")
         self.request_count += 1
 
-        bt.logging.trace(f"entering get_chunk_metadata()")
+        bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(self.database, synapse.challenge_hash)
         if data is None:
             bt.logging.error(f"No data found for {synapse.challenge_hash}")
@@ -697,7 +697,7 @@ class miner:
         )
 
         # Chunk the data according to the provided chunk_size
-        bt.logging.trace(f"entering chunk_data()")
+        bt.logging.trace("entering chunk_data()")
         data_chunks = chunk_data(encrypted_data_bytes, synapse.chunk_size)
 
         # Extract setup params
@@ -705,7 +705,7 @@ class miner:
         h = hex_to_ecc_point(synapse.h, synapse.curve)
 
         # Commit the data chunks based on the provided curve points
-        bt.logging.trace(f"entering ECCcommitment()")
+        bt.logging.trace("entering ECCcommitment()")
         committer = ECCommitment(g, h)
         bt.logging.trace(f"entering commit_data_with_seed()")
         randomness, chunks, commitments, merkle_tree = commit_data_with_seed(
@@ -716,7 +716,7 @@ class miner:
         )
 
         # Prepare return values to validator
-        bt.logging.trace(f"entering b64_encode()")
+        bt.logging.trace("entering b64_encode()")
         synapse.commitment = commitments[synapse.challenge_index]
         synapse.data_chunk = base64.b64encode(chunks[synapse.challenge_index])
         synapse.randomness = randomness[synapse.challenge_index]
@@ -724,7 +724,7 @@ class miner:
             merkle_tree.get_proof(synapse.challenge_index)
         )
 
-        bt.logging.trace(f"getting merkle root...")
+        bt.logging.trace("getting merkle root...")
         synapse.merkle_root = merkle_tree.get_merkle_root()
 
         if self.config.miner.verbose:
@@ -773,7 +773,7 @@ class miner:
         self.request_count += 1
 
         # Fetch the data from the miner database
-        bt.logging.trace(f"entering get_chunk_metadata()")
+        bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(self.database, synapse.data_hash)
 
         # Decode the data + metadata from bytes to json
@@ -796,7 +796,7 @@ class miner:
                 )
                 return synapse
 
-        bt.logging.trace(f"entering load_from_filesystem()")
+        bt.logging.trace("entering load_from_filesystem()")
         try:
             encrypted_data_bytes = load_from_filesystem(filepath)
         except Exception as e:
@@ -817,14 +817,14 @@ class miner:
         synapse.commitment_proof = proof
 
         # store new seed
-        bt.logging.trace(f"entering update_seed_info()")
+        bt.logging.trace("entering update_seed_info()")
         await update_seed_info(
             self.database, synapse.data_hash, synapse.dendrite.hotkey, synapse.seed
         )
         bt.logging.debug(f"udpated retrieve miner storage: {pformat(data)}")
 
         # Return base64 data
-        bt.logging.trace(f"entering b64_encode()")
+        bt.logging.trace("entering b64_encode()")
         synapse.data = base64.b64encode(encrypted_data_bytes)
         bt.logging.info(f"returning retrieved data {synapse.data[:24]}...")
         return synapse
