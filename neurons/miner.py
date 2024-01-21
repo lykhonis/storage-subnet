@@ -670,7 +670,7 @@ class miner:
         # Construct the next commitment hash using previous commitment and hash
         # of the data to prove storage over time
         prev_seed = data.get(b"seed", "").encode()
-        if prev_seed == None:
+        if prev_seed is None:
             bt.logging.error(f"No seed found for {synapse.challenge_hash}")
             return synapse
 
@@ -781,7 +781,7 @@ class miner:
 
         # load the data from the filesystem
         filepath = data.get(b"filepath", None)
-        if filepath == None:
+        if filepath is None:
             bt.logging.warning(
                 f"No file found for {synapse.data_hash} in index, trying path construction..."
             )
