@@ -16,9 +16,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
-import sys
-import copy
 import json
 import time
 import torch
@@ -27,7 +24,6 @@ import typing
 import asyncio
 import aioredis
 import traceback
-import websocket
 import bittensor as bt
 import threading
 
@@ -39,11 +35,6 @@ from storage.validator.state import should_checkpoint
 from storage.validator.encryption import encrypt_data, setup_encryption_wallet
 from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
-from storage.validator.network import (
-    reroll_distribution,
-    compute_and_ping_chunks,
-    ping_uids,
-)
 
 from storage.validator.database import retrieve_encryption_payload
 
