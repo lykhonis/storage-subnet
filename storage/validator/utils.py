@@ -800,3 +800,10 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
             "uids": uid_group,
             "chunk_index": i,
         }
+
+
+def get_rebalance_script_path(current_dir):
+    project_root = os.path.join(current_dir, "..")
+    project_root = os.path.normpath(project_root)
+    script_path = os.path.join(project_root, "scripts", "rebalance_deregistration.sh")
+    return script_path

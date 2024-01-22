@@ -37,7 +37,10 @@ from substrateinterface.base import SubstrateInterface
 from storage import protocol
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
-from storage.validator.utils import get_current_validtor_uid_round_robin
+from storage.validator.utils import (
+    get_current_validtor_uid_round_robin,
+    get_rebalance_script_path,
+)
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -198,6 +201,9 @@ class neuron:
         self.subscription_thread: threading.Thread = None
         self.last_registered_block = 0
         self.rebalance_queue = []
+        self.rebalance_script_path = get_rebalance_script_path(
+            os.path.dirname(os.path.abspath(__file__))
+        )
 
     def run(self):
         bt.logging.info("run()")
@@ -374,12 +380,9 @@ class neuron:
                 # Fire off the script
                 hotkeys_str = ",".join(map(str, hotkeys))
                 hotkeys_arg = quote(hotkeys_str)
-                path = os.path.join(
-                    os.path.abspath("."), "scripts/rebalance_deregistration.sh"
-                )
                 subprocess.Popen(
                     [
-                        path,
+                        self.rebalance_script_path,
                         hotkeys_arg,
                         self.subtensor.chain_endpoint,
                         str(self.config.database.index),
