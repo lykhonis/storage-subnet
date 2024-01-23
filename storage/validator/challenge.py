@@ -173,9 +173,7 @@ async def challenge_data(self):
 
     start_time = time.time()
     tasks = []
-    uids = await get_available_query_miners(
-        self, k=self.config.neuron.challenge_sample_size
-    )
+    uids = await get_available_query_miners(self, k=10)
     bt.logging.debug(f"challenge uids {uids}")
     responses = []
     for uid in uids:

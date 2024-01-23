@@ -192,9 +192,6 @@ class neuron:
         # Init the event loop.
         self.loop = asyncio.get_event_loop()
 
-        if self.config.neuron.challenge_sample_size == 0:
-            self.config.neuron.challenge_sample_size = self.metagraph.n
-
         self.prev_step_block = get_current_block(self.subtensor)
 
         # Instantiate runners

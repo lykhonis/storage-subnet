@@ -182,9 +182,6 @@ class neuron:
             bt.logging.debug("loading wandb")
             init_wandb(self)
 
-        if self.config.neuron.challenge_sample_size == 0:
-            self.config.neuron.challenge_sample_size = self.metagraph.n
-
         self.prev_step_block = get_current_block(self.subtensor)
         self.step = 0
 

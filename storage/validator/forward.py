@@ -47,7 +47,7 @@ async def forward(self):
     # Record forward time
     start = time.time()
 
-    if self.step % self.config.neuron.store_step_length == 0:
+    if self.step % 2 == 0:
         # Store some random data
         bt.logging.info("initiating store random")
         event = await store_random_data(self)
