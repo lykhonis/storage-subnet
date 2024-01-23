@@ -22,7 +22,7 @@ import asyncio
 import bittensor as bt
 from rich.table import Table
 from rich.console import Console
-from storage.validator.database import get_miner_statistics
+from storage.validator.database import get_miner_statistics, total_hotkey_storage
 
 
 async def show_all_miner_statistics(r: aioredis.Redis):
@@ -41,7 +41,7 @@ async def show_all_miner_statistics(r: aioredis.Redis):
     table.add_column("Challenge Rate")
     table.add_column("Retrieve Rate")
     table.add_column("Tier")
-    table.add_column("Storage Limit (GB)")
+    table.add_column("Current Storage / Limit (GB)")
 
     for hotkey, stats in data.items():
         # Compute the success rate for each task type
@@ -65,14 +65,16 @@ async def show_all_miner_statistics(r: aioredis.Redis):
         table.add_row(
             hotkey,
             stats["total_successes"],
-            stats["store_attempts"] + " | " + stats["store_successes"],
-            stats["challenge_successes"] + " | " + stats["challenge_attempts"],
-            stats["retrieve_successes"] + " | " + stats["retrieve_attempts"],
+            stats["store_attempts"] + " / " + stats["store_successes"],
+            stats["challenge_successes"] + " / " + stats["challenge_attempts"],
+            stats["retrieve_successes"] + " / " + stats["retrieve_attempts"],
             str(store_success_rate * 100),
             str(challenge_success_rate * 100),
             str(retrieval_success_rate * 100),
             stats["tier"],
-            str(int(stats["storage_limit"]) // (1024**3)),
+            str(await total_hotkey_storage(hotkey, r) // (1024**3))
+            + " / "
+            + str(int(stats["storage_limit"]) // (1024**3)),
         )
 
     # Print the table to the console

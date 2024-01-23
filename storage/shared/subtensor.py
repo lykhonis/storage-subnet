@@ -6,7 +6,7 @@ from typing import Callable, Any
 
 def _ttl_hash_gen(seconds: int):
     start_time = time.time()
-    while True:
+    while 1:
         yield floor((time.time() - start_time) / seconds)
 
 

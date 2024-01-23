@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import time
 import torch
 import base64
@@ -25,6 +26,8 @@ import aioredis
 import threading
 import traceback
 import bittensor as bt
+import subprocess
+from shlex import quote
 from copy import deepcopy
 from loguru import logger
 from pprint import pformat
@@ -215,8 +218,13 @@ class neuron:
         self.run_subscription_thread()
 
         try:
-            while True:
+            while 1:
                 start_epoch = time.time()
+
+                self.metagraph.sync(subtensor=self.subtensor)
+                prev_set_weights_block = self.metagraph.last_update[
+                    self.my_subnet_uid
+                ].item()
 
                 # --- Wait until next step epoch.
                 current_block = self.subtensor.get_current_block()
@@ -257,9 +265,9 @@ class neuron:
                     self.config.neuron.checkpoint_block_length,
                 )
                 bt.logging.debug(
-                    f"should_checkpoint() params: (current block) {current_block} (prev block) {self.prev_step_block} (checkpoint_block_length) {self.config.neuron.checkpoint_block_length}\n"
-                    f"should checkpoint ? {should_checkpoint_validator}"
+                    f"should_checkpoint() params: (current block) {current_block} (prev block) {self.prev_step_block} (checkpoint_block_length) {self.config.neuron.checkpoint_block_length}"
                 )
+                bt.logging.debug(f"should checkpoint ? {should_checkpoint_validator}")
                 if should_checkpoint_validator:
                     bt.logging.info(f"Checkpointing...")
                     checkpoint(self)
@@ -268,15 +276,15 @@ class neuron:
                 bt.logging.info(f"Checking if should set weights")
                 validator_should_set_weights = should_set_weights(
                     get_current_block(self.subtensor),
-                    self.prev_step_block,
+                    prev_set_weights_block,
                     self.config.neuron.set_weights_epoch_length,
                     self.config.neuron.disable_set_weights,
                 )
-                bt.logging.info(
+                bt.logging.debug(
                     f"Should validator check weights? -> {validator_should_set_weights}"
                 )
                 if validator_should_set_weights:
-                    bt.logging.info(f"Setting weights {self.moving_averaged_scores}")
+                    bt.logging.debug(f"Setting weights {self.moving_averaged_scores}")
                     set_weights_for_validator(
                         subtensor=self.subtensor,
                         wallet=self.wallet,
@@ -285,6 +293,7 @@ class neuron:
                         moving_averaged_scores=self.moving_averaged_scores,
                         wandb_on=self.config.wandb.on,
                     )
+                    prev_set_weights_block = get_current_block(self.subtensor)
                     save_state(self)
 
                 # Rollover wandb to a new run.
@@ -312,8 +321,9 @@ class neuron:
         # After all we have to ensure subtensor connection is closed properly
         finally:
             if hasattr(self, "subtensor"):
-                bittensor.logging.debug("Closing subtensor connection")
+                bt.logging.debug("Closing subtensor connection")
                 self.subtensor.close()
+                self.stop_subscription_thread()
 
     def log(self, log: str):
         bt.logging.debug(log)
@@ -331,6 +341,7 @@ class neuron:
             url=self.subtensor.chain_endpoint,
             type_registry=bt.__type_registry__,
         )
+        self.subscription_substrate = substrate
 
         def neuron_registered_subscription_handler(obj, update_nr, subscription_id):
             block_no = obj["header"]["number"]
@@ -358,14 +369,21 @@ class neuron:
             ):
                 hotkeys = deepcopy(self.rebalance_queue)
                 self.rebalance_queue.clear()
+                self.log(f"Running rebalance in separate process on hotkeys {hotkeys}")
 
-                self.log(
-                    f"Running rebalance in background on hotkeys {hotkeys}"
+                # Fire off the script
+                hotkeys_str = ",".join(map(str, hotkeys))
+                hotkeys_arg = quote(hotkeys_str)
+                path = os.path.join(
+                    os.path.abspath("."), "scripts/rebalance_deregistration.sh"
                 )
-                self.loop.run_until_complete(
-                    rebalance_data(
-                        self, k=2, dropped_hotkeys=hotkeys, hotkey_replaced=True
-                    )
+                subprocess.Popen(
+                    [
+                        path,
+                        hotkeys_arg,
+                        self.subtensor.chain_endpoint,
+                        str(self.config.database.index),
+                    ]
                 )
 
         substrate.subscribe_block_headers(neuron_registered_subscription_handler)
@@ -391,7 +409,8 @@ class neuron:
             self.should_exit = True
             self.subscription_thread.join(5)
             self.subscription_is_running = False
-            bt.logging.debug("Stopped")
+            self.subscription_substrate.close()
+            bt.logging.debug("Stopped subscription handler.")
 
     def __del__(self):
         """

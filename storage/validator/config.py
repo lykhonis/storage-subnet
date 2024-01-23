@@ -202,7 +202,7 @@ def add_args(cls, parser):
     parser.add_argument(
         "--neuron.compute_stats_interval",
         type=int,
-        default=200,
+        default=360,
         help="Number of steps before computing and logging all stats.",
     )
     parser.add_argument(

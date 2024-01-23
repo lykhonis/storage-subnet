@@ -1,6 +1,6 @@
 # FileTAO
 
-[![Latest Version](https://img.shields.io/pypi/v/substrate-interface.svg)](https://pypi.org/project/filetao/)
+[![Latest Version](https://img.shields.io/pypi/v/filetao.svg)](https://pypi.org/project/filetao/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/filetao)](https://pypi.org/project/filetao)
 [![License](https://img.shields.io/pypi/l/filetao.svg)](https://github.com/ifrit98/storage-subnet/blob/master/LICENSE)
 
@@ -19,6 +19,9 @@ Currently supporting `python>=3.9,<3.11`.
 # Table of Contents for Subnet 21 (FileTAO)
 
 1. [FileTAO](#FileTAO)
+1. [Installation](#installation)
+   - [Install Redis](#install-redis)
+   - [Install PM2](#install-pm2)
 1. [Network Stats](#network-stats)
 1. [Storage CLI Interface](#storage-cli-interface)
    - [Overview](#overview)
@@ -46,9 +49,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Retrieval Phase](#retrieval-phase)
 1. [Reward System](#reward-system)
 1. [Epoch UID Selection](#epoch-uid-selection)
-1. [Installation](#installation)
-   - [Install Redis](#install-redis)
-   - [Install PM2](#install-pm2)
+1. [Running FileTao](#running-filetao)
    - [Running a Miner](#running-a-miner)
    - [Running a Validator](#running-a-validator)
    - [Running the API](#running-the-api)
@@ -107,6 +108,99 @@ decoded_hash == expected_hash
 
 ## Prerequisites
 Before using the Storage CLI, ensure that Bittensor is installed and your wallet (hotkey and coldkey) is properly configured.
+
+
+## Installation
+```bash
+git clone https://github.com/ifrit98/storage-subnet
+cd storage-subnet
+python -m pip install -e .
+```
+
+### Install Redis
+Install Redis on your host system.
+
+Linux [instructions](https://redis.io/docs/install/install-redis/install-redis-on-linux/)
+
+```bash
+sudo apt install lsb-release curl gpg
+
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
+```
+
+Ensure the local Redis server is started.
+
+```bash
+sudo systemctl status redis-server.service
+```
+
+You should see output like:
+```
+● redis-server.service - Advanced key-value store
+     Loaded: loaded (/lib/systemd/system/redis-server.service; disabled; vendor preset: enabled)
+     Active: active (running) since Thu 2023-11-16 22:35:42 EST; 3min 25s ago
+       Docs: http://redis.io/documentation,
+             man:redis-server(1)
+   Main PID: 31881 (redis-server)
+     Status: "Ready to accept connections"
+      Tasks: 5 (limit: 38370)
+     Memory: 2.9M
+        CPU: 387ms
+     CGroup: /system.slice/redis-server.service
+             └─31881 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""
+
+Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
+Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
+```
+
+#### Redis troubleshooting
+If you have problems with connecting to redis or it is not active for some reason, try:
+
+(1) Look for existing processes on the default redis port (6379)
+```
+sudo lsof -i:6379
+```
+
+If anything displays, like in the example below:
+
+```bash
+COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
+python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
+
+```
+
+Look for the process ID under `PID` and kill it
+
+```bash
+kill -9 <PID>
+
+#e.g.
+kill -9 961206
+```
+
+(2) Restarting the service
+```bash
+systemctl restart redis
+```
+
+### Install PM2
+This will allow you to use the process manager `pm2` for easily setting up your miner or validator.
+
+Install nodejs and npm
+```bash
+sudo apt install nodejs npm
+```
+
+Once this compeltes, install pm2 globally
+```bash
+sudo npm install pm2 -g
+```
+
 
 ## Commands
 
@@ -178,6 +272,20 @@ ftcli retrieve list --wallet.name mywallet
 ```
 
 ![list](assets/list.png)
+
+
+### Miner statistics
+
+If you are running a validator and have a locally running instance of Redis, you may use this command to view the miner statistics gathered. This command will display a list of all hotkeys and their associated statistics, such as `total successes`, `attempts` vs `successes` for each category, `tier`, `current storage`, and `total storage limit`.
+
+```bash
+ftcli miner stats --index 0
+```
+![stats](assets/miner_stats.png)
+
+#### Options
+- `--index <id>`: (Optional) Integer index of the Redis database (default: 0)
+
 
 ## General Options
 - `--help`: Displays help information about CLI commands and options.
@@ -327,75 +435,6 @@ In FileTAO's decentralized storage system, optimal behavior is crucial for the o
 
 Failing to pass either challenge or retrieval verifications incur negative rewards. This is doubly destructive, as rolling statistics are continuously logged to periodically compute which tier a given miner hotkey belongs to. When a miner achieves the threshold for the next tier, the rewards that miner recieves proportionally increase. Conversely, when a miner drops below the threshold of the previous tier, that miner's rewards are slashed such that they recieve rewards proportionally to the immediately lower tier.
 
-
-#### Tier System:
-The tier system classifies miners into five distinct categories, each with specific requirements and storage limits. These tiers are designed to reward miners based on their performance, reliability, and the total volume of data they can store.
-
-1. 🎇 **Super Saiyan Tier:** 
-   - **Storage Limit:** 1 Exabyte (EB)
-   - **Store Success Rate:** 99.9% (1/1000 chance of failure)
-   - **Retrieval Success Rate:** 99.9%
-   - **Challenge Success Rate:** 99.9%
-   - **Minimum Successes Required:** 100,000
-   - **Reward Factor:** 2.0 (200% rewards)
-
-2. 💎 **Diamond Tier:**
-   - **Storage Limit:** 1 Petabyte (PB)
-   - **Store Success Rate:** 99% (1/100 chance of failure)
-   - **Retrieval Success Rate:** 99%
-   - **Challenge Success Rate:** 99%
-   - **Minimum Successes Required:** 50,000
-   - **Reward Factor:** 1.0 (100% rewards)
-
-3. 🥇 **Gold Tier:**
-   - **Storage Limit:** 100 Terabytes (TB)
-   - **Store Success Rate:** 97.5% (1/50 chance of failure)
-   - **Retrieval Success Rate:** 97.5%
-   - **Challenge Success Rate:** 97.5%
-   - **Minimum Successes Required:** 5,000
-   - **Reward Factor:** 0.888 (88.8% rewards)
-
-4. 🥈 **Silver Tier:**
-   - **Storage Limit:** 10 Terabytes (TB)
-   - **Store Success Rate:** 95% (1/20 chance of failure)
-   - **Retrieval Success Rate:** 95%
-   - **Challenge Success Rate:** 95%
-   - **Minimum Successes Required:** 1,000
-   - **Reward Factor:** 0.555 (55.5% rewards)
-
-5. 🥉 **Bronze Tier:**
-   - **Storage Limit:** 1 Terabyte (TB)
-   - **Store Success Rate:** Not specifically defined for this tier
-   - **Retrieval Success Rate:** Not specifically defined for this tier
-   - **Challenge Success Rate:** Not specifically defined for this tier
-   - **Minimum Successes Required:** Not specifically defined for this tier
-   - **Reward Factor:** 0.333 (33.3% rewards)
-
-#### Importance of Tier System:
-- **Encourages High Performance:** Higher tiers reward miners with greater benefits, motivating them to maintain high success rates.
-- **Enhances Network Reliability:** The tier system ensures that only the most reliable and efficient miners handle significant volumes of data, enhancing the overall reliability of the network.
-- **Fair Reward Distribution:** The reward factors are proportional to the miners' tier, ensuring a fair distribution of rewards based on performance.
-
-#### Maintaining and Advancing Tiers:
-- To advance to a higher tier, miners must consistently achieve the required success rates in their operations.
-- Periodic evaluations are conducted to ensure miners maintain the necessary performance standards to stay in their respective tiers.
-- Advancing to a higher tier takes time. In order to ascend to the first higher tier (Silver), it takes at least 1000 sucessful requests, whether they are challenge requests, store requests, or retrie requests and must maintain a 95% success rate in all categories. 
-- Depending on how often a miner is queried, how many validators are operating at one given time, and primarily the performance of the miner, this can take several hours to several days. Assuming full 64 validator slots are occupied, this should take a matter of hours.
-
-Here is a distribution of UIDs queried over 1000 blocks based on block hash:
-![uid-dist](assets/uid_dist.png)
-
-Assuming perfect performance, that out of ~200 miner UIDs, each of which is queried rougly 34 times every 1000 rounds, namely a 3.4% chance every query round, one can expect to reach the next tier within 
-
-```bash
-hours = total_successes / prob_of_query_per_round * time_per_round / 3600
-hours = 98 # roughly 4 days at perfect performance (no challenge failures)
-```
-
-#### Conclusion:
-The tier system in FileTAO's decentralized storage network plays a pivotal role in ensuring the network's efficiency and reliability. By setting clear performance benchmarks and rewarding miners accordingly, the system fosters a competitive yet fair environment. This encourages continuous improvement among miners, ultimately leading to a robust and trustworthy decentralized storage solution.
-
-
 **Why Optimal Behavior Matters:**
 1. **Reliability:** Miners who consistently store, retrieve, and pass challenges with high success rates ensure the reliability and integrity of the network.
 2. **Trust:** High-performing miners build trust in the network, attracting more users and increasing the overall value of the system.
@@ -413,9 +452,97 @@ The tier system in FileTAO's decentralized storage network plays a pivotal role 
 **Graphical Representation:**
 - The graph below illustrates how rewards increase as miners advance through the tiers. It visually represents the potential growth in earnings as miners optimize their operations and maintain high standards of performance.
 
-![bond-curve](assets/bonding.jpg)
+<div align="center">
+   <img src="assets/reward-tiers-vert.png" alt="Bonding Curves" width="650"/>
+</div>
 
-The tier-based reward system is designed to promote optimal behavior among miners, ensuring the health and efficiency of the decentralized storage network. By aligning miners' interests with those of the network, we create a robust, trustworthy, and efficient storage solution.
+#### Tier System:
+The tier system classifies miners into five distinct categories, each with specific requirements and storage limits. These tiers are designed to reward miners based on their performance, reliability, and the total volume of data they can store.
+
+Importance of Tier System:
+- **Encourages High Performance:** Higher tiers reward miners with greater benefits, motivating them to maintain high success rates.
+- **Enhances Network Reliability:** The tier system ensures that only the most reliable and efficient miners handle significant volumes of data, enhancing the overall reliability of the network.
+- **Fair Reward Distribution:** The reward factors are proportional to the miners' tier, ensuring a fair distribution of rewards based on performance.
+
+1. 🎇 **Super Saiyan Tier:** 
+   - **Storage Limit:** 1 Exabyte (EB)
+   - **Store Success Rate:** 99.9% (1/1000 chance of failure)
+   - **Retrieval Success Rate:** 99.9%
+   - **Challenge Success Rate:** 99.9%
+   - **Minimum Successes Required:** 100,000
+   - **Reward Factor:** 1.0 (100% rewards)
+
+2. 💎 **Diamond Tier:**
+   - **Storage Limit:** 1 Petabyte (PB)
+   - **Store Success Rate:** 99% (1/100 chance of failure)
+   - **Retrieval Success Rate:** 99%
+   - **Challenge Success Rate:** 99%
+   - **Minimum Successes Required:** 50,000
+   - **Reward Factor:** 0.888 (88.8% rewards)
+
+3. 🥇 **Gold Tier:**
+   - **Storage Limit:** 100 Terabytes (TB)
+   - **Store Success Rate:** 97.5% (1/50 chance of failure)
+   - **Retrieval Success Rate:** 97.5%
+   - **Challenge Success Rate:** 97.5%
+   - **Minimum Successes Required:** 5,000
+   - **Reward Factor:** 0.777 (77.7% rewards)
+
+4. 🥈 **Silver Tier:**
+   - **Storage Limit:** 10 Terabytes (TB)
+   - **Store Success Rate:** 95% (1/20 chance of failure)
+   - **Retrieval Success Rate:** 95%
+   - **Challenge Success Rate:** 95%
+   - **Minimum Successes Required:** 1,000
+   - **Reward Factor:** 0.555 (55.5% rewards)
+
+5. 🥉 **Bronze Tier:**
+   - **Storage Limit:** 1 Terabyte (TB)
+   - **Store Success Rate:** Not specifically defined for this tier
+   - **Retrieval Success Rate:** Not specifically defined for this tier
+   - **Challenge Success Rate:** Not specifically defined for this tier
+   - **Minimum Successes Required:** Not specifically defined for this tier
+   - **Reward Factor:** 0.444 (44.4% rewards)
+
+#### Maintaining and Advancing Tiers:
+- To advance to a higher tier, miners must consistently achieve the required success rates in their operations.
+- Periodic evaluations are conducted to ensure miners maintain the necessary performance standards to stay in their respective tiers.
+- Advancing to a higher tier takes time. In order to ascend to the first higher tier (Silver), it takes at least 1000 sucessful requests, whether they are challenge requests, store requests, or retrie requests and must maintain a 95% success rate in all categories. 
+- Depending on how often a miner is queried, how many validators are operating at one given time, and primarily the performance of the miner, this can take several hours to several days. Assuming full 64 validator slots are occupied, this should take a matter of hours.
+
+Here is a distribution of UIDs queried over 1000 blocks based on block hash:
+![uid-dist](assets/uid_dist.png)
+
+Assuming perfect performance, that out of ~200 miner UIDs, each of which is queried rougly 34 times every 1000 rounds, namely a 3.4% chance every query round, one can expect to reach the next tier within 
+
+```bash
+hours = total_successes / prob_of_query_per_round * time_per_round / 3600
+hours = 98 # roughly 4 days at perfect performance (no challenge failures)
+```
+
+#### Periodic Statistics Rollover
+
+Statistics for `store_successes/attempts`, `challenge_attempts/successes`, and `retrieve_attempts/successes` are reset every epoch, while the `total_successes` are carried over for accurate tier computation. This "sliding window" of the previous 360 blocks of `N` successes vs `M` attempts effectively resets the `N / M`ratio. This facilitates a less punishing tier calculation for early failures that then have to be "outpaced", while simultaneously discouraging grandfathering in of older miners who were able to succeed early and cement their status in a higher tier. The net effect is greater mobility across the tiers, keeping the network competitive while incentivizing reliability and consistency.
+
+For example:
+```bash
+# Initial 10 challenges failed
+
+# 10 early failures really punishing this miner even after 90 perfect attempts in a row
+total_successes = 1200
+challenge_successes = 90
+challenge_attempts = 100
+ratio = 0.9 # won't qualify for silver, would take 100 more perfect requests
+
+# Resets after 1 epoch
+challenge_successes = 0
+challenge_attempts = 0
+
+# At the end of the following epoch, missed only 1 challenge
+challenge_attempts = 29
+challenge_successes = 30
+ratio = 0.967 # now qualifies for silver, only took 30 more requests and allowed 1 failure
+```
 
 ### Speed and Reliability in Decentralized Storage Mining
 
@@ -431,9 +558,30 @@ In the context of FileTAO's decentralized storage system, speed and reliability 
 2. **Challenge Success Rate:** A high success rate in passing challenges signifies a miner's reliability. It shows their commitment to maintaining the network's integrity and their capability to meet the required standards.
 3. **Tier Advancement and Stability:** Reliable miners have a better chance of advancing to higher tiers and maintaining their position. This stability is rewarded with increased earning potential and recognition within the network.
 
-#### Reward Scaling Mechanisms:
-1. **Sigmoid and Min-Max Scaling:** The reward scaling is based on response times, using either an adjusted sigmoid function or min-max normalization. This approach rewards faster and more reliable miners, aligning their incentives with the network's goals.
-2. **Tier-Based Reward Factors:** Each tier has an associated reward factor, which determines the proportion of rewards received by the miner. Higher tiers, achieved through consistent performance, offer greater rewards.
+#### Reward Scaling Mechanism:
+1. **Sigmoid Scaling:** The reward scaling is based on response times, using an adjustable sigmoid function across response times. This approach rewards faster and more reliable miners, aligning their incentives with the network's goals.
+
+The sigmoid function is modified to incentivize faster response times while still sufficiently rewarding proper behavior. See the curve below:
+![sigmoid](assets/sigmoid-scale.png)
+
+2. **Tier-Based Reward Factors:** Each tier has an associated reward factor, which determines the proportion of rewards received by the miner. Higher tiers, achieved through consistent performance, offer greater rewards. Miner rewards and punishments are symmetrically scaled by their tier. Miners who have a lower tier are penalized proportionally less than miners who have a higher tier. This encourages top miners to have higher success rates, and allows for lower tier miners the ability to work their way up the ladder.
+
+e.g.
+```python
+reward = 1.0 * TIER_FACTOR if task_successful else TASK_NEGATIVE_REWARD * TIER_FACTOR
+
+# For Bronze and challenges
+reward = 1.0 * 0.444 if challenge_successful else -0.05 * 0.444
+reward
+> 0.444 | -0.0222 # lighter punishment for lower tier failure
+
+# However for Gold
+reward = 1.0 * 0.777 if challenge_successful else -0.05 * 0.777
+reward
+> 0.777 | -0.03885 # harsher punishment for higher tier failure
+```
+
+The tier system in FileTAO's decentralized storage network plays a pivotal role in ensuring the network's efficiency and reliability. By setting clear performance benchmarks and rewarding miners accordingly, the system fosters a competitive yet fair environment. This encourages continuous improvement among miners, ultimately leading to a robust and trustworthy decentralized storage solution.
 
 
 ## Epoch UID selection
@@ -450,96 +598,9 @@ miner_uids
 >>> [0, 4, 9] # Only these miners are allowed to be challenged this round (3 blocks, ~36 sec)
 ```
 
-## Installation
-```bash
-git clone https://github.com/ifrit98/storage-subnet
-cd storage-subnet
-python -m pip install -e .
-```
 
-### Install Redis
-Install Redis on your host system.
-
-Linux [instructions](https://redis.io/docs/install/install-redis/install-redis-on-linux/)
-
-```bash
-sudo apt install lsb-release curl gpg
-
-curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
-
-sudo apt-get update
-sudo apt-get install redis
-```
-
-Ensure the local Redis server is started.
-
-```bash
-sudo systemctl status redis-server.service
-```
-
-You should see output like:
-```
-● redis-server.service - Advanced key-value store
-     Loaded: loaded (/lib/systemd/system/redis-server.service; disabled; vendor preset: enabled)
-     Active: active (running) since Thu 2023-11-16 22:35:42 EST; 3min 25s ago
-       Docs: http://redis.io/documentation,
-             man:redis-server(1)
-   Main PID: 31881 (redis-server)
-     Status: "Ready to accept connections"
-      Tasks: 5 (limit: 38370)
-     Memory: 2.9M
-        CPU: 387ms
-     CGroup: /system.slice/redis-server.service
-             └─31881 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""
-
-Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
-Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
-```
-
-#### Redis troubleshooting
-If you have problems with connecting to redis or it is not active for some reason, try:
-
-(1) Look for existing processes on the default redis port (6379)
-```
-sudo lsof -i:6379
-```
-
-If anything displays, like in the example below:
-
-```bash
-COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
-python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
-
-```
-
-Look for the process ID under `PID` and kill it
-
-```bash
-kill -9 <PID>
-
-#e.g.
-kill -9 961206
-```
-
-(2) Restarting the service
-```bash
-systemctl restart redis
-```
-
-### Install PM2
-This will allow you to use the process manager `pm2` for easily setting up your miner or validator.
-
-Install nodejs and npm
-```bash
-sudo apt install nodejs npm
-```
-
-Once this compeltes, install pm2 globally
-```bash
-sudo npm install pm2 -g
-```
+## Running FileTao
+FileTao is made up of both miners and validators, both of which are responsible for proper functioning of the network. Miners are the nodes that store and provide data availability, while validators are indexers and verifier nodes who challenge the miners to ensure the health and consistency of the network.
 
 
 ### Running a miner
@@ -631,6 +692,12 @@ Migrating database from ~/.data to ~/.new_data_path ...
 2023-12-28 21:16:25.943 |     SUCCESS      | All data was migrated to the new directory.
 ```
 
+> NOTE: If you are transferring data to a new server, you will need to modify the `rsync` command found in `scripts/migrate_database_directory.sh` to point to the new server.
+
+E.g.
+```bash
+rsync -avz /path/to/source/file user@remote_host:/path/to/destination/
+```
 
 ### Running a validator
 ```bash

@@ -44,7 +44,7 @@ SILVER_STORE_SUCCESS_RATE = 0.95  # 1/20 chance of failure
 SILVER_RETRIEVAL_SUCCESS_RATE = 0.95  # 1/20 chance of failure
 SILVER_CHALLENGE_SUCCESS_RATE = 0.95  # 1/20 chance of failure
 
-SUPER_SAIYAN_TIER_REWARD_FACTOR = 1.0  # Get 200% rewards
+SUPER_SAIYAN_TIER_REWARD_FACTOR = 1.0  # Get 100% rewards
 DIAMOND_TIER_REWARD_FACTOR = 0.888  # Get 88.8% rewards
 GOLD_TIER_REWARD_FACTOR = 0.777  # Get 77.7% rewards
 SILVER_TIER_REWARD_FACTOR = 0.555  # Get 55.5% rewards
@@ -158,9 +158,29 @@ async def update_statistics(
         if success:
             await database.hincrby(stats_key, f"{task_type}_successes", 1)
 
+    # Transition retireval -> retrieve successes (legacy)
+    legacy_retrieve_successes = await database.hget(stats_key, "retrieval_successes")
+    if legacy_retrieve_successes != None:
+        await database.hset(
+            stats_key, "retrieve_successes", int(legacy_retrieve_successes)
+        )
+        await database.hdel(stats_key, "retrieval_successes")
+
+    # Transition retireval -> retrieve attempts (legacy)
+    legacy_retrieve_attempts = await database.hget(stats_key, "retrieval_attempts")
+    if legacy_retrieve_attempts != None:
+        await database.hset(
+            stats_key, "retrieve_attempts", int(legacy_retrieve_attempts)
+        )
+        await database.hdel(stats_key, "retrieval_attempts")
+
     # Update the total successes that we rollover every epoch
     if await database.hget(stats_key, "total_successes") == None:
-        await database.hset(stats_key, "total_successes", 0)
+        store_successes = int(await database.hget(stats_key, "store_successes"))
+        challenge_successes = int(await database.hget(stats_key, "challenge_successes"))
+        retrieval_successes = int(await database.hget(stats_key, "retrieve_successes"))
+        total_successes = store_successes + retrieval_successes + challenge_successes
+        await database.hset(stats_key, "total_successes", total_successes)
     if success:
         await database.hincrby(stats_key, "total_successes", 1)
 
@@ -177,6 +197,22 @@ async def compute_tier(stats_key: str, database: aioredis.Redis):
     if not await database.exists(stats_key):
         bt.logging.warning(f"Miner key {stats_key} is not registered!")
         return
+
+    # Transition retireval -> retrieve successes (legacy)
+    legacy_retrieve_successes = await database.hget(stats_key, "retrieval_successes")
+    if legacy_retrieve_successes != None:
+        await database.hset(
+            stats_key, "retrieve_successes", int(legacy_retrieve_successes)
+        )
+        await database.hdel(stats_key, "retrieval_successes")
+
+    # Transition retireval -> retrieve attempts (legacy)
+    legacy_retrieve_attempts = await database.hget(stats_key, "retrieval_attempts")
+    if legacy_retrieve_attempts != None:
+        await database.hset(
+            stats_key, "retrieve_attempts", int(legacy_retrieve_attempts)
+        )
+        await database.hdel(stats_key, "retrieval_attempts")
 
     # Get the number of successful challenges
     challenge_successes = int(await database.hget(stats_key, "challenge_successes"))
@@ -203,9 +239,7 @@ async def compute_tier(stats_key: str, database: aioredis.Redis):
     total_successes = await database.hget(stats_key, "total_successes")
     if total_successes is None:
         # This value wasn't stored. Legacy miners will have this issue.
-        total_successes = (
-            store_success_rate + retrieval_success_rate + challenge_success_rate
-        )
+        total_successes = store_successes + retrieval_successes + challenge_successes
     total_successes = int(total_successes)
 
     if (

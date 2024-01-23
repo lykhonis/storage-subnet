@@ -87,7 +87,7 @@ async def forward(self):
                 hotkey_replaced=False,  # Don't delete challenge data (only in subscription handler)
             )
 
-    if self.step % self.config.neuron.compute_stats_interval == 0:
+    if self.step % self.config.neuron.compute_stats_interval == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
         await compute_all_tiers(self.database)
 
