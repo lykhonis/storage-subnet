@@ -66,6 +66,9 @@ from storage.miner.utils import (
     get_directory_size,
     get_free_disk_space,
     update_storage_stats,
+    load_request_log,
+    log_request,
+    RateLimiter,
 )
 
 from storage.miner.config import (
@@ -235,6 +238,9 @@ class miner:
         # Init the miner's storage usage tracker
         update_storage_stats(self)
 
+        self.rate_limiters = {}
+        self.request_log = load_request_log(self)
+
     def start_request_count_timer(self):
         """
         Initializes and starts a timer for tracking the number of requests received by the miner in an hour.
@@ -327,15 +333,26 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
-            # Ignore requests from unrecognized entities.
-            bt.logging.trace(
-                f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}"
+        self.request_log = log_request(synapse, self.request_log)
+
+        caller = synapse.dendrite.hotkey
+        if caller not in self.rate_limiters:
+            self.rate_limiters[caller] = RateLimiter(
+                self.config.miner.max_requests_per_window,
+                self.config.miner.rate_limit_window,
             )
+
+        if not self.rate_limiters[caller].is_allowed():
+            window = self.config.miner.max_requests_per_window
+            blocks = self.config.miner.rate_limit_window
+            reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
+            return True, reason
+
+        if caller not in self.metagraph.hotkeys:
+            bt.logging.trace(f"Blacklisting unrecognized hotkey {caller}")
             return True, "Unrecognized hotkey"
-        bt.logging.trace(
-            f"Not Blacklisting recognized hotkey {synapse.dendrite.hotkey}"
-        )
+
+        bt.logging.trace(f"Not Blacklisting recognized hotkey {caller}")
         return False, "Hotkey recognized!"
 
     def store_priority_fn(self, synapse: storage.protocol.Store) -> float:
@@ -395,15 +412,26 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
-            # Ignore requests from unrecognized entities.
-            bt.logging.trace(
-                f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}"
+        self.request_log = log_request(synapse, self.request_log)
+
+        caller = synapse.dendrite.hotkey
+        if caller not in self.rate_limiters:
+            self.rate_limiters[caller] = RateLimiter(
+                self.config.miner.max_requests_per_window,
+                self.config.miner.rate_limit_window,
             )
+
+        if not self.rate_limiters[caller].is_allowed():
+            window = self.config.miner.max_requests_per_window
+            blocks = self.config.miner.rate_limit_window
+            reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
+            return True, reason
+
+        if caller not in self.metagraph.hotkeys:
+            bt.logging.trace(f"Blacklisting unrecognized hotkey {caller}")
             return True, "Unrecognized hotkey"
-        bt.logging.trace(
-            f"Not Blacklisting recognized hotkey {synapse.dendrite.hotkey}"
-        )
+
+        bt.logging.trace(f"Not Blacklisting recognized hotkey {caller}")
         return False, "Hotkey recognized!"
 
     def challenge_priority_fn(self, synapse: storage.protocol.Challenge) -> float:
@@ -463,15 +491,26 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
-            # Ignore requests from unrecognized entities.
-            bt.logging.trace(
-                f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}"
+        self.request_log = log_request(synapse, self.request_log)
+
+        caller = synapse.dendrite.hotkey
+        if caller not in self.rate_limiters:
+            self.rate_limiters[caller] = RateLimiter(
+                self.config.miner.max_requests_per_window,
+                self.config.miner.rate_limit_window,
             )
+
+        if not self.rate_limiters[caller].is_allowed():
+            window = self.config.miner.max_requests_per_window
+            blocks = self.config.miner.rate_limit_window
+            reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
+            return True, reason
+
+        if caller not in self.metagraph.hotkeys:
+            bt.logging.trace(f"Blacklisting unrecognized hotkey {caller}")
             return True, "Unrecognized hotkey"
-        bt.logging.trace(
-            f"Not Blacklisting recognized hotkey {synapse.dendrite.hotkey}"
-        )
+
+        bt.logging.trace(f"Not Blacklisting recognized hotkey {caller}")
         return False, "Hotkey recognized!"
 
     def retrieve_priority_fn(self, synapse: storage.protocol.Retrieve) -> float:

@@ -115,6 +115,24 @@ def add_args(cls, parser):
         default="cuda" if torch.cuda.is_available() else "cpu",
     )
     parser.add_argument("--miner.verbose", default=False, action="store_true")
+    parser.add_argument(
+        "--miner.request_log_name",
+        type=str,
+        help="Name of the request log file",
+        default="requests_log.json",
+    )
+    parser.add_argument(
+        "--miner.max_requests_per_window",
+        type=int,
+        help="Maximum number of requests per time window.",
+        default=50,
+    )
+    parser.add_argument(
+        "--miner.rate_limit_window",
+        type=int,
+        help="Time window in blocks for rate limiting.",
+        default=25,
+    )
 
     parser.add_argument(
         "--database.host", default="localhost", help="The host of the redis database."
