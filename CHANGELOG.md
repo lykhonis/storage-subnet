@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.6 / 2024-01-24
+
+## What's Changed
+* Create github action python-package.yml for testing purposes by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/93
+* add redis restart script and set env var password by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/104
+* Redis start script save passwd and use it to start redis if exists by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/106
+
+## New Contributors
+* @Rubberbandits made their first contribution in https://github.com/ifrit98/storage-subnet/pull/20
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/commits/v1.3.6
+
+
 ## 1.3.5 / 2024-01-18
 
 ## What's Changed
