@@ -144,6 +144,44 @@ kill -9 961206
 systemctl restart redis
 ```
 
+### Updating Redis Configuration
+
+#### Automated Redis Password Configuration
+To enhance security, our system now automatically generates a strong password for Redis. This is **REQUIRED**. This is handled by the `start_redis.sh` script. Follow these steps to set up Redis with an automated password:
+
+1. **Run the Redis Start Script**: 
+    ```bash
+    bash scripts/redis/start_redis.sh
+    ```
+    This script generates a secure password for Redis, attempts to shut down any running Redis instances, and then starts Redis with the new password.
+
+2. **Set `REDIS_PASSWORD` Environment Variable**: 
+    The script will export the `REDIS_PASSWORD` environment variable. Ensure this variable is set in your environment where the Redis client is running.
+
+
+#### Redis Troubleshooting
+If you encounter issues with Redis, follow these steps:
+
+1. **Check for Existing Redis Processes**: 
+    Use `lsof` to look for processes using the default Redis port (6379).
+    ```bash
+    sudo lsof -i:6379
+    ```
+    If any processes are using this port, they will be listed.
+
+2. **Terminate Unwanted Redis Processes**: 
+    Find the PID under the `PID` column and terminate it using `kill`.
+    ```bash
+    kill -9 <PID>
+    # Example: kill -9 961206
+    ```
+
+3. **Restart the Redis Service**: 
+    If needed, restart the Redis service.
+    ```bash
+    systemctl restart redis
+    ```
+
 ### Install PM2
 This will allow you to use the process manager `pm2` for easily setting up your miner or validator.
 
