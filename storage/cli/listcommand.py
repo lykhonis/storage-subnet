@@ -131,6 +131,7 @@ class ListLocalHashes:
         r"""Lists hashes available to fetch data from the Bittensor network."""
 
         try:
+            # TODO: review if this is needed
             wallets = next(os.walk(os.path.expanduser(cli.config.wallet.path)))[1]
         except StopIteration:
             # No wallet files found.
