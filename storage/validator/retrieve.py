@@ -42,8 +42,8 @@ from storage.validator.database import (
 )
 from storage.validator.bonding import update_statistics, get_tier_factor
 
-from storage.network import ping_uids, ping_and_retry_uids
-from storage.reward import create_reward_vector
+from storage.validator.network import ping_uids, ping_and_retry_uids
+from storage.validator.reward import create_reward_vector
 
 
 async def handle_retrieve(self, uid):
