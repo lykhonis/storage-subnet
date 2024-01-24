@@ -17,7 +17,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
-import json
 import shutil
 import storage
 import wandb
@@ -26,7 +25,6 @@ import bittensor as bt
 
 from ..shared.ecc import (
     ecc_point_to_hex,
-    hex_to_ecc_point,
     hash_data,
 )
 from ..shared.merkle import (

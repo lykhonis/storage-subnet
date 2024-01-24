@@ -18,8 +18,6 @@
 
 import os
 import json
-import redis
-import aioredis
 import bittensor as bt
 
 
