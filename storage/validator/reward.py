@@ -132,25 +132,6 @@ def sigmoid_normalize(process_times, timeout):
     return adjusted_sigmoid_inverse(centered_times, steepness, shift)
 
 
-def min_max_normalize(times):
-    """
-    Normalizes the response times using Min-Max scaling.
-    Args:
-        times (List[float]): A list of response times.
-    Returns:
-        List[float]: Normalized response times scaled between 0 and 1.
-    """
-    if times == []:
-        return []
-    min_time = min(times)
-    max_time = max(times)
-    range_time = max_time - min_time
-    if range_time == 0:
-        # Avoid division by zero in case all times are the same
-        return [0.5 for _ in times]
-    return [(time - max_time) / range_time for time in times]
-
-
 def scale_rewards(uids, responses, rewards, timeout: float):
     """
     Scales the rewards for each axon based on their response times using sigmoid normalization.
@@ -190,7 +171,7 @@ def apply_reward_scores(self, uids, responses, rewards, timeout: float):
     """
     Adjusts the moving average scores for a set of UIDs based on their response times and reward values.
 
-    This should reflect the distribution of axon response times (minmax norm)
+    This should reflect the distribution of axon response times (softmax norm)
 
     Parameters:
         uids (List[int]): A list of UIDs for which rewards are being applied.
