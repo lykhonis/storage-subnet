@@ -20,14 +20,12 @@
 import torch
 import wandb
 import copy
-import math
-import hashlib as rpccheckhealth
 
 from loguru import logger
 from dataclasses import asdict
-from typing import Callable, Any
 
-import storage
+from storage import __version__ as THIS_VERSION
+from storage import __spec_version__ as THIS_SPEC_VERSION
 import storage.validator as validator
 from storage.validator.event import EventSchema
 
@@ -47,8 +45,8 @@ def init_wandb(self, reinit=False):
     """Starts a new wandb run."""
     tags = [
         self.wallet.hotkey.ss58_address,
-        storage.__version__,
-        str(storage.__spec_version__),
+        THIS_VERSION,
+        str(THIS_SPEC_VERSION),
         f"netuid_{self.metagraph.netuid}",
     ]
 
