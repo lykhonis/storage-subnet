@@ -107,7 +107,7 @@ def get_sorted_response_times(uids, responses, timeout: float):
         (
             uids[idx],
             response.dendrite.process_time
-            if response.dendrite.process_time != None
+            if response.dendrite.process_time is not None
             else timeout,
         )
         for idx, response in enumerate(responses)
