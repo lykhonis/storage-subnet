@@ -87,16 +87,12 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
     bt.logging.trace(f"Challenge data: {pformat(data)}")
 
     try:
-        chunk_size = (
-            self.config.neuron.override_chunk_size
-            if self.config.neuron.override_chunk_size > 0
-            else get_random_chunksize(
-                minsize=self.config.neuron.min_chunk_size,
-                maxsize=max(
-                    self.config.neuron.min_chunk_size,
-                    data["size"] // self.config.neuron.chunk_factor,
-                ),
-            )
+        chunk_size = get_random_chunksize(
+            minsize=self.config.neuron.min_chunk_size,
+            maxsize=max(
+                self.config.neuron.min_chunk_size,
+                data["size"] // self.config.neuron.chunk_factor,
+            ),
         )
     except:
         bt.logging.error(
@@ -131,7 +127,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
         [axon],
         synapse,
         deserialize=True,
-        timeout=self.config.neuron.challenge_timeout,
+        timeout=30,
     )
     verified = verify_challenge_with_seed(response[0], synapse.seed)
 
@@ -247,8 +243,7 @@ async def challenge_data(self):
         uids,
         responses,
         rewards,
-        timeout=self.config.neuron.challenge_timeout,
-        mode=self.config.neuron.reward_mode,
+        timeout=30,
     )
 
     # Determine the best UID based on rewards

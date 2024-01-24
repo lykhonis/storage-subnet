@@ -424,10 +424,7 @@ class neuron:
 
                 # --- Wait until next epoch.
                 current_block = self.subtensor.get_current_block()
-                while (
-                    current_block - self.prev_step_block
-                    < self.config.neuron.blocks_per_step
-                ):
+                while current_block - self.prev_step_block < 3:
                     # --- Wait for next bloc.
                     time.sleep(1)
                     current_block = self.subtensor.get_current_block()

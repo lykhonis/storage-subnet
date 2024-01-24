@@ -82,7 +82,7 @@ async def handle_retrieve(self, uid):
         [axon],
         synapse,
         deserialize=False,
-        timeout=self.config.neuron.retrieve_timeout,
+        timeout=60,
     )
 
     try:
@@ -248,8 +248,7 @@ async def retrieve_data(
         uids,
         [response_tuple[0] for response_tuple in response_tuples],
         rewards,
-        timeout=self.config.neuron.retrieve_timeout,
-        mode=self.config.neuron.reward_mode,
+        timeout=60,
     )
 
     # Determine the best UID based on rewards
@@ -311,7 +310,7 @@ async def retrieve_broadband(self, full_hash: str):
             axons,
             synapse,
             deserialize=False,
-            timeout=self.config.api.retrieve_timeout,
+            timeout=60,
         )
 
         # Compute the rewards for the responses given proc time.
@@ -338,8 +337,7 @@ async def retrieve_broadband(self, full_hash: str):
             uids,
             responses,
             rewards,
-            timeout=self.config.neuron.retrieve_timeout,
-            mode=self.config.neuron.reward_mode,
+            timeout=60,
         )
 
         # Determine the best UID based on rewards
