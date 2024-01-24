@@ -99,4 +99,4 @@ def chunk_data(data: bytes, chunksize: int) -> List[bytes]:
         ValueError: If 'chunksize' is less than or equal to 0.
     """
     for i in range(0, len(data), chunksize):
-        yield data[i : i + chunksize]
+        yield data[i: i + chunksize]
