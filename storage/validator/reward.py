@@ -17,23 +17,20 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-import sys
 import torch
 import numpy as np
 import bittensor as bt
 from bittensor import Synapse
-from pprint import pformat
 from typing import Union, List
 from functools import partial
 
-from .verify import (
+from storage.validator.verify import (
     verify_store_with_seed,
     verify_challenge_with_seed,
     verify_retrieve_with_seed,
 )
-from .database import add_metadata_to_hotkey
-from .bonding import update_statistics, get_tier_factor
-from .event import EventSchema
+from storage.validator.bonding import update_statistics, get_tier_factor
+from storage.validator.event import EventSchema
 
 from storage.constants import (
     STORE_FAILURE_REWARD,
