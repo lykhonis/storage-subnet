@@ -149,10 +149,19 @@ class neuron:
         self.current_block = self.subtensor.get_current_block()
 
         # Setup database
+        redis_password = os.getenv("REDIS_PASSWORD")
+        if redis_password is None:
+            bt.logging.error(
+                "No Redis password set in `REDIS_PASSWORD` environment variable. "
+                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
+            )
+            exit(1)
+
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
+            password=redis_password,
         )
         self.db_semaphore = asyncio.Semaphore()
 
