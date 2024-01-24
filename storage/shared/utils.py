@@ -17,9 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import json
-import torch
 import base64
-import random
 import aioredis
 from typing import List, Union
 
@@ -81,7 +79,7 @@ def b64_decode(data: bytes, decode_hex: bool = False, encrypted: bool = False):
                 if isinstance(decoded_data, list)
                 else {k: bytes.fromhex(v) for k, v in decoded_data.items()}
             )
-        except:
+        except: # TODO: do not use bare except
             pass
     return decoded_data
 
