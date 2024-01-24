@@ -173,13 +173,13 @@ def run(self):
         nonlocal checked_extrinsics_count
         nonlocal should_retry
 
-        if last_extrinsic_hash != None:
+        if last_extrinsic_hash is not None:
             try:
                 receipt = block_handler_substrate.retrieve_extrinsic_by_hash(
                     block_hash, last_extrinsic_hash
                 )
                 bt.logging.debug(
-                    f"Last set-weights call: {'Success' if receipt.is_success else format('Failure, reason: %s', receipt.error_message['name'] if receipt.error_message != None else 'nil')}"
+                    f"Last set-weights call: {'Success' if receipt.is_success else format('Failure, reason: %s', receipt.error_message['name'] if receipt.error_message is not None else 'nil')}"
                 )
 
                 should_retry = False
