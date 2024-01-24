@@ -15,6 +15,7 @@
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
+import json
 import time
 import wandb
 import bittensor as bt
@@ -194,6 +195,13 @@ def run(self):
                     checked_extrinsics_count = 0
 
         if ((current_block + netuid + 1) % (tempo + 1) == 0) or should_retry:
+            bt.logging.info("Saving request log")
+            try:
+                with open(self.config.miner.request_log_path, "w") as f:
+                    json.dump(self.request_log, f)
+            except Exception as e:
+                bt.logging.error(f"Unable to save request log to disk {e}")
+
             bt.logging.info(
                 f"New epoch started, setting weights at block {current_block}"
             )

@@ -401,7 +401,7 @@ async def get_available_query_miners(
             if not await hotkey_at_capacity(self.metagraph.hotkeys[uid], self.database)
         ]
         bt.logging.debug(f"available uids nonfull: {muids_nonfull}")
-    return get_pseudorandom_uids(self, muids, k=k)
+    return [4]  # get_pseudorandom_uids(self, muids, k=k)
 
 
 def get_current_validator_uid_pseudorandom(self):

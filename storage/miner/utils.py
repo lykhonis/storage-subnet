@@ -18,11 +18,13 @@
 
 import os
 import json
+import time
 import shutil
 import storage
 import wandb
 import copy
 import bittensor as bt
+from collections import deque
 
 from ..shared.ecc import (
     ecc_point_to_hex,
@@ -316,15 +318,16 @@ class RateLimiter:
         self.time_window = time_window
         self.requests = deque()
 
-    def is_allowed(self, current_time=None):
-        if current_time is None:
-            current_time = time.time()
-
-        while self.requests and current_time - self.requests[0] > self.time_window:
+    def is_allowed(self, caller):
+        current_time = time.time()
+        while (
+            self.requests
+            and current_time - self.requests[0]["timestamp"] > self.time_window
+        ):
             self.requests.popleft()
 
         if len(self.requests) < self.max_requests:
-            self.requests.append(current_time)
+            self.requests.append({"caller": caller, "timestamp": current_time})
             return True
         else:
             return False

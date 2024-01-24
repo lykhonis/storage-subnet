@@ -239,7 +239,7 @@ class miner:
         update_storage_stats(self)
 
         self.rate_limiters = {}
-        self.request_log = load_request_log(self)
+        self.request_log = load_request_log(self.config.miner.request_log_path)
 
     def start_request_count_timer(self):
         """
@@ -336,13 +336,18 @@ class miner:
         self.request_log = log_request(synapse, self.request_log)
 
         caller = synapse.dendrite.hotkey
+        if caller in self.config.blacklist.blacklist_hotkeys:
+            return True, f"Hotkey {caller} in blacklist."
+        elif caller in self.config.blacklist.whitelist_hotkeys:
+            return False, f"Hotkey {caller} in whitelist."
+
         if caller not in self.rate_limiters:
             self.rate_limiters[caller] = RateLimiter(
                 self.config.miner.max_requests_per_window,
                 self.config.miner.rate_limit_window,
             )
 
-        if not self.rate_limiters[caller].is_allowed():
+        if not self.rate_limiters[caller].is_allowed(caller):
             window = self.config.miner.max_requests_per_window
             blocks = self.config.miner.rate_limit_window
             reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
@@ -415,13 +420,18 @@ class miner:
         self.request_log = log_request(synapse, self.request_log)
 
         caller = synapse.dendrite.hotkey
+        if caller in self.config.blacklist.blacklist_hotkeys:
+            return True, f"Hotkey {caller} in blacklist."
+        elif caller in self.config.blacklist.whitelist_hotkeys:
+            return False, f"Hotkey {caller} in whitelist."
+
         if caller not in self.rate_limiters:
             self.rate_limiters[caller] = RateLimiter(
                 self.config.miner.max_requests_per_window,
                 self.config.miner.rate_limit_window,
             )
 
-        if not self.rate_limiters[caller].is_allowed():
+        if not self.rate_limiters[caller].is_allowed(caller):
             window = self.config.miner.max_requests_per_window
             blocks = self.config.miner.rate_limit_window
             reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
@@ -494,13 +504,18 @@ class miner:
         self.request_log = log_request(synapse, self.request_log)
 
         caller = synapse.dendrite.hotkey
+        if caller in self.config.blacklist.blacklist_hotkeys:
+            return True, f"Hotkey {caller} in blacklist."
+        elif caller in self.config.blacklist.whitelist_hotkeys:
+            return False, f"Hotkey {caller} in whitelist."
+
         if caller not in self.rate_limiters:
             self.rate_limiters[caller] = RateLimiter(
                 self.config.miner.max_requests_per_window,
                 self.config.miner.rate_limit_window,
             )
 
-        if not self.rate_limiters[caller].is_allowed():
+        if not self.rate_limiters[caller].is_allowed(caller):
             window = self.config.miner.max_requests_per_window
             blocks = self.config.miner.rate_limit_window
             reason = f"Caller {caller} rate limited. Exceeded {window} requests in {blocks} blocks."
