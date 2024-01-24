@@ -185,7 +185,7 @@ def run(self):
                 should_retry = False
                 last_extrinsic_hash = None
                 checked_extrinsics_count = 0
-            except Exception as e:
+            except Exception:
                 checked_extrinsics_count += 1
                 bt.logging.debug(f"An error occurred, extrinsic not found in block.")
             finally:
