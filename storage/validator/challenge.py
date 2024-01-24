@@ -16,18 +16,10 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
-import sys
-import copy
-import json
 import time
 import torch
-import base64
 import typing
 import asyncio
-import aioredis
-import argparse
-import traceback
 import bittensor as bt
 
 from pprint import pformat
@@ -98,7 +90,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
                 ),
             )
         )
-    except:
+    except: # TODO: do not use bare except
         bt.logging.error(
             f"Failed to get chunk size {self.config.neuron.min_chunk_size} | {self.config.neuron.chunk_factor} | {data['size'] // self.config.neuron.chunk_factor}"
         )
@@ -154,7 +146,7 @@ async def challenge_data(self):
         # Sort indices in descending order to avoid index out of range error
         sorted_indices = sorted(indices_to_remove, reverse=True)
         for index in sorted_indices:
-            tensor = torch.cat([tensor[:index], tensor[index + 1 :]])
+            tensor = torch.cat([tensor[:index], tensor[index + 1:]])
         return tensor
 
     event = EventSchema(
@@ -189,14 +181,14 @@ async def challenge_data(self):
 
     remove_reward_idxs = []
     for idx, (uid, (verified, response)) in enumerate(zip(uids, responses)):
-        response_dict = response[0].axon.dict() if response[0] != None else None
+        response_dict = response[0].axon.dict() if response[0] is not None else None
         bt.logging.trace(
             f"Challenge idx {idx} uid {uid} verified {verified} response {str(response_dict)}"
         )
 
         hotkey = self.metagraph.hotkeys[uid]
 
-        if verified == None:
+        if verified is None:
             # This hotkey was not found in the database, remove it from the rewards tensor
             bt.logging.debug(
                 f"Hotkey {hotkey} | uid {uid} not found in database. Removing from rewards tensor."
@@ -232,7 +224,7 @@ async def challenge_data(self):
     event.step_length = time.time() - start_time
 
     if len(responses) == 0:
-        bt.logging.debug(f"Received zero hashes from miners, returning event early.")
+        bt.logging.debug("Received zero hashes from miners, returning event early.")
         return event
 
     # Remove UIDs without hashes (don't punish new miners that have no challenges yet)
@@ -266,7 +258,7 @@ def _filter_verified_responses(uids, responses):
     not_none_responses = [
         (uid, response[0])
         for (uid, (verified, response)) in zip(uids, responses)
-        if verified != None
+        if verified is not None
     ]
 
     if len(not_none_responses) == 0:

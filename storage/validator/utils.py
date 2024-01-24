@@ -22,17 +22,14 @@ import time
 import torch
 import functools
 import numpy as np
-import multiprocessing
 import random as pyrandom
 
-from math import comb
 from Crypto.Random import random
 from itertools import combinations, cycle
-from typing import Dict, List, Any, Union, Optional, Tuple
+from typing import List, Union
 
-from ..shared.ecc import hex_to_ecc_point, ecc_point_to_hex, hash_data, ECCommitment
-from ..shared.merkle import MerkleTree
-from ..validator.database import hotkey_at_capacity
+from storage.shared.ecc import hash_data
+from storage.validator.database import hotkey_at_capacity
 
 import bittensor as bt
 
@@ -53,7 +50,7 @@ def chunk_data_generator(data, chunk_size):
         bytes: The next chunk of data.
     """
     for i in range(0, len(data), chunk_size):
-        yield data[i : i + chunk_size]
+        yield data[i: i + chunk_size]
 
 
 def generate_file_size_with_lognormal(
@@ -95,7 +92,7 @@ def make_random_file(name: str = None, maxsize: int = None) -> Union[bytes, str]
     """
     size = (
         random.randint(random.randint(24, 128), maxsize)
-        if maxsize != None
+        if maxsize is not None
         else generate_file_size_with_lognormal()
     )
     data = os.urandom(size)
@@ -616,7 +613,7 @@ def partition_uids(available_uids, R):
     Returns:
         list of tuples: A list where each tuple contains a unique group of UIDs.
     """
-    return [tuple(available_uids[i : i + R]) for i in range(0, len(available_uids), R)]
+    return [tuple(available_uids[i: i + R]) for i in range(0, len(available_uids), R)]
 
 
 def adjust_uids_to_multiple(available_uids, R):

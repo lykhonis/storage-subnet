@@ -19,25 +19,19 @@
 import os
 import time
 import torch
-import base64
-import typing
 import asyncio
 import aioredis
 import threading
-import traceback
 import bittensor as bt
 import subprocess
 from shlex import quote
 from copy import deepcopy
-from loguru import logger
 from pprint import pformat
 from traceback import print_exception
 from substrateinterface.base import SubstrateInterface
 
-from storage import protocol
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
-from storage.validator.utils import get_current_validtor_uid_round_robin
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -47,14 +41,12 @@ from storage.validator.state import (
     load_state,
     save_state,
     init_wandb,
-    log_event,
 )
 from storage.validator.weights import (
     set_weights_for_validator,
 )
 from storage.validator.database import purge_challenges_for_all_hotkeys
 from storage.validator.forward import forward
-from storage.validator.rebalance import rebalance_data
 from storage.validator.encryption import setup_encryption_wallet
 
 
@@ -237,7 +229,7 @@ class neuron:
                     current_block = self.subtensor.get_current_block()
 
                 time.sleep(5)
-                if not self.wallet.hotkey.ss58_address in self.metagraph.hotkeys:
+                if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
                     raise Exception(
                         f"Validator is not registered - hotkey {self.wallet.hotkey.ss58_address} not in metagraph"
                     )
@@ -269,11 +261,11 @@ class neuron:
                 )
                 bt.logging.debug(f"should checkpoint ? {should_checkpoint_validator}")
                 if should_checkpoint_validator:
-                    bt.logging.info(f"Checkpointing...")
+                    bt.logging.info("Checkpointing...")
                     checkpoint(self)
 
                 # Set the weights on chain.
-                bt.logging.info(f"Checking if should set weights")
+                bt.logging.info("Checking if should set weights")
                 validator_should_set_weights = should_set_weights(
                     get_current_block(self.subtensor),
                     prev_set_weights_block,
@@ -298,7 +290,7 @@ class neuron:
 
                 # Rollover wandb to a new run.
                 if should_reinit_wandb(self):
-                    bt.logging.info(f"Reinitializing wandb")
+                    bt.logging.info("Reinitializing wandb")
                     reinit_wandb(self)
 
                 self.prev_step_block = get_current_block(self.subtensor)

@@ -1,5 +1,8 @@
 import wandb
 from bittensor import logging as bt_logging
+from bittensor import subtensor
+from bittensor import wallet
+from torch import Tensor
 
 
 def should_wait_to_set_weights(current_block, last_epoch_block, tempo):
@@ -23,11 +26,11 @@ def should_set_weights(
 
 
 def set_weights(
-    subtensor: "bt.subtensor",
-    wallet: "bt.wallet",
+    subtensor: "subtensor",
+    wallet: "wallet",
     netuid: int,
-    uids: "torch.Tensor",
-    weights: "torch.Tensor",
+    uids: "Tensor",
+    weights: "Tensor",
     version_key: int,
     wandb_on: bool = False,
     wait_for_inclusion: bool = False,

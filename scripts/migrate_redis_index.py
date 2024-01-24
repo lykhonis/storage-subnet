@@ -16,7 +16,7 @@ async def main(args):
     r = aioredis.StrictRedis(db=args.database_index)
     failed_uids = await migrate_data_directory(r, new_directory, return_failures=True)
 
-    if failed_uids != None:
+    if failed_uids is not None:
         bt.logging.error(
             f"Failed to migrate {len(failed_uids)} filepaths to the new directory: {new_directory}."
         )
