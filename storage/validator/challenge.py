@@ -258,7 +258,7 @@ def _filter_verified_responses(uids, responses):
     not_none_responses = [
         (uid, response[0])
         for (uid, (verified, response)) in zip(uids, responses)
-        if verified != None
+        if verified is not None
     ]
 
     if len(not_none_responses) == 0:
