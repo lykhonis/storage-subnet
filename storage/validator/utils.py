@@ -50,7 +50,7 @@ def chunk_data_generator(data, chunk_size):
         bytes: The next chunk of data.
     """
     for i in range(0, len(data), chunk_size):
-        yield data[i : i + chunk_size]
+        yield data[i: i + chunk_size]
 
 
 def generate_file_size_with_lognormal(
@@ -92,7 +92,7 @@ def make_random_file(name: str = None, maxsize: int = None) -> Union[bytes, str]
     """
     size = (
         random.randint(random.randint(24, 128), maxsize)
-        if maxsize != None
+        if maxsize is not None
         else generate_file_size_with_lognormal()
     )
     data = os.urandom(size)
@@ -613,7 +613,7 @@ def partition_uids(available_uids, R):
     Returns:
         list of tuples: A list where each tuple contains a unique group of UIDs.
     """
-    return [tuple(available_uids[i : i + R]) for i in range(0, len(available_uids), R)]
+    return [tuple(available_uids[i: i + R]) for i in range(0, len(available_uids), R)]
 
 
 def adjust_uids_to_multiple(available_uids, R):
