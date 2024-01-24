@@ -171,7 +171,7 @@ class RetrieveData:
                 bittensor.logging.trace(f"response: {response.dendrite.dict()}")
                 if (
                     response.dendrite.status_code != 200
-                    or response.encrypted_data == None
+                    or response.encrypted_data is None
                 ):
                     continue
 
@@ -184,7 +184,7 @@ class RetrieveData:
                     f"encryption_payload: {response.encryption_payload}"
                 )
                 if (
-                    response.encryption_payload == None
+                    response.encryption_payload is None
                     or response.encryption_payload == ""
                     or response.encryption_payload == "{}"
                 ):
