@@ -181,14 +181,14 @@ async def challenge_data(self):
 
     remove_reward_idxs = []
     for idx, (uid, (verified, response)) in enumerate(zip(uids, responses)):
-        response_dict = response[0].axon.dict() if response[0] != None else None
+        response_dict = response[0].axon.dict() if response[0] is not None else None
         bt.logging.trace(
             f"Challenge idx {idx} uid {uid} verified {verified} response {str(response_dict)}"
         )
 
         hotkey = self.metagraph.hotkeys[uid]
 
-        if verified == None:
+        if verified is None:
             # This hotkey was not found in the database, remove it from the rewards tensor
             bt.logging.debug(
                 f"Hotkey {hotkey} | uid {uid} not found in database. Removing from rewards tensor."
