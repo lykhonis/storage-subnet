@@ -153,7 +153,7 @@ class neuron:
         if redis_password is None:
             bt.logging.error(
                 "No Redis password set in `REDIS_PASSWORD` environment variable. "
-                "Please set it by running `bash scripts/redis/start_redis.sh` and try again."
+                "Please set it by running `./scripts/redis/start_redis.sh` and try again."
             )
             exit(1)
 
