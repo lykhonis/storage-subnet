@@ -75,6 +75,7 @@ def runtime_call(
     runtime_call_def = substrate.runtime_config.type_registry["runtime_api"][api][
         "methods"
     ][method]
+    # TODO: review is this variable is needed
     runtime_api_types = substrate.runtime_config.type_registry["runtime_api"][api].get(
         "types", {}
     )
