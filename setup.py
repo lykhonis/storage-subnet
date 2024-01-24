@@ -45,6 +45,7 @@ def read_requirements(path):
 
 
 requirements = read_requirements("requirements.txt")
+extra_requirements_dev = read_requirements("requirements-dev.txt")
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
@@ -74,6 +75,7 @@ setup(
     python_requires=">=3.9,<3.11",
     scripts=["bin/ftcli"],
     install_requires=requirements,
+    extras_require={"dev": extra_requirements_dev},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
