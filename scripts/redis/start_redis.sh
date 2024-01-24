@@ -10,7 +10,7 @@ redis-cli shutdown
 
 sleep 5
 
-if lsof -i :6379; then
+if (sudo lsof -i :6379 | wc -l) > 1; then
     echo "Redis is still running. Attempting to force stop..."
     sudo kill $(sudo lsof -t -i :6379)
     sleep 5
