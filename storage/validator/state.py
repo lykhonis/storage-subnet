@@ -129,7 +129,7 @@ def resync_metagraph(self: "validator.neuron.neuron"):
         # If so, we need to add new hotkeys and moving averages.
         if len(self.moving_averaged_scores) < len(self.metagraph.hotkeys):
             bt.logging.info(
-                f"resync_metagraph() Metagraph has grown, adding new hotkeys and moving averages"
+                "resync_metagraph() Metagraph has grown, adding new hotkeys and moving averages"
             )
             # Update the size of the moving average scores.
             new_moving_average = torch.zeros((self.metagraph.n)).to(self.device)
