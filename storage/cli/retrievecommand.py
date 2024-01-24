@@ -17,7 +17,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
-import sys
 import json
 import torch
 import base64
@@ -28,14 +27,8 @@ from storage.validator.encryption import decrypt_data_with_private_key
 
 import bittensor
 
-from rich import print
-from rich.console import Console
-from rich.tree import Tree
-from typing import List, Optional
-from rich.align import Align
-from rich.table import Table
+from typing import List
 from rich.prompt import Prompt
-from tqdm import tqdm
 
 from .default_values import defaults
 
