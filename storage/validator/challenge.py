@@ -224,7 +224,7 @@ async def challenge_data(self):
     event.step_length = time.time() - start_time
 
     if len(responses) == 0:
-        bt.logging.debug(f"Received zero hashes from miners, returning event early.")
+        bt.logging.debug("Received zero hashes from miners, returning event early.")
         return event
 
     # Remove UIDs without hashes (don't punish new miners that have no challenges yet)
