@@ -16,16 +16,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import sys
-import base64
-import typing
-import asyncio
 import bittensor as bt
 
 from pprint import pformat
-from Crypto.Random import get_random_bytes, random
+from Crypto.Random import random
 
-from storage import protocol
 from storage.validator.database import get_ordered_metadata
 
 from .store import store_broadband
