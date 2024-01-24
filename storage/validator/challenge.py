@@ -16,18 +16,10 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
-import sys
-import copy
-import json
 import time
 import torch
-import base64
 import typing
 import asyncio
-import aioredis
-import argparse
-import traceback
 import bittensor as bt
 
 from pprint import pformat
