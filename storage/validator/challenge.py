@@ -90,7 +90,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
                 ),
             )
         )
-    except:
+    except: # TODO: do not use bare except
         bt.logging.error(
             f"Failed to get chunk size {self.config.neuron.min_chunk_size} | {self.config.neuron.chunk_factor} | {data['size'] // self.config.neuron.chunk_factor}"
         )
