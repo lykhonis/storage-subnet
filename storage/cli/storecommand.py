@@ -17,31 +17,24 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
-import sys
 import json
-import torch
 import base64
 import argparse
 
 import storage
 from storage.validator.encryption import encrypt_data
-from storage.shared.ecc import hash_data
 
 import bittensor
 
-from rich import print
-from rich.console import Console
-from rich.tree import Tree
-from typing import List, Optional
-from rich.align import Align
-from rich.table import Table
+from typing import List
 from rich.prompt import Prompt
-from tqdm import tqdm
 from storage.validator.utils import get_all_validators
+
+from .default_values import defaults
+
 
 bittensor.trace()
 
-from .default_values import defaults
 
 # Create a console instance for CLI display.
 console = bittensor.__console__
