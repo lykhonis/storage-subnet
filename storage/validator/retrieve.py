@@ -168,7 +168,7 @@ async def retrieve_data(
     ):
         hotkey = self.metagraph.hotkeys[uid]
 
-        if response == None:
+        if response is None:
             bt.logging.debug(f"No response: skipping retrieve for uid {uid}")
             continue  # We don't have any data for this hotkey, skip it.
 
