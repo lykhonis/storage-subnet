@@ -152,12 +152,22 @@ class miner:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
+        redis_password = os.getenv("REDIS_PASSWORD")
+        if redis_password is None:
+            bt.logging.error(
+                "No Redis password set in `REDIS_PASSWORD` environment variable. "
+                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
+            )
+            exit(1)
+
+        # Setup database
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
             socket_keepalive=True,
             socket_connect_timeout=300,
+            password=redis_password,
         )
 
         self.my_subnet_uid = self.metagraph.hotkeys.index(
