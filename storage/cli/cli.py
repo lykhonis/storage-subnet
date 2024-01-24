@@ -111,6 +111,7 @@ class cli:
         if not self.config.get("no_version_checking", d=True):
             try:
                 bittensor.utils.version_checking()
+            # TODO: replace bare except with 'expected' exceptions
             except:
                 # If version checking fails, inform user with an exception.
                 raise RuntimeError(
@@ -186,7 +187,7 @@ class cli:
             command = config.command
             command_data = COMMANDS[command]
             if isinstance(command_data, dict):
-                if config["subcommand"] != None:
+                if config["subcommand"] is not None:
                     command_data["commands"][config["subcommand"]].check_config(config)
                 else:
                     print(
