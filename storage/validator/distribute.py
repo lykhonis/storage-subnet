@@ -44,6 +44,7 @@ async def distribute_data(self, k: int):
         return
 
     full_hash = random.choice(full_hashes).decode("utf-8").split(":")[1]
+    # TODO: review if this variable is needed
     encryption_payload = await self.database.get(f"payload:{full_hash}")
     ordered_metadata = await get_ordered_metadata(full_hash, self.database)
 
