@@ -311,7 +311,7 @@ async def compute_all_tiers(database: aioredis.Redis):
     await asyncio.gather(*tasks)
 
     # Reset the statistics for the next epoch
-    bt.logging.info(f"Resetting statistics for all hotkeys...")
+    bt.logging.info("Resetting statistics for all hotkeys...")
     await rollover_storage_stats(database)
 
 
