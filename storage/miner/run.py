@@ -187,7 +187,7 @@ def run(self):
                 checked_extrinsics_count = 0
             except Exception:
                 checked_extrinsics_count += 1
-                bt.logging.debug(f"An error occurred, extrinsic not found in block.")
+                bt.logging.debug("An error occurred, extrinsic not found in block.")
             finally:
                 if checked_extrinsics_count >= 20:
                     should_retry = True
