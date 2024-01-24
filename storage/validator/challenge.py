@@ -146,7 +146,7 @@ async def challenge_data(self):
         # Sort indices in descending order to avoid index out of range error
         sorted_indices = sorted(indices_to_remove, reverse=True)
         for index in sorted_indices:
-            tensor = torch.cat([tensor[:index], tensor[index + 1 :]])
+            tensor = torch.cat([tensor[:index], tensor[index + 1:]])
         return tensor
 
     event = EventSchema(
