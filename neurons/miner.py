@@ -169,7 +169,7 @@ class miner:
         if redis_password is None:
             bt.logging.error(
                 "No Redis password set in `REDIS_PASSWORD` environment variable. "
-                "Please set it by running `./scripts/redis/start_redis.sh` and try again."
+                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
             )
             exit(1)
 
@@ -180,6 +180,7 @@ class miner:
             db=self.config.database.index,
             socket_keepalive=True,
             socket_connect_timeout=300,
+            password=redis_password,
         )
 
         self.my_subnet_uid = self.metagraph.hotkeys.index(
