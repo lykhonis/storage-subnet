@@ -16,12 +16,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import re
 import json
 import base64
-from redis import asyncio as aioredis
 import subprocess
+import bittensor as bt
 from typing import List, Union
+from redis import asyncio as aioredis
 
 
 async def safe_key_search(database: aioredis.Redis, pattern: str) -> List[str]:
@@ -81,7 +83,7 @@ def b64_decode(data: bytes, decode_hex: bool = False, encrypted: bool = False):
                 if isinstance(decoded_data, list)
                 else {k: bytes.fromhex(v) for k, v in decoded_data.items()}
             )
-        except: # TODO: do not use bare except
+        except:  # TODO: do not use bare except
             pass
     return decoded_data
 
@@ -101,7 +103,7 @@ def chunk_data(data: bytes, chunksize: int) -> List[bytes]:
         ValueError: If 'chunksize' is less than or equal to 0.
     """
     for i in range(0, len(data), chunksize):
-        yield data[i: i + chunksize]
+        yield data[i : i + chunksize]
 
 
 def get_redis_port():
@@ -116,11 +118,38 @@ def get_redis_port():
     """
 
     try:
-        result = subprocess.check_output(['sudo', 'systemctl', 'status', 'redis-server.service'], text=True)
-        match = re.search(r'(\d{1,3}\.){3}\d{1,3}:(\d+)', result)
+        result = subprocess.check_output(
+            ["sudo", "systemctl", "status", "redis-server.service"], text=True
+        )
+        match = re.search(r"(\d{1,3}\.){3}\d{1,3}:(\d+)", result)
         if match:
             return match.group(2)
         else:
             return "Redis server port not found in the service status."
     except subprocess.CalledProcessError as e:
         return "Failed to get Redis service status: " + str(e)
+
+
+def get_redis_password(
+    redis_password: str = None, redis_conf: str = "/etc/redis/redis.conf"
+) -> str:
+    redis_password = os.getenv("REDIS_PASSWORD") or redis_password
+    if redis_password is None:
+        try:
+            redis_password = subprocess.check_output(
+                ["sudo", "grep", "-Po", "^requirepass \K.*", redis_conf],
+                text=True,
+            ).strip()
+        except Exception as e:
+            bt.logging.error(
+                f"No Redis password set in Redis config file: {redis_conf}"
+            )
+    if redis_password == "" or redis_password is None:
+        bt.logging.error(
+            "Redis password not found! This must be set as either an env var `REDIS_PASSWORD`, passed via CLI in `--database.redis_pasword`, or parsed from /etc/redis/redis.conf."
+            "Please ensure it is set by running `. ./scripts/redis/set_redis_password.sh` and try again."
+            f"You may also run: `sudo grep -Po '^requirepass \K.*' {redis_conf}` to discover this manually and pass to the cli."
+        )
+        exit(1)
+
+    return redis_password

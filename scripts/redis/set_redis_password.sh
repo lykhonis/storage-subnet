@@ -7,7 +7,6 @@ generate_password() {
 REDIS_CONF="/etc/redis/redis.conf"
 
 REDIS_PASSWORD=$(generate_password)
-echo "Generated Redis Password: $REDIS_PASSWORD"
 
 # Backup the config file
 sudo cp $REDIS_CONF "${REDIS_CONF}.bak"
@@ -35,4 +34,6 @@ sudo systemctl status redis
 
 # Verify that the password was set in the configuration file
 echo "Password set in Redis config:"
-sudo grep -Po '^requirepass \K.*' $REDIS_CONF
+
+# Set the password as an environment variable for the current session
+export REDIS_PASSWORD=$(sudo grep -Po '^requirepass \K.*' $REDIS_CONF)

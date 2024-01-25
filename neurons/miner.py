@@ -40,7 +40,12 @@ from storage.shared.ecc import (
     hex_to_ecc_point,
 )
 
-from storage.shared.utils import b64_encode, chunk_data, safe_key_search
+from storage.shared.utils import (
+    b64_encode,
+    chunk_data,
+    safe_key_search,
+    get_redis_password,
+)
 
 from storage.miner import (
     run,
@@ -152,13 +157,7 @@ class miner:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
-        redis_password = os.getenv("REDIS_PASSWORD") or self.config.database.password
-        if redis_password is None:
-            bt.logging.error(
-                "No Redis password set in `REDIS_PASSWORD` environment variable or passed via config. "
-                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
-            )
-            exit(1)
+        redis_password = get_redis_password(self.config.database.redis_password)
 
         # Setup database
         self.database = aioredis.StrictRedis(

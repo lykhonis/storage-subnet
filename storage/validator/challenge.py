@@ -90,7 +90,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
                 ),
             )
         )
-    except: # TODO: do not use bare except
+    except:  # TODO: do not use bare except
         bt.logging.error(
             f"Failed to get chunk size {self.config.neuron.min_chunk_size} | {self.config.neuron.chunk_factor} | {data['size'] // self.config.neuron.chunk_factor}"
         )
@@ -146,7 +146,7 @@ async def challenge_data(self):
         # Sort indices in descending order to avoid index out of range error
         sorted_indices = sorted(indices_to_remove, reverse=True)
         for index in sorted_indices:
-            tensor = torch.cat([tensor[:index], tensor[index + 1:]])
+            tensor = torch.cat([tensor[:index], tensor[index + 1 :]])
         return tensor
 
     event = EventSchema(

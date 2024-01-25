@@ -144,19 +144,101 @@ kill -9 961206
 systemctl restart redis
 ```
 
-### Close external traffic to Redis (SECURITY)
 
-This section describes the usage of a Bash script designed to configure UFW (Uncomplicated Firewall) to manage access to port 6379. The script's primary function is to block all external traffic to port 6379, typically used by Redis, while allowing local processes (like a Python application) to access this port without restriction.
+## Installation
+```bash
+git clone https://github.com/ifrit98/storage-subnet
+cd storage-subnet
+python -m pip install -e .
+```
 
-#### Prerequisites
-- A Linux-based system with UFW installed.
-- Superuser (root) privileges are required to execute the script.
+### Install Redis
+Install Redis on your host system.
 
-#### Script Functionality
-- **Deny External Traffic**: Blocks all external inbound traffic to port 6379.
-- **Allow Local Traffic**: Permits unrestricted access to port 6379 from localhost (127.0.0.1), facilitating internal communication.
+Linux [instructions](https://redis.io/docs/install/install-redis/install-redis-on-linux/)
 
-#### Usage
+```bash
+sudo apt install lsb-release curl gpg
+
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
+```
+
+Ensure the local Redis server is started.
+
+```bash
+sudo systemctl status redis
+```
+
+You should see output like:
+```
+● redis-server.service - Advanced key-value store
+     Loaded: loaded (/lib/systemd/system/redis-server.service; disabled; vendor preset: enabled)
+     Active: active (running) since Thu 2023-11-16 22:35:42 EST; 3min 25s ago
+       Docs: http://redis.io/documentation,
+             man:redis-server(1)
+   Main PID: 31881 (redis-server)
+     Status: "Ready to accept connections"
+      Tasks: 5 (limit: 38370)
+     Memory: 2.9M
+        CPU: 387ms
+     CGroup: /system.slice/redis-server.service
+             └─31881 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""
+
+Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
+Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
+```
+
+#### Redis troubleshooting
+If you have problems with connecting to redis or it is not active for some reason, try:
+
+
+
+(1) Look for existing processes on the default redis port (6379)
+```
+sudo lsof -i:6379
+```
+
+If anything displays, like in the example below:
+
+```bash
+COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
+python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
+
+```
+
+Look for the process ID under `PID` and kill it
+
+```bash
+kill -9 <PID>
+
+#e.g.
+kill -9 961206
+```
+
+(2) Restarting the service
+```bash
+systemctl restart redis
+```
+
+
+### Secure Redis Configuration
+
+In order to securely run a node, whether a miner or validator, you must run ensure your redis instance is secure from the outside internet and is password-protected.
+
+The following steps are mandatory for secure communication on the network.
+
+#### Close external traffic to Redis 
+
+> Note: **EXPOSING THE REDIS PORT IS A MAJOR SECURITY RISK**
+
+This Bash script is designed to configure UFW (Uncomplicated Firewall) to manage access to default Redis port 6379. The script's primary function is to block all external traffic to port 6379, typically used by Redis, while allowing local processes to still access this port.
+
+##### Usage
 To run the script, use the following command in the terminal:
 ```bash
 sudo ./scripts/redis/close_redis_port.sh
@@ -167,25 +249,74 @@ Running this script will:
 - Set UFW rules to allow all local access to port 6379.
 - Apply the changes by reloading UFW.
 
-#### Important Considerations
+##### Important Considerations
 - **Test Before Production**: Always test the script in a controlled environment before deploying it in a production setting.
 - **Existing Rules**: If there are existing rules for port 6379, review the script to ensure compatibility.
 - **Firewall Management**: This script is specifically for systems using UFW. If another firewall management tool is in use, this script will not be compatible.
 
-
-### Updating Redis Configuration
-
 #### Automated Redis Password Configuration
-To enhance security, our system now automatically generates a strong password for Redis. This is **REQUIRED**. This is handled by the `start_redis.sh` script. Follow these steps to set up Redis with an automated password:
+To enhance security, our system now automatically generates a strong password for Redis. This is **REQUIRED**. This is handled by the `set_redis_password.sh` script. Follow these steps to set up Redis with an automated password:
 
 1. **Run the Redis Start Script**: 
     ```bash
-    bash scripts/redis/start_redis.sh
+    bash scripts/redis/set_redis_password.sh
     ```
     This script generates a secure password for Redis, attempts to shut down any running Redis instances, and then starts Redis with the new password.
 
 2. **Set `REDIS_PASSWORD` Environment Variable**: 
     The script will export the `REDIS_PASSWORD` environment variable. Ensure this variable is set in your environment where the Redis client is running.
+
+   To export your redis password generated in `./scripts/redis/set_redis_password.sh` as an environment variable at any time, run:
+   ```bash
+   REDIS_CONF="/etc/redis/redis.conf"
+   export REDIS_PASSWORD=$(sudo grep -Po '^requirepass \K.*' $REDIS_CONF)
+   ```
+
+3. **Test password successfully enabled**
+    Use the provided script `test_redis_require_pass.sh`
+    ```bash
+    bash ./scripts/redis/test_redis_require_pass.sh
+    ```
+
+#### Enable persistence
+If persistence is not enabled in your redis instance, it is **CRUCIAL** that this feature is used. Provided script `./scripts/redis/enable_persistence.sh` does exactly this.
+
+```bash
+bash ./scripts/redis/enable_persistence.sh
+```
+
+You can verify that this was done correctly by running another provided script to test this feature was enabled.
+```bash
+bash ./scripts/redis/test_persistence.sh
+```
+
+> Note these scripts and operations REQUIRE sudo
+
+
+#### Redis Troubleshooting
+If you encounter issues with Redis, follow these steps:
+
+1. **Check for Existing Redis Processes**: 
+    Use `lsof` to look for processes using the default Redis port (6379).
+    ```bash
+    sudo lsof -i:6379
+    ```
+    If any processes are using this port, they will be listed.
+
+2. **Terminate Unwanted Redis Processes**: 
+    Find the PID under the `PID` column and terminate it using `kill`.
+    ```bash
+    kill -9 <PID>
+    # Example: kill -9 961206
+    ```
+
+3. **Restart the Redis Service**: 
+    If needed, restart the Redis service.
+    ```bash
+    systemctl restart redis
+    ```
+
+> Note these scripts and operations REQUIRE sudo
 
 
 #### Redis Troubleshooting
