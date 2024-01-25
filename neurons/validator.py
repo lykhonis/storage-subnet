@@ -46,7 +46,6 @@ from storage.validator.state import (
 from storage.validator.weights import (
     set_weights_for_validator,
 )
-from storage.validator.database import purge_challenges_for_all_hotkeys
 from storage.validator.forward import forward
 from storage.validator.encryption import setup_encryption_wallet
 
@@ -197,15 +196,6 @@ class neuron:
 
     def run(self):
         bt.logging.info("run()")
-
-        if self.config.database.purge_challenges:
-            bt.logging.info("purging challenges")
-
-            async def run_purge():
-                await asyncio.gather(purge_challenges_for_all_hotkeys(self.database))
-
-            self.loop.run_until_complete(run_purge())
-            bt.logging.info("purged challenges.")
 
         load_state(self)
         checkpoint(self)

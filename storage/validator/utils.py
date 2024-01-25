@@ -797,3 +797,10 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
             "uids": uid_group,
             "chunk_index": i,
         }
+
+
+def get_current_epoch(subtensor, netuid=21):
+    registered_at = 2009702
+    blocks_since_registration = subtensor.get_current_block() - registered_at
+    current_epoch = blocks_since_registration // subtensor.tempo(netuid)
+    return current_epoch

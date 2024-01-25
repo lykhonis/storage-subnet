@@ -194,6 +194,12 @@ def add_args(cls, parser):
         help="Number of miners to challenge at a time. Target is ~90 miners per epoch.",
     )
     parser.add_argument(
+        "--neuron.purge_challenge_length",
+        type=int,
+        default=10,
+        help="Number of epochs before purging all challenges.",
+    )
+    parser.add_argument(
         "--neuron.retrieve_step_length",
         type=int,
         default=5,
