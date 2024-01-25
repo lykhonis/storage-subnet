@@ -142,8 +142,8 @@ class neuron:
         self.current_block = self.subtensor.get_current_block()
 
         # Setup database
+        bt.logging.info("loading database")
         redis_password = get_redis_password(self.config.database.redis_password)
-
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
