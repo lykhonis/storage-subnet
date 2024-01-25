@@ -114,127 +114,15 @@ Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
 Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
 ```
 
-#### Redis troubleshooting
-If you have problems with connecting to redis or it is not active for some reason, try:
-
-(1) Look for existing processes on the default redis port (6379)
-```
-sudo lsof -i:6379
-```
-
-If anything displays, like in the example below:
-
-```bash
-COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
-python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
-
-```
-
-Look for the process ID under `PID` and kill it
-
-```bash
-kill -9 <PID>
-
-#e.g.
-kill -9 961206
-```
-
-(2) Restarting the service
-```bash
-systemctl restart redis
-```
-
-
-## Installation
-```bash
-git clone https://github.com/ifrit98/storage-subnet
-cd storage-subnet
-python -m pip install -e .
-```
-
-### Install Redis
-Install Redis on your host system.
-
-Linux [instructions](https://redis.io/docs/install/install-redis/install-redis-on-linux/)
-
-```bash
-sudo apt install lsb-release curl gpg
-
-curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
-
-sudo apt-get update
-sudo apt-get install redis
-```
-
-Ensure the local Redis server is started.
-
-```bash
-sudo systemctl status redis
-```
-
-You should see output like:
-```
-● redis-server.service - Advanced key-value store
-     Loaded: loaded (/lib/systemd/system/redis-server.service; disabled; vendor preset: enabled)
-     Active: active (running) since Thu 2023-11-16 22:35:42 EST; 3min 25s ago
-       Docs: http://redis.io/documentation,
-             man:redis-server(1)
-   Main PID: 31881 (redis-server)
-     Status: "Ready to accept connections"
-      Tasks: 5 (limit: 38370)
-     Memory: 2.9M
-        CPU: 387ms
-     CGroup: /system.slice/redis-server.service
-             └─31881 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""
-
-Nov 16 22:35:42 user systemd[1]: Starting Advanced key-value store...
-Nov 16 22:35:42 user systemd[1]: Started Advanced key-value store.
-```
-
-#### Redis troubleshooting
-If you have problems with connecting to redis or it is not active for some reason, try:
-
-
-
-(1) Look for existing processes on the default redis port (6379)
-```
-sudo lsof -i:6379
-```
-
-If anything displays, like in the example below:
-
-```bash
-COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
-python3 961206   user   33u  IPv4 455676435      0t0  TCP 123.456.111.22:58162->111.222.333.44.bc.googleusercontent.com:6379 (ESTABLISHED)
-
-```
-
-Look for the process ID under `PID` and kill it
-
-```bash
-kill -9 <PID>
-
-#e.g.
-kill -9 961206
-```
-
-(2) Restarting the service
-```bash
-systemctl restart redis
-```
-
-
 ### Secure Redis Configuration
 
 In order to securely run a node, whether a miner or validator, you must run ensure your redis instance is secure from the outside internet and is password-protected.
 
-The following steps are mandatory for secure communication on the network.
+The following steps are **mandatory** for secure communication on the network:
 
-(1) Closing the default redis port
-(2) Password protecting redis
-(3) Enabling persistence
+1. Closing the default redis port
+1. Password protecting redis
+1. Enabling persistence
 
 #### Close external traffic to Redis 
 
@@ -270,7 +158,7 @@ To enhance security, our system now automatically generates a strong password fo
 2. **Set `REDIS_PASSWORD` Environment Variable**: 
     The script will export the `REDIS_PASSWORD` environment variable. Ensure this variable is set in your environment where the Redis client is running.
 
-   To export your redis password generated in `./scripts/redis/set_redis_password.sh` as an environment variable at any time, run:
+   To export your redis password generated in `set_redis_password.sh` as an environment variable at any time, run:
    ```bash
    REDIS_CONF="/etc/redis/redis.conf"
    export REDIS_PASSWORD=$(sudo grep -Po '^requirepass \K.*' $REDIS_CONF)
