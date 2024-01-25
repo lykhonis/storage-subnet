@@ -2,10 +2,24 @@ import unittest
 import subprocess
 import time
 import pytest
-from redis import asyncio as aioredis
 import asyncio
 import re
 from redis import asyncio as aioredis
+
+
+REDIS_CONF = "/etc/redis/redis.conf"
+
+def get_redis_password(redis_conf_path):
+    try:
+        cmd = f"sudo grep -Po '^requirepass \K.*' {redis_conf_path}"
+        result = subprocess.run(cmd, shell=True, text=True, capture_output=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    return None
 
 
 def get_redis_config(file_path, setting):
@@ -34,8 +48,7 @@ def test_redis_configuration(setting, expected_values):
 
 @pytest.mark.asyncio
 async def test_data_persistence():
-    redis_password = "9JdmTIqKakTbmfNnnYCYavFpSag="
-
+    redis_password = get_redis_password(REDIS_CONF)
     port = 6379
 
     assert port is not None, "Redis server port not found"
