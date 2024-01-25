@@ -232,6 +232,10 @@ In order to securely run a node, whether a miner or validator, you must run ensu
 
 The following steps are mandatory for secure communication on the network.
 
+(1) Closing the default redis port
+(2) Password protecting redis
+(3) Enabling persistence
+
 #### Close external traffic to Redis 
 
 > Note: **EXPOSING THE REDIS PORT IS A MAJOR SECURITY RISK**
@@ -292,29 +296,11 @@ bash ./scripts/redis/test_persistence.sh
 
 > Note these scripts and operations REQUIRE sudo
 
+After these steps have been completed, you may test your installation and redis configuration by running the tests in `tests/redis`:
 
-#### Redis Troubleshooting
-If you encounter issues with Redis, follow these steps:
-
-1. **Check for Existing Redis Processes**: 
-    Use `lsof` to look for processes using the default Redis port (6379).
-    ```bash
-    sudo lsof -i:6379
-    ```
-    If any processes are using this port, they will be listed.
-
-2. **Terminate Unwanted Redis Processes**: 
-    Find the PID under the `PID` column and terminate it using `kill`.
-    ```bash
-    kill -9 <PID>
-    # Example: kill -9 961206
-    ```
-
-3. **Restart the Redis Service**: 
-    If needed, restart the Redis service.
-    ```bash
-    systemctl restart redis
-    ```
+```bash
+pytest tests/redis
+```
 
 > Note these scripts and operations REQUIRE sudo
 
