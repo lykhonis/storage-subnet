@@ -16,9 +16,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import re
 import json
 import base64
-import aioredis
+from redis import asyncio as aioredis
+import subprocess
 from typing import List, Union
 
 
@@ -100,3 +102,25 @@ def chunk_data(data: bytes, chunksize: int) -> List[bytes]:
     """
     for i in range(0, len(data), chunksize):
         yield data[i: i + chunksize]
+
+
+def get_redis_port():
+    """
+    Gets the port number of the Redis server.
+
+    Returns:
+        str: The port number of the Redis server.
+
+    Raises:
+        CalledProcessError: If the command to get the Redis service status fails.
+    """
+
+    try:
+        result = subprocess.check_output(['sudo', 'systemctl', 'status', 'redis-server.service'], text=True)
+        match = re.search(r'(\d{1,3}\.){3}\d{1,3}:(\d+)', result)
+        if match:
+            return match.group(2)
+        else:
+            return "Redis server port not found in the service status."
+    except subprocess.CalledProcessError as e:
+        return "Failed to get Redis service status: " + str(e)

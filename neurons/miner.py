@@ -23,11 +23,11 @@ import torch
 import typing
 import base64
 import asyncio
-import aioredis
 import threading
 import traceback
 import bittensor as bt
 from typing import Dict
+from redis import asyncio as aioredis
 
 from pprint import pformat
 
@@ -152,10 +152,10 @@ class miner:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
-        redis_password = os.getenv("REDIS_PASSWORD")
+        redis_password = os.getenv("REDIS_PASSWORD") or self.config.database.password
         if redis_password is None:
             bt.logging.error(
-                "No Redis password set in `REDIS_PASSWORD` environment variable. "
+                "No Redis password set in `REDIS_PASSWORD` environment variable or passed via config. "
                 "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
             )
             exit(1)

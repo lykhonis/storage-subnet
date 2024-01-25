@@ -17,7 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import bittensor as bt
 
 # Constants for storage limits in bytes

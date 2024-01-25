@@ -20,7 +20,7 @@ import os
 import time
 import torch
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import threading
 import bittensor as bt
 import subprocess

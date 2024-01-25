@@ -144,6 +144,35 @@ kill -9 961206
 systemctl restart redis
 ```
 
+### Close external traffic to Redis (SECURITY)
+
+This section describes the usage of a Bash script designed to configure UFW (Uncomplicated Firewall) to manage access to port 6379. The script's primary function is to block all external traffic to port 6379, typically used by Redis, while allowing local processes (like a Python application) to access this port without restriction.
+
+#### Prerequisites
+- A Linux-based system with UFW installed.
+- Superuser (root) privileges are required to execute the script.
+
+#### Script Functionality
+- **Deny External Traffic**: Blocks all external inbound traffic to port 6379.
+- **Allow Local Traffic**: Permits unrestricted access to port 6379 from localhost (127.0.0.1), facilitating internal communication.
+
+#### Usage
+To run the script, use the following command in the terminal:
+```bash
+sudo ./scripts/redis/close_redis_port.sh
+```
+Running this script will:
+- Check if UFW is installed and active. If UFW is not active, the script will attempt to enable it.
+- Set UFW rules to deny all external access to port 6379.
+- Set UFW rules to allow all local access to port 6379.
+- Apply the changes by reloading UFW.
+
+#### Important Considerations
+- **Test Before Production**: Always test the script in a controlled environment before deploying it in a production setting.
+- **Existing Rules**: If there are existing rules for port 6379, review the script to ensure compatibility.
+- **Firewall Management**: This script is specifically for systems using UFW. If another firewall management tool is in use, this script will not be compatible.
+
+
 ### Updating Redis Configuration
 
 #### Automated Redis Password Configuration
