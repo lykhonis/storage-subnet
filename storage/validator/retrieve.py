@@ -17,7 +17,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 import sys
-import json
 import time
 import torch
 import base64
@@ -30,14 +29,8 @@ from Crypto.Random import get_random_bytes, random
 
 from storage import protocol
 from storage.constants import RETRIEVAL_FAILURE_REWARD
-from storage.validator.event import EventSchema
 from storage.shared.ecc import hash_data
-from storage.shared.utils import (
-    b64_encode,
-    b64_decode,
-    chunk_data,
-    safe_key_search,
-)
+from storage.validator.event import EventSchema
 from storage.validator.verify import verify_retrieve_with_seed
 from storage.validator.reward import apply_reward_scores
 from storage.validator.database import (
@@ -47,11 +40,10 @@ from storage.validator.database import (
     get_ordered_metadata,
     retrieve_encryption_payload,
 )
-from storage.validator.encryption import decrypt_data_with_private_key
 from storage.validator.bonding import update_statistics, get_tier_factor
 
-from .network import ping_uids, ping_and_retry_uids
-from .reward import create_reward_vector
+from storage.validator.network import ping_uids, ping_and_retry_uids
+from storage.validator.reward import create_reward_vector
 
 
 async def handle_retrieve(self, uid):
@@ -177,7 +169,7 @@ async def retrieve_data(
     ):
         hotkey = self.metagraph.hotkeys[uid]
 
-        if response == None:
+        if response is None:
             bt.logging.debug(f"No response: skipping retrieve for uid {uid}")
             continue  # We don't have any data for this hotkey, skip it.
 

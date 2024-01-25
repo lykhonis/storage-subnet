@@ -178,7 +178,7 @@ def add_args(cls, parser):
     parser.add_argument(
         "--neuron.store_step_length",
         type=int,
-        default=2,
+        default=1,
         help="Number of steps before random store epoch is complete.",
     )
     parser.add_argument(
@@ -192,6 +192,12 @@ def add_args(cls, parser):
         type=int,
         default=10,
         help="Number of miners to challenge at a time. Target is ~90 miners per epoch.",
+    )
+    parser.add_argument(
+        "--neuron.purge_epoch_length",
+        type=int,
+        default=2,
+        help="Number of epochs before purging all challenges.",
     )
     parser.add_argument(
         "--neuron.retrieve_step_length",

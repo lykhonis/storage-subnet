@@ -16,12 +16,9 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import Crypto
 import typing
 import pydantic
 import bittensor as bt
-
-from Crypto.PublicKey import ECC
 
 
 # Basically setup for a given piece of data
