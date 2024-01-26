@@ -17,23 +17,20 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-import sys
 import torch
 import numpy as np
 import bittensor as bt
 from bittensor import Synapse
-from pprint import pformat
 from typing import Union, List
 from functools import partial
 
-from .verify import (
+from storage.validator.verify import (
     verify_store_with_seed,
     verify_challenge_with_seed,
     verify_retrieve_with_seed,
 )
-from .database import add_metadata_to_hotkey
-from .bonding import update_statistics, get_tier_factor
-from .event import EventSchema
+from storage.validator.bonding import update_statistics, get_tier_factor
+from storage.validator.event import EventSchema
 
 from storage.constants import (
     STORE_FAILURE_REWARD,
@@ -110,7 +107,7 @@ def get_sorted_response_times(uids, responses, timeout: float):
         (
             uids[idx],
             response.dendrite.process_time
-            if response.dendrite.process_time != None
+            if response.dendrite.process_time is not None
             else timeout,
         )
         for idx, response in enumerate(responses)
@@ -192,7 +189,13 @@ def scale_rewards(uids, responses, rewards, timeout: float, mode: str):
 
 
 def apply_reward_scores(
-    self, uids, responses, rewards, timeout: float, mode: str = "sigmoid"
+    self,
+    uids,
+    responses,
+    rewards,
+    total_batch_size: int,
+    timeout: float,
+    mode: str = "sigmoid",
 ):
     """
     Adjusts the moving average scores for a set of UIDs based on their response times and reward values.
@@ -203,7 +206,15 @@ def apply_reward_scores(
         uids (List[int]): A list of UIDs for which rewards are being applied.
         responses (List[Response]): A list of response objects received from the nodes.
         rewards (torch.FloatTensor): A tensor containing the computed reward values.
+        total_batch_size (int): The total batch size used for the forward pass.
+        timeout (float): The timeout value used for response time calculations.
+        mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
     """
+
+    def zeros_with_same_length(n):
+        length = len(str(abs(n)))
+        return int("1" + "0" * (length - 1))
+
     if mode not in ["sigmoid", "minmax"]:
         raise ValueError(f"Invalid mode: {mode}")
 
@@ -212,13 +223,21 @@ def apply_reward_scores(
         bt.logging.debug(f"Reward shape: {rewards.shape}")
         bt.logging.debug(f"UIDs: {uids}")
 
+    # Normalize rewards based on total batch size
+    bt.logging.debug(f"Total batch size: {total_batch_size}")
+    bt.logging.debug(f"Prenormalized rewards: {rewards}")
+    rebal_size = zeros_with_same_length(total_batch_size)
+    rewards = [(reward / total_batch_size) * rebal_size for reward in rewards]
+    bt.logging.debug(f"Normalized rewards: {rewards}")
+
+    # Scale rewards based on response times
     scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout, mode=mode)
     bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
     # shape: [ metagraph.n ]
     scattered_rewards: torch.FloatTensor = self.moving_averaged_scores.scatter(
-        0, torch.tensor(uids).to(self.device), scaled_rewards
+        0, torch.tensor(uids).to(self.device), torch.tensor(scaled_rewards)
     ).to(self.device)
     bt.logging.trace(f"Scattered rewards: {scattered_rewards}")
 

@@ -16,7 +16,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
 import sys
 import copy
 import time
@@ -24,13 +23,12 @@ import torch
 import base64
 import typing
 import asyncio
-import aioredis
+import websocket
 import bittensor as bt
 
 from pprint import pformat
 from pyinstrument import Profiler
-from Crypto.Random import get_random_bytes, random
-from dataclasses import asdict
+from Crypto.Random import get_random_bytes
 
 from storage.validator.event import EventSchema
 from storage import protocol
@@ -39,7 +37,6 @@ from storage.shared.ecc import (
     setup_CRS,
     ecc_point_to_hex,
 )
-from storage.shared.utils import b64_encode
 from storage.validator.utils import (
     make_random_file,
     compute_chunk_distribution_mut_exclusive_numpy_reuse_uids,
@@ -192,6 +189,7 @@ async def store_encrypted_data(
             uids,
             responses,
             rewards,
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -253,10 +251,6 @@ async def store_random_data(self):
         k=self.config.neuron.store_sample_size,
         ttl=self.config.neuron.data_ttl,
     )
-
-
-from .utils import compute_chunk_distribution_mut_exclusive_numpy_reuse_uids
-import websocket
 
 
 async def store_broadband(
@@ -373,6 +367,7 @@ async def store_broadband(
             uids,
             responses,
             rewards,
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -538,7 +533,7 @@ async def store_broadband(
             distributions = await create_initial_distributions(encrypted_data, R, k)
             break
         except websocket._exceptions.WebSocketConnectionClosedException:
-            bt.logging.warning(f"Failed to create initial distributions, retrying...")
+            bt.logging.warning("Failed to create initial distributions, retrying...")
             retries += 1
         except Exception as e:
             bt.logging.warning(
@@ -549,6 +544,7 @@ async def store_broadband(
     bt.logging.trace(f"computed distributions: {pformat(distributions)}")
 
     chunk_hashes = []
+    # TODO: review is variable is needed
     retry_dists = [None]  # sentinel for first iteration
     retries = 0
     while len(distributions) > 0 and retries < 3:

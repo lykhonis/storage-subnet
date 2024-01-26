@@ -17,7 +17,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
-import sys
 import json
 import torch
 import base64
@@ -28,14 +27,8 @@ from storage.validator.encryption import decrypt_data_with_private_key
 
 import bittensor
 
-from rich import print
-from rich.console import Console
-from rich.tree import Tree
-from typing import List, Optional
-from rich.align import Align
-from rich.table import Table
+from typing import List
 from rich.prompt import Prompt
-from tqdm import tqdm
 
 from .default_values import defaults
 
@@ -145,8 +138,8 @@ class RetrieveData:
             bittensor.logging.debug("subtensor:", sub)
             RetrieveData._run(cli, sub, outpath, wallet)
         finally:
-            if "subtensor" in locals():
-                subtensor.close()
+            if "sub" in locals():
+                sub.close()
                 bittensor.logging.debug("closing subtensor connection")
 
     @staticmethod
@@ -178,7 +171,7 @@ class RetrieveData:
                 bittensor.logging.trace(f"response: {response.dendrite.dict()}")
                 if (
                     response.dendrite.status_code != 200
-                    or response.encrypted_data == None
+                    or response.encrypted_data is None
                 ):
                     continue
 
@@ -191,7 +184,7 @@ class RetrieveData:
                     f"encryption_payload: {response.encryption_payload}"
                 )
                 if (
-                    response.encryption_payload == None
+                    response.encryption_payload is None
                     or response.encryption_payload == ""
                     or response.encryption_payload == "{}"
                 ):

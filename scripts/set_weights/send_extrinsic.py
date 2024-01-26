@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import asyncio
 import argparse
 import bittensor as bt
@@ -31,7 +30,7 @@ async def main(args):
     finally:
         if "subtensor" in locals():
             subtensor.close()
-            bittensor.logging.debug("closing subtensor connection")
+            bt.logging.debug("closing subtensor connection")
 
 
 if __name__ == "__main__":
