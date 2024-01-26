@@ -260,7 +260,7 @@ class neuron:
             - It relies on the 'store_broadband' method for actual storage and hash generation.
             - The method logs detailed information about the storage process for monitoring and debugging.
         """
-        bt.logging.debug(f"store_user_data() {synapse.dendrite.dict()}")
+        bt.logging.debug(f"store_user_data() {synapse.axon.dict()}")
 
         decoded_data = base64.b64decode(synapse.encrypted_data)
         decoded_data = (

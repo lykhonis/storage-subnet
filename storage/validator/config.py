@@ -163,13 +163,6 @@ def add_args(cls, parser):
         help="Override random chunk size to split data into for challenges.",
     )
     parser.add_argument(
-        "--neuron.reward_mode",
-        default="sigmoid",
-        type=str,
-        choices=["minmax", "sigmoid"],
-        help="Reward mode for the validator.",
-    )
-    parser.add_argument(
         "--neuron.store_redundancy",
         type=int,
         default=4,

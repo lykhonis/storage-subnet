@@ -179,7 +179,7 @@ async def store_encrypted_data(
         if self.config.neuron.verbose and self.config.neuron.log_responses:
             bt.logging.debug(f"Store responses round: {retries}")
             [
-                bt.logging.debug(f"Store response: {response.dendrite.dict()}")
+                bt.logging.debug(f"Store response: {response.axon.dict()}")
                 for response in responses
             ]
 
@@ -191,7 +191,6 @@ async def store_encrypted_data(
             rewards,
             total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
-            mode=self.config.neuron.reward_mode,
         )
 
         # Get a new set of UIDs to query for those left behind
@@ -369,7 +368,6 @@ async def store_broadband(
             rewards,
             total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
-            mode=self.config.neuron.reward_mode,
         )
 
         bt.logging.debug(f"Updated reward scores: {rewards.tolist()}")
