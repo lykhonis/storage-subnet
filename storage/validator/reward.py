@@ -210,6 +210,11 @@ def apply_reward_scores(
         timeout (float): The timeout value used for response time calculations.
         mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
     """
+
+    def zeros_with_same_length(n):
+        length = len(str(abs(n)))
+        return int('1' + '0' * (length - 1))
+
     if mode not in ["sigmoid", "minmax"]:
         raise ValueError(f"Invalid mode: {mode}")
 
@@ -219,7 +224,13 @@ def apply_reward_scores(
         bt.logging.debug(f"UIDs: {uids}")
 
     # Normalize rewards based on total batch size
-    rewards = [reward / total_batch_size for reward in rewards]
+    bt.logging.debug(f"Total batch size: {total_batch_size}")
+    bt.logging.debug(f"Prenormalized rewards: {rewards}")
+    rebal_size = zeros_with_same_length(total_batch_size)
+    rewards = [
+        (reward / total_batch_size) * rebal_size for reward in rewards
+    ]
+    bt.logging.debug(f"Normalized rewards: {rewards}")
 
     # Scale rewards based on response times
     scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout, mode=mode)
