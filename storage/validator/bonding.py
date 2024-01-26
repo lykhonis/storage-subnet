@@ -18,7 +18,7 @@
 
 import math
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import bittensor as bt
 
 # Constants for storage limits in bytes
@@ -186,7 +186,7 @@ async def update_statistics(
 
     # Transition retireval -> retrieve successes (legacy)
     legacy_retrieve_successes = await database.hget(stats_key, "retrieval_successes")
-    if legacy_retrieve_successes != None:
+    if legacy_retrieve_successes is not None:
         await database.hset(
             stats_key, "retrieve_successes", int(legacy_retrieve_successes)
         )
@@ -194,14 +194,14 @@ async def update_statistics(
 
     # Transition retireval -> retrieve attempts (legacy)
     legacy_retrieve_attempts = await database.hget(stats_key, "retrieval_attempts")
-    if legacy_retrieve_attempts != None:
+    if legacy_retrieve_attempts is not None:
         await database.hset(
             stats_key, "retrieve_attempts", int(legacy_retrieve_attempts)
         )
         await database.hdel(stats_key, "retrieval_attempts")
 
     # Update the total successes that we rollover every epoch
-    if await database.hget(stats_key, "total_successes") == None:
+    if await database.hget(stats_key, "total_successes") is None:
         store_successes = int(await database.hget(stats_key, "store_successes"))
         challenge_successes = int(await database.hget(stats_key, "challenge_successes"))
         retrieval_successes = int(await database.hget(stats_key, "retrieve_successes"))
@@ -297,7 +297,7 @@ async def compute_all_tiers(database: aioredis.Redis):
     await asyncio.gather(*tasks)
 
     # Reset the statistics for the next epoch
-    bt.logging.info(f"Resetting statistics for all hotkeys...")
+    bt.logging.info("Resetting statistics for all hotkeys...")
     await rollover_storage_stats(database)
 
 

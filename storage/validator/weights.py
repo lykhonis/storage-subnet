@@ -18,12 +18,10 @@
 
 # Utils for weights setting on chain.
 
-import wandb
 import torch
 import bittensor as bt
 
 from storage import __spec_version__ as spec_version
-from storage.shared.subtensor import get_current_block
 from storage.shared.weights import set_weights
 
 
