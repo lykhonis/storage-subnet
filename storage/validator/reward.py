@@ -228,7 +228,7 @@ def apply_reward_scores(
     # Compute forward pass rewards
     # shape: [ metagraph.n ]
     scattered_rewards: torch.FloatTensor = self.moving_averaged_scores.scatter(
-        0, torch.tensor(uids).to(self.device), scaled_rewards
+        0, torch.tensor(uids).to(self.device), torch.tensor(scaled_rewards)
     ).to(self.device)
     bt.logging.trace(f"Scattered rewards: {scattered_rewards}")
 

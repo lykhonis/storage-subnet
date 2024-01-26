@@ -158,14 +158,14 @@ class miner:
 
         # Setup database
         bt.logging.info("loading database")
-        redis_password = get_redis_password(self.config.database.redis_password)
+        # redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
             socket_keepalive=True,
             socket_connect_timeout=300,
-            password=redis_password,
+            # password=redis_password,
         )
 
         self.my_subnet_uid = self.metagraph.hotkeys.index(
