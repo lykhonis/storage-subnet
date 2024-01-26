@@ -447,9 +447,9 @@ def add_args(cls, parser):
         default=[],
     )
     parser.add_argument(
-        "--api.debug",
+        "--api.open_access",
         action="store_true",
-        help="If set, we whitelist by default to test easily.",
+        help="If set, we whitelist all hotkeys by default to test easily. (NOT RECOMMENDED FOR PRODUCTION)",
     )
 
     # Encryption wallet

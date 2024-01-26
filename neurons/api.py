@@ -294,17 +294,13 @@ class neuron:
     async def store_blacklist(
         self, synapse: protocol.StoreUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted"
 
         # Otherwise, reject.
         return (
@@ -376,17 +372,13 @@ class neuron:
     async def retrieve_blacklist(
         self, synapse: protocol.RetrieveUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted."
 
         # Otherwise, reject.
         return (
