@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.7 / 2024-01-26
+
+## What's Changed
+* Release/1.3.6 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/107
+* purge challenge data every 10 epochs by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/103
+* Bump pycryptodome from 3.18.0 to 3.19.1 by @dependabot in https://github.com/ifrit98/storage-subnet/pull/105
+* normalize all rewards by the total size of the batch for consistent r… by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/96
+
+## New Contributors
+* @dependabot made their first contribution in https://github.com/ifrit98/storage-subnet/pull/105
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.3.6...v1.3.7
+
+
 ## 1.3.6 / 2024-01-24
 
 ## What's Changed
