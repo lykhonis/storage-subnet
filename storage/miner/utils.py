@@ -17,11 +17,14 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import json
+import time
 import shutil
 import storage
 import wandb
 import copy
 import bittensor as bt
+from collections import deque
 
 from ..shared.ecc import (
     ecc_point_to_hex,
@@ -267,3 +270,63 @@ def update_storage_stats(self):
     bt.logging.info(f"Miner storage usage: {self.current_storage_usage} bytes")
     self.percent_disk_usage = self.current_storage_usage / self.free_memory
     bt.logging.info(f"Miner % disk usage : {100 * self.percent_disk_usage:.3f}%")
+
+
+def load_request_log(request_log_path: str) -> dict:
+    """
+    Loads the request logger from disk if it exists.
+
+    Args:
+        log_path (str): The path to the directory containing the request log.
+
+    Returns:
+        Dict: The request log data, if it exists, or an empty dictionary.
+
+    This method loads the request log from disk if it exists. If not, it returns an empty dictionary.
+    """
+    if os.path.exists(request_log_path):
+        with open(request_log_path, "r") as f:
+            request_log = json.load(f)
+    else:
+        request_log = {}
+    return request_log
+
+
+def log_request(synapse: "bt.Synapse", request_log: dict):
+    """
+    Log the request and store the timestamp of each request.
+
+    Args:
+        synapse (bt.Synapse): The synapse object with the request details.
+        request_log (dict): The dictionary to log request timestamps.
+
+    The function logs the time of each request in the request log and the request type.
+    """
+    current_time = time.time()
+    caller = synapse.dendrite.hotkey
+    if caller not in request_log:
+        request_log[caller] = []
+
+    request_log[caller].append((synapse.name, current_time))
+    return request_log
+
+
+class RateLimiter:
+    def __init__(self, max_requests, time_window):
+        self.max_requests = max_requests
+        self.time_window = time_window
+        self.requests = deque()
+
+    def is_allowed(self, caller):
+        current_time = time.time()
+        while (
+            self.requests
+            and current_time - self.requests[0]["timestamp"] > self.time_window
+        ):
+            self.requests.popleft()
+
+        if len(self.requests) < self.max_requests:
+            self.requests.append({"caller": caller, "timestamp": current_time})
+            return True
+        else:
+            return False
