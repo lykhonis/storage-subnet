@@ -189,7 +189,8 @@ async def challenge_data(self):
         )
 
         # Calculate the size of the response and add it to the total batch size
-        total_batch_size += sys.getsizeof(response[0].data_chunk)
+        weight = sys.getsizeof(response[0].challenge_hash)
+        total_batch_size += weight
         bt.logging.trace(f"Size of response.data_chunk: {weight}")
 
         hotkey = self.metagraph.hotkeys[uid]
