@@ -15,14 +15,14 @@
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-import time
-import wandb
+
 import bittensor as bt
-import traceback
+
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
+
 from .utils import update_storage_stats
-from copy import deepcopy
+
 
 tagged_tx_queue_registry = {
     "types": {
@@ -75,6 +75,7 @@ def runtime_call(
     runtime_call_def = substrate.runtime_config.type_registry["runtime_api"][api][
         "methods"
     ][method]
+    # TODO: review is this variable is needed
     runtime_api_types = substrate.runtime_config.type_registry["runtime_api"][api].get(
         "types", {}
     )
@@ -172,21 +173,21 @@ def run(self):
         nonlocal checked_extrinsics_count
         nonlocal should_retry
 
-        if last_extrinsic_hash != None:
+        if last_extrinsic_hash is not None:
             try:
                 receipt = block_handler_substrate.retrieve_extrinsic_by_hash(
                     block_hash, last_extrinsic_hash
                 )
                 bt.logging.debug(
-                    f"Last set-weights call: {'Success' if receipt.is_success else format('Failure, reason: %s', receipt.error_message['name'] if receipt.error_message != None else 'nil')}"
+                    f"Last set-weights call: {'Success' if receipt.is_success else format('Failure, reason: %s', receipt.error_message['name'] if receipt.error_message is not None else 'nil')}"
                 )
 
                 should_retry = False
                 last_extrinsic_hash = None
                 checked_extrinsics_count = 0
-            except Exception as e:
+            except Exception:
                 checked_extrinsics_count += 1
-                bt.logging.debug(f"An error occurred, extrinsic not found in block.")
+                bt.logging.debug("An error occurred, extrinsic not found in block.")
             finally:
                 if checked_extrinsics_count >= 20:
                     should_retry = True

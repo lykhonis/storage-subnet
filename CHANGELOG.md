@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.3.7 / 2024-01-26
+
+## What's Changed
+* Release/1.3.6 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/107
+* purge challenge data every 10 epochs by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/103
+* Bump pycryptodome from 3.18.0 to 3.19.1 by @dependabot in https://github.com/ifrit98/storage-subnet/pull/105
+* normalize all rewards by the total size of the batch for consistent r… by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/96
+
+## New Contributors
+* @dependabot made their first contribution in https://github.com/ifrit98/storage-subnet/pull/105
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.3.6...v1.3.7
+
+
+## 1.3.6 / 2024-01-24
+
+## What's Changed
+* Create github action python-package.yml for testing purposes by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/93
+* add redis restart script and set env var password by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/104
+* Redis start script save passwd and use it to start redis if exists by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/106
+
+## New Contributors
+* @Rubberbandits made their first contribution in https://github.com/ifrit98/storage-subnet/pull/20
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/commits/v1.3.6
+
+
 ## 1.3.5 / 2024-01-18
 
 ## What's Changed
