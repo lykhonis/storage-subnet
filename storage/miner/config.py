@@ -159,6 +159,12 @@ def add_args(cls, parser):
         default="~/.data",
         help="The directory to store data in.",
     )
+    parser.add_argument(
+        "--database.redis_password",
+        type=str,
+        default=None,
+        help="The redis password.",
+    )
 
     # Run config.
     parser.add_argument(

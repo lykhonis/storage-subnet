@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import os
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import argparse
 import bittensor as bt
 
