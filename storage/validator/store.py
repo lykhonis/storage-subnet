@@ -189,7 +189,7 @@ async def store_encrypted_data(
             uids,
             responses,
             rewards,
-            total_batch_size=1,  # Same data size for all responses.
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -367,7 +367,7 @@ async def store_broadband(
             uids,
             responses,
             rewards,
-            total_batch_size=1,  # Same data size for all responses.
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )

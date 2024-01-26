@@ -284,7 +284,7 @@ async def retrieve_broadband(self, full_hash: str):
     """
     semaphore = asyncio.Semaphore(self.config.neuron.semaphore_size)
 
-    async def retrieve_chunk_group(chunk_hash, uids):
+    async def retrieve_chunk_group(chunk_hash, chunk_size, uids):
         event = EventSchema(
             task_name="Store",
             successful=[],
@@ -337,7 +337,7 @@ async def retrieve_broadband(self, full_hash: str):
             uids,
             responses,
             rewards,
-            total_batch_size=1,
+            total_batch_size=chunk_size * len(responses),
             timeout=self.config.neuron.retrieve_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -379,7 +379,9 @@ async def retrieve_broadband(self, full_hash: str):
             total_size += chunk_metadata["size"]
             tasks.append(
                 asyncio.create_task(
-                    retrieve_chunk_group(chunk_metadata["chunk_hash"], uids)
+                    retrieve_chunk_group(
+                        chunk_metadata["chunk_hash"], chunk_metadata["chunk_size"], uids
+                    )
                 )
             )
         responses = await asyncio.gather(*tasks)
