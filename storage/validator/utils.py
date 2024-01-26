@@ -50,7 +50,7 @@ def chunk_data_generator(data, chunk_size):
         bytes: The next chunk of data.
     """
     for i in range(0, len(data), chunk_size):
-        yield data[i: i + chunk_size]
+        yield data[i : i + chunk_size]
 
 
 def generate_file_size_with_lognormal(
@@ -613,7 +613,7 @@ def partition_uids(available_uids, R):
     Returns:
         list of tuples: A list where each tuple contains a unique group of UIDs.
     """
-    return [tuple(available_uids[i: i + R]) for i in range(0, len(available_uids), R)]
+    return [tuple(available_uids[i : i + R]) for i in range(0, len(available_uids), R)]
 
 
 def adjust_uids_to_multiple(available_uids, R):
@@ -797,3 +797,10 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
             "uids": uid_group,
             "chunk_index": i,
         }
+
+
+def get_current_epoch(subtensor, netuid=21):
+    registered_at = 2009702
+    blocks_since_registration = subtensor.get_current_block() - registered_at
+    current_epoch = blocks_since_registration // subtensor.tempo(netuid)
+    return current_epoch

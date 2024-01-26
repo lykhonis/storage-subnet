@@ -189,6 +189,7 @@ async def store_encrypted_data(
             uids,
             responses,
             rewards,
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -366,6 +367,7 @@ async def store_broadband(
             uids,
             responses,
             rewards,
+            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
             timeout=self.config.neuron.store_timeout,
             mode=self.config.neuron.reward_mode,
         )
@@ -444,7 +446,7 @@ async def store_broadband(
                 bt.logging.trace(
                     f"Start index: {dist['start_idx']}, End index: {dist['end_idx']}"
                 )
-                chunk = encrypted_data[dist["start_idx"]: dist["end_idx"]]
+                chunk = encrypted_data[dist["start_idx"] : dist["end_idx"]]
                 bt.logging.trace(f"chunk: {chunk[:12]}")
                 dist["chunk_hash"] = hash_data(chunk)
                 bt.logging.debug(

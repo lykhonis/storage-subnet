@@ -17,7 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import argparse
-import aioredis
+from redis import asyncio as aioredis
 import asyncio
 import bittensor as bt
 from rich.table import Table
