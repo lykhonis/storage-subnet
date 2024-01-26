@@ -142,12 +142,12 @@ class neuron:
 
         # Setup database
         bt.logging.info("loading database")
-        # redis_password = get_redis_password(self.config.database.redis_password)
+        redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
-            # password=redis_password,
+            password=redis_password,
         )
         self.db_semaphore = asyncio.Semaphore()
 
