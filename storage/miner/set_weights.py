@@ -17,16 +17,22 @@
 # DEALINGS IN THE SOFTWARE.
 
 import torch
+import wandb
+
+from bittensor import logging as bt_logging
+from bittensor import subtensor
+from bittensor import wallet
+from bittensor import metagraph
 
 from storage.shared.weights import set_weights, should_set_weights
 
 
 def set_weights_for_miner(
-    subtensor: "bt.subtensor",
+    subtensor: "subtensor",
     netuid: int,
     uid: int,
-    wallet: "bt.wallet",
-    metagraph: "bt.metagraph",
+    wallet: "wallet",
+    metagraph: "metagraph",
     wandb_on: bool = False,
     tempo: int = 360,
     wait_for_inclusion: bool = False,
