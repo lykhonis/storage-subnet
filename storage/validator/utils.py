@@ -799,6 +799,13 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
         }
 
 
+def get_rebalance_script_path(current_dir):
+    project_root = os.path.join(current_dir, "..")
+    project_root = os.path.normpath(project_root)
+    script_path = os.path.join(project_root, "scripts", "rebalance_deregistration.sh")
+    return script_path
+
+
 def get_current_epoch(subtensor, netuid=21):
     registered_at = 2009702
     blocks_since_registration = subtensor.get_current_block() - registered_at
