@@ -1,6 +1,6 @@
 import os
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import argparse
 import bittensor as bt
 from storage.miner.database import migrate_data_directory

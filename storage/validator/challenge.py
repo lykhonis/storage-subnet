@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import sys
 import time
 import torch
 import typing
@@ -90,7 +91,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
                 ),
             )
         )
-    except: # TODO: do not use bare except
+    except:  # TODO: do not use bare except
         bt.logging.error(
             f"Failed to get chunk size {self.config.neuron.min_chunk_size} | {self.config.neuron.chunk_factor} | {data['size'] // self.config.neuron.chunk_factor}"
         )
@@ -146,7 +147,7 @@ async def challenge_data(self):
         # Sort indices in descending order to avoid index out of range error
         sorted_indices = sorted(indices_to_remove, reverse=True)
         for index in sorted_indices:
-            tensor = torch.cat([tensor[:index], tensor[index + 1:]])
+            tensor = torch.cat([tensor[:index], tensor[index + 1 :]])
         return tensor
 
     event = EventSchema(
@@ -180,11 +181,17 @@ async def challenge_data(self):
     )
 
     remove_reward_idxs = []
+    total_batch_size = 0
     for idx, (uid, (verified, response)) in enumerate(zip(uids, responses)):
         response_dict = response[0].axon.dict() if response[0] is not None else None
         bt.logging.trace(
             f"Challenge idx {idx} uid {uid} verified {verified} response {str(response_dict)}"
         )
+
+        # Calculate the size of the response and add it to the total batch size
+        weight = sys.getsizeof(response[0].challenge_hash)
+        total_batch_size += weight
+        bt.logging.trace(f"Size of response.data_chunk: {weight}")
 
         hotkey = self.metagraph.hotkeys[uid]
 
@@ -241,6 +248,7 @@ async def challenge_data(self):
         uids,
         responses,
         rewards,
+        total_batch_size,
         timeout=self.config.neuron.challenge_timeout,
     )
 

@@ -20,7 +20,7 @@ import os
 import time
 import torch
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import threading
 import bittensor as bt
 import subprocess
@@ -32,6 +32,7 @@ from substrateinterface.base import SubstrateInterface
 
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
+from storage.shared.utils import get_redis_password
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -140,14 +141,8 @@ class neuron:
         self.current_block = self.subtensor.get_current_block()
 
         # Setup database
-        redis_password = os.getenv("REDIS_PASSWORD")
-        if redis_password is None:
-            bt.logging.error(
-                "No Redis password set in `REDIS_PASSWORD` environment variable. "
-                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
-            )
-            exit(1)
-
+        bt.logging.info("loading database")
+        redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,

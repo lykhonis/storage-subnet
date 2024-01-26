@@ -376,7 +376,7 @@ def validate_merkle_proof(proof, target_hash, merkle_root, hash_type="sha3_256")
                 # the sibling is a left node
                 sibling = bytearray.fromhex(p["left"])
                 proof_hash = hash_func(sibling + proof_hash).digest()
-            except: # TODO: do not use bare except
+            except:  # TODO: do not use bare except
                 # the sibling is a right node
                 sibling = bytearray.fromhex(p["right"])
                 proof_hash = hash_func(proof_hash + sibling).digest()

@@ -22,7 +22,7 @@ import torch
 import base64
 import typing
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import traceback
 import bittensor as bt
 import threading

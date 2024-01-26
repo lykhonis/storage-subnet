@@ -23,11 +23,11 @@ import torch
 import typing
 import base64
 import asyncio
-import aioredis
 import threading
 import traceback
 import bittensor as bt
 from typing import Dict
+from redis import asyncio as aioredis
 
 from pprint import pformat
 
@@ -40,7 +40,12 @@ from storage.shared.ecc import (
     hex_to_ecc_point,
 )
 
-from storage.shared.utils import b64_encode, chunk_data, safe_key_search
+from storage.shared.utils import (
+    b64_encode,
+    chunk_data,
+    safe_key_search,
+    get_redis_password,
+)
 
 from storage.miner import (
     run,
@@ -152,15 +157,8 @@ class miner:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
-        redis_password = os.getenv("REDIS_PASSWORD")
-        if redis_password is None:
-            bt.logging.error(
-                "No Redis password set in `REDIS_PASSWORD` environment variable. "
-                "Please set it by running `. ./scripts/redis/start_redis.sh` and try again."
-            )
-            exit(1)
-
-        # Setup database
+        bt.logging.info("loading database")
+        redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
