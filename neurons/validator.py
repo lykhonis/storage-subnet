@@ -200,6 +200,7 @@ class neuron:
         self.rebalance_script_path = get_rebalance_script_path(
             os.path.dirname(os.path.abspath(__file__))
         )
+        self.last_purged_epoch = 0
 
     def run(self):
         bt.logging.info("run()")
