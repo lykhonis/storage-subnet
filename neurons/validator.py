@@ -30,7 +30,7 @@ from pprint import pformat
 from traceback import print_exception
 from substrateinterface.base import SubstrateInterface
 
-from stroage.shared.utils import get_redis_password
+from storage.shared.utils import get_redis_password
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
 from storage.validator.utils import (
