@@ -47,13 +47,12 @@ async def forward(self):
     # Record forward time
     start = time.time()
 
-    if self.step % 2 == 0:
-        # Store some random data
-        bt.logging.info("initiating store random")
-        event = await store_random_data(self)
+    # Store some random data
+    bt.logging.info("initiating store random")
+    event = await store_random_data(self)
 
-        # Log event
-        log_event(self, event)
+    # Log store event
+    log_event(self, event)
 
     # Challenge every opportunity (e.g. every 2.5 blocks with 30 sec timeout)
     bt.logging.info("initiating challenge")
