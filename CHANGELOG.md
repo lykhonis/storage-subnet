@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.8 / 2024-01-27
+
+## What's Changed
+* don't allow minmax by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/95
+* Release/1.3.7 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/108
+* ensure correct path parsing for rebalance script for separate proc by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/94
+* show axon info (IP, status msg, etc) in logging for challenges/verify by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/101
+* disable top-percent stake check, unused until v2 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/100
+* Miner/request logger by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/99
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.3.7...v1.3.8
+
+
 ## 1.3.7 / 2024-01-26
 
 ## What's Changed

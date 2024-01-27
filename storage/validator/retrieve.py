@@ -154,7 +154,7 @@ async def retrieve_data(
     if self.config.neuron.verbose and self.config.neuron.log_responses:
         [
             bt.logging.trace(
-                f"Retrieve response: {uid} | {pformat(response.dendrite.dict())}"
+                f"Retrieve response: {uid} | {pformat(response.axon.dict())}"
             )
             for uid, (response, _, _) in zip(uids, response_tuples)
         ]
@@ -163,7 +163,7 @@ async def retrieve_data(
     ).to(self.device)
 
     decoded_data = b""
-    total_batch_size = 0
+    data_sizes = []
     for idx, (uid, (response, data_hash, seed)) in enumerate(
         zip(uids, response_tuples)
     ):
@@ -174,7 +174,7 @@ async def retrieve_data(
             continue  # We don't have any data for this hotkey, skip it.
 
         # Collect data sizes from responses
-        total_batch_size += sys.getsizeof(response.data)
+        data_sizes.append(sys.getsizeof(response.data))
 
         # Get the tier factor for this miner to determine the total reward
         tier_factor = await get_tier_factor(hotkey, self.database)
@@ -243,10 +243,10 @@ async def retrieve_data(
     bt.logging.debug(f"retrieve() rewards: {rewards}")
     apply_reward_scores(
         self,
-        uids,
-        [response_tuple[0] for response_tuple in response_tuples],
-        rewards,
-        total_batch_size,
+        uids=uids,
+        responses=[response_tuple[0] for response_tuple in response_tuples],
+        rewards=rewards,
+        data_sizes=data_sizes,
         timeout=self.config.neuron.retrieve_timeout,
     )
 
@@ -333,10 +333,10 @@ async def retrieve_broadband(self, full_hash: str):
 
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=chunk_size * len(responses),
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[chunk_size * len(responses)],
             timeout=self.config.neuron.retrieve_timeout,
         )
 
@@ -389,7 +389,7 @@ async def retrieve_broadband(self, full_hash: str):
         for i, (response_group, seed) in enumerate(responses):
             for response in response_group:
                 if response.dendrite.status_code != 200:
-                    bt.logging.debug(f"failed response: {response.dendrite.dict()}")
+                    bt.logging.debug(f"failed response: {response.axon.dict()}")
                     continue
                 verified = verify_retrieve_with_seed(response, seed)
                 if verified:

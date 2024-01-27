@@ -179,17 +179,18 @@ async def store_encrypted_data(
         if self.config.neuron.verbose and self.config.neuron.log_responses:
             bt.logging.debug(f"Store responses round: {retries}")
             [
-                bt.logging.debug(f"Store response: {response.dendrite.dict()}")
+                bt.logging.debug(f"Store response: {response.axon.dict()}")
                 for response in responses
             ]
 
         bt.logging.trace(f"Applying store rewards for retry: {retries}")
+        data_size = sys.getsizeof(b64_encrypted_data)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
             timeout=self.config.neuron.store_timeout,
         )
 
@@ -361,12 +362,13 @@ async def store_broadband(
         )
         event.rewards.extend(rewards.tolist())
 
+        data_size = sys.getsizeof(b64_encrypted_data)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
             timeout=self.config.neuron.store_timeout,
         )
 
@@ -467,7 +469,7 @@ async def store_broadband(
             bt.logging.debug(f"-- b64_encoded_chunk: {b64_encoded_chunk[:100]}")
             bt.logging.debug(f"-- random_seed: {random_seed}")
 
-            # Update the distributions with respones
+            # Update the distributions with responses
             distributions[i]["responses"] = responses
             distributions[i]["b64_encoded_chunk"] = b64_encoded_chunk
             distributions[i]["random_seed"] = random_seed
