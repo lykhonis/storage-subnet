@@ -185,10 +185,12 @@ def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[flo
     }
 
     # Scale the rewards with normalized times and logarithmically scaled data sizes
-    combined_rewards = torch.tensor([
-        rewards[i] * uid_to_normalized[uid][0] * uid_to_normalized[uid][1]
-        for i, uid in enumerate(uids)
-    ])
+    combined_rewards = torch.tensor(
+        [
+            rewards[i] * uid_to_normalized[uid][0] * uid_to_normalized[uid][1]
+            for i, uid in enumerate(uids)
+        ]
+    )
     bt.logging.debug(f"Combined rewards: {combined_rewards}")
 
     # Rescale the rewards to a similar magnitude as the original rewards
@@ -196,9 +198,7 @@ def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[flo
     rescale_factor = torch.sum(rewards) / torch.sum(combined_rewards)
     bt.logging.debug(f"torch.sum(combined): {torch.sum(combined_rewards)}")
     bt.logging.debug(f"Rescale factor: {rescale_factor}")
-    scaled_rewards = [
-        reward * rescale_factor for reward in combined_rewards
-    ]
+    scaled_rewards = [reward * rescale_factor for reward in combined_rewards]
 
     return scaled_rewards
 
