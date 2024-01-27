@@ -129,29 +129,9 @@ def sigmoid_normalize(process_times, timeout):
     return adjusted_sigmoid_inverse(centered_times, steepness, shift)
 
 
-def min_max_normalize(times):
+def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[float], device):
     """
-    Normalizes the response times using Min-Max scaling.
-    Args:
-        times (List[float]): A list of response times.
-    Returns:
-        List[float]: Normalized response times scaled between 0 and 1.
-    """
-    if times == []:
-        return []
-    min_time = min(times)
-    max_time = max(times)
-    range_time = max_time - min_time
-    if range_time == 0:
-        # Avoid division by zero in case all times are the same
-        return [0.5 for _ in times]
-    return [(time - max_time) / range_time for time in times]
-
-
-def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[float], device: str):
-    """
-    Scales the rewards for each axon based on their data sizes and response times using sigmoid normalization.
-
+    Scales the rewards for each axon based on their response times using sigmoid normalization.
     Args:
         uids (List[int]): A list of unique identifiers for each axon.
         responses (List[Response]): A list of Response objects corresponding to each axon.
@@ -221,7 +201,6 @@ def apply_reward_scores(
         data_sizes (List[float]): The size of each data piece used for the forward pass.
         timeout (float): The timeout value used for response time calculations.
     """
-
     if self.config.neuron.verbose:
         bt.logging.debug(f"Applying rewards: {rewards}")
         bt.logging.debug(f"Reward shape: {rewards.shape}")
@@ -244,7 +223,7 @@ def apply_reward_scores(
 
     # Update moving_averaged_scores with rewards produced by this step.
     # shape: [ metagraph.n ]
-    alpha: float = self.config.neuron.moving_average_alpha
+    alpha: float = 0.05
     self.moving_averaged_scores: torch.FloatTensor = alpha * scattered_rewards + (
         1 - alpha
     ) * self.moving_averaged_scores.to(self.device)

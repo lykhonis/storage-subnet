@@ -74,7 +74,7 @@ async def handle_retrieve(self, uid):
         [axon],
         synapse,
         deserialize=False,
-        timeout=self.config.neuron.retrieve_timeout,
+        timeout=60,
     )
 
     try:
@@ -130,9 +130,7 @@ async def retrieve_data(
 
     start_time = time.time()
 
-    uids, _ = await ping_and_retry_uids(
-        self, k=self.config.neuron.challenge_sample_size
-    )
+    uids, _ = await ping_and_retry_uids(self, k=10)
 
     # Ensure that each UID has data to retreive. If not, skip it.
     uids = [
@@ -247,7 +245,7 @@ async def retrieve_data(
         responses=[response_tuple[0] for response_tuple in response_tuples],
         rewards=rewards,
         data_sizes=data_sizes,
-        timeout=self.config.neuron.retrieve_timeout,
+        timeout=60,
     )
 
     # Determine the best UID based on rewards
@@ -309,7 +307,7 @@ async def retrieve_broadband(self, full_hash: str):
             axons,
             synapse,
             deserialize=False,
-            timeout=self.config.api.retrieve_timeout,
+            timeout=60,
         )
 
         # Compute the rewards for the responses given proc time.
@@ -337,7 +335,7 @@ async def retrieve_broadband(self, full_hash: str):
             responses=responses,
             rewards=rewards,
             data_sizes=[chunk_size * len(responses)],
-            timeout=self.config.neuron.retrieve_timeout,
+            timeout=60,
         )
 
         # Determine the best UID based on rewards

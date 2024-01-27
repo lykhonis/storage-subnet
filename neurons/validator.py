@@ -181,9 +181,6 @@ class neuron:
             bt.logging.debug("loading wandb")
             init_wandb(self)
 
-        if self.config.neuron.challenge_sample_size == 0:
-            self.config.neuron.challenge_sample_size = self.metagraph.n
-
         self.prev_step_block = get_current_block(self.subtensor)
         self.step = 0
 
@@ -222,10 +219,7 @@ class neuron:
 
                 # --- Wait until next step epoch.
                 current_block = self.subtensor.get_current_block()
-                while (
-                    current_block - self.prev_step_block
-                    < self.config.neuron.blocks_per_step
-                ):
+                while current_block - self.prev_step_block < 3:
                     # --- Wait for next block.
                     time.sleep(1)
                     current_block = self.subtensor.get_current_block()
@@ -271,7 +265,7 @@ class neuron:
                 validator_should_set_weights = should_set_weights(
                     get_current_block(self.subtensor),
                     prev_set_weights_block,
-                    self.config.neuron.set_weights_epoch_length,
+                    360,  # tempo
                     self.config.neuron.disable_set_weights,
                 )
                 bt.logging.debug(

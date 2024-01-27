@@ -80,16 +80,12 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
     bt.logging.trace(f"Challenge data: {pformat(data)}")
 
     try:
-        chunk_size = (
-            self.config.neuron.override_chunk_size
-            if self.config.neuron.override_chunk_size > 0
-            else get_random_chunksize(
-                minsize=self.config.neuron.min_chunk_size,
-                maxsize=max(
-                    self.config.neuron.min_chunk_size,
-                    data["size"] // self.config.neuron.chunk_factor,
-                ),
-            )
+        chunk_size = get_random_chunksize(
+            minsize=self.config.neuron.min_chunk_size,
+            maxsize=max(
+                self.config.neuron.min_chunk_size,
+                data["size"] // self.config.neuron.chunk_factor,
+            ),
         )
     except:  # TODO: do not use bare except
         bt.logging.error(
@@ -124,7 +120,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
         [axon],
         synapse,
         deserialize=True,
-        timeout=self.config.neuron.challenge_timeout,
+        timeout=30,
     )
     verified = verify_challenge_with_seed(response[0], synapse.seed)
 
@@ -166,9 +162,7 @@ async def challenge_data(self):
 
     start_time = time.time()
     tasks = []
-    uids = await get_available_query_miners(
-        self, k=self.config.neuron.challenge_sample_size
-    )
+    uids = await get_available_query_miners(self, k=10)
     bt.logging.debug(f"challenge uids {uids}")
     responses = []
     for uid in uids:
@@ -250,7 +244,7 @@ async def challenge_data(self):
         responses=responses,
         rewards=rewards,
         data_sizes=data_sizes,
-        timeout=self.config.neuron.challenge_timeout,
+        timeout=30,
     )
 
     # Determine the best UID based on rewards
