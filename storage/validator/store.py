@@ -469,7 +469,7 @@ async def store_broadband(
             bt.logging.debug(f"-- b64_encoded_chunk: {b64_encoded_chunk[:100]}")
             bt.logging.debug(f"-- random_seed: {random_seed}")
 
-            # Update the distributions with respones
+            # Update the distributions with responses
             distributions[i]["responses"] = responses
             distributions[i]["b64_encoded_chunk"] = b64_encoded_chunk
             distributions[i]["random_seed"] = random_seed

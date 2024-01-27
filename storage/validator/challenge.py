@@ -245,7 +245,7 @@ async def challenge_data(self):
     apply_reward_scores(
         self,
         uids=uids,
-        respones=responses,
+        responses=responses,
         rewards=rewards,
         data_sizes=data_sizes,
         timeout=self.config.neuron.challenge_timeout,
