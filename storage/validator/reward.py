@@ -220,16 +220,16 @@ def apply_reward_scores(
     # Normalize rewards based on total batch size
     bt.logging.debug(f"Total batch size: {total_batch_size}")
     rebal_size = zeros_with_same_length(total_batch_size)
-    scaled_rewards = [
-        (reward / total_batch_size) * rebal_size for reward in rewards
-    ]
+    scaled_rewards = [(reward / total_batch_size) * rebal_size for reward in rewards]
     bt.logging.debug(f"Normalized rewards: {scaled_rewards}")
     bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
     # shape: [ metagraph.n ]
     scattered_rewards: torch.FloatTensor = self.moving_averaged_scores.scatter(
-        0, torch.tensor(uids).to(self.device), torch.tensor(scaled_rewards).to(self.device)
+        0,
+        torch.tensor(uids).to(self.device),
+        torch.tensor(scaled_rewards).to(self.device),
     ).to(self.device)
     bt.logging.trace(f"Scattered rewards: {scattered_rewards}")
 

@@ -803,7 +803,7 @@ def get_rebalance_script_path(current_dir: str):
     """
     Constructs and returns the path to the 'rebalance_deregistration.sh' script within a project directory.
 
-    This function takes the root path of a project and appends the relative path to the 'rebalance_deregistration.sh' script. 
+    This function takes the root path of a project and appends the relative path to the 'rebalance_deregistration.sh' script.
     It assumes that the script is located within the 'scripts' subdirectory of the given project root.
 
     Parameters:
