@@ -244,24 +244,28 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
         challenge_success_rate_lower >= SUPER_SAIYAN_CHALLENGE_SUCCESS_RATE
         and retrieval_success_rate_lower >= SUPER_SAIYAN_RETIREVAL_SUCCESS_RATE
         and store_success_rate_lower >= SUPER_SAIYAN_STORE_SUCCESS_RATE
+        and total_successes >= SUPER_SAIYAN_TIER_TOTAL_SUCCESSES
     ):
         tier = "Super Saiyan"
     elif (
         challenge_success_rate_lower >= DIAMOND_CHALLENGE_SUCCESS_RATE
         and retrieval_success_rate_lower >= DIAMOND_RETRIEVAL_SUCCESS_RATE
         and store_success_rate_lower >= DIAMOND_STORE_SUCCESS_RATE
+        and total_successes >= DIAMOND_TIER_TOTAL_SUCCESSES
     ):
         tier = "Diamond"
     elif (
         challenge_success_rate_lower >= GOLD_CHALLENGE_SUCCESS_RATE
         and retrieval_success_rate_lower >= GOLD_RETRIEVAL_SUCCESS_RATE
         and store_success_rate_lower >= GOLD_STORE_SUCCESS_RATE
+        and total_successes >= GOLD_TIER_TOTAL_SUCCESSES
     ):
         tier = "Gold"
     elif (
         challenge_success_rate_lower >= SILVER_CHALLENGE_SUCCESS_RATE
         and retrieval_success_rate_lower >= SILVER_RETRIEVAL_SUCCESS_RATE
         and store_success_rate_lower >= SILVER_STORE_SUCCESS_RATE
+        and total_successes >= SILVER_TIER_TOTAL_SUCCESSES
     ):
         tier = "Silver"
 
@@ -280,7 +284,11 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     else:  # Bronze
         storage_limit = STORAGE_LIMIT_BRONZE
 
+    current_limit = await database.hget(stats_key, "storage_limit")
     await database.hset(stats_key, "storage_limit", storage_limit)
+    bt.logging.trace(
+        f"Storage limit for {stats_key} set from {current_limit} -> {storage_limit} bytes."
+    )
 
 
 async def compute_all_tiers(database: aioredis.Redis):
