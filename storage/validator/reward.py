@@ -174,7 +174,7 @@ def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[flo
     bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
     log_data_sizes = np.log1p(data_sizes)
     normalized_log_data_sizes = log_data_sizes / np.sum(log_data_sizes)
-    bt.logging.debug(f"Normalized data sizes: {normalized_data_sizes}")
+    bt.logging.debug(f"Normalized data sizes: {normalized_log_data_sizes}")
 
     # Create a dictionary mapping UIDs to normalized times and data sizes
     uid_to_normalized = {
