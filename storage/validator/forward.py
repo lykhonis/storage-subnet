@@ -88,9 +88,12 @@ async def forward(self):
             )
 
     # Purge all challenge data to start fresh and avoid requerying hotkeys with stale challenge data
-    if get_current_epoch(self.subtensor) % self.config.neuron.purge_epoch_length == 0:
-        bt.logging.info("initiating challenges purge")
-        await purge_challenges_for_all_hotkeys(self.database)
+    current_epoch = get_current_epoch(self.subtensor)
+    if current_epoch % self.config.neuron.purge_epoch_length == 0:
+        if self.last_purged_epoch < current_epoch:
+            bt.logging.info("initiating challenges purge")
+            await purge_challenges_for_all_hotkeys(self.database)
+            self.last_purged_epoch = current_epoch
 
     if self.step % self.config.neuron.compute_stats_interval == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
