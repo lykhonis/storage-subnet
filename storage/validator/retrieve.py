@@ -154,7 +154,7 @@ async def retrieve_data(
     if self.config.neuron.verbose and self.config.neuron.log_responses:
         [
             bt.logging.trace(
-                f"Retrieve response: {uid} | {pformat(response.dendrite.dict())}"
+                f"Retrieve response: {uid} | {pformat(response.axon.dict())}"
             )
             for uid, (response, _, _) in zip(uids, response_tuples)
         ]
@@ -248,7 +248,6 @@ async def retrieve_data(
         rewards,
         total_batch_size,
         timeout=self.config.neuron.retrieve_timeout,
-        mode=self.config.neuron.reward_mode,
     )
 
     # Determine the best UID based on rewards
@@ -339,7 +338,6 @@ async def retrieve_broadband(self, full_hash: str):
             rewards,
             total_batch_size=chunk_size * len(responses),
             timeout=self.config.neuron.retrieve_timeout,
-            mode=self.config.neuron.reward_mode,
         )
 
         # Determine the best UID based on rewards
@@ -391,7 +389,7 @@ async def retrieve_broadband(self, full_hash: str):
         for i, (response_group, seed) in enumerate(responses):
             for response in response_group:
                 if response.dendrite.status_code != 200:
-                    bt.logging.debug(f"failed response: {response.dendrite.dict()}")
+                    bt.logging.debug(f"failed response: {response.axon.dict()}")
                     continue
                 verified = verify_retrieve_with_seed(response, seed)
                 if verified:

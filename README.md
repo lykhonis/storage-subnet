@@ -667,12 +667,12 @@ pm2 start /home/user/storage-subnet/neurons/miner.py --interpreter /home/user/mi
 - `--miner.set_weights_wait_for_inclusion`: Wether to wait for the set_weights extrinsic to enter a block. Default: False.
 - `--miner.set_weights_wait_for_finalization`: Wether to wait for the set_weights extrinsic to be finalized on the chain. Default: False.
 
-- `--miner.blacklist.blacklist`: List of hotkeys to blacklist. Default: [].
-- `--miner.blacklist.whitelist`: List of hotkeys to whitelist. Default: [].
-- `--miner.blacklist.force_validator_permit`: If True, only allows requests from validators. Default: False.
-- `--miner.blacklist.allow_non_registered`: If True, allows non-registered hotkeys to mine. Default: False.
-- `--miner.blacklist.minimum_stake_requirement`: Minimum stake requirement for participating hotkeys. Default: 0.0.
-- `--miner.blacklist.min_request_period`: Time period (in minutes) to serve a maximum number of requests per hotkey. Default: 5.
+- `--blacklist.blacklist_hotkeys`: List of hotkeys to blacklist. Default: [].
+- `--blacklist.whitelist_hotkeys`: List of hotkeys to whitelist. Default: [].
+- `--blacklist.force_validator_permit`: If True, only allows requests from validators. Default: False.
+- `--blacklist.allow_non_registered`: If True, allows non-registered hotkeys to mine. Default: False.
+- `--blacklist.minimum_stake_requirement`: Minimum stake requirement for participating hotkeys. Default: 0.0.
+- `--blacklist.min_request_period`: Time period (in minutes) to serve a maximum number of requests per hotkey. Default: 5.
 
 - `--miner.priority.default`: Default priority for non-registered requests. Default: 0.0.
 - `--miner.priority.time_stake_multiplicate`: Time (in minutes) to double the importance of stake in the priority queue. Default: 10.

@@ -163,13 +163,6 @@ def add_args(cls, parser):
         help="Override random chunk size to split data into for challenges.",
     )
     parser.add_argument(
-        "--neuron.reward_mode",
-        default="sigmoid",
-        type=str,
-        choices=["minmax", "sigmoid"],
-        help="Reward mode for the validator.",
-    )
-    parser.add_argument(
         "--neuron.store_redundancy",
         type=int,
         default=4,
@@ -184,7 +177,7 @@ def add_args(cls, parser):
     parser.add_argument(
         "--neuron.store_sample_size",
         type=int,
-        default=10,
+        default=20,
         help="Number of miners to store each piece of data on.",
     )
     parser.add_argument(
@@ -454,9 +447,9 @@ def add_args(cls, parser):
         default=[],
     )
     parser.add_argument(
-        "--api.debug",
+        "--api.open_access",
         action="store_true",
-        help="If set, we whitelist by default to test easily.",
+        help="If set, we whitelist all hotkeys by default to test easily. (NOT RECOMMENDED FOR PRODUCTION)",
     )
 
     # Encryption wallet
