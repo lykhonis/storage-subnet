@@ -170,26 +170,36 @@ def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[flo
     # Normalize the response times
     normalized_times = sigmoid_normalize(process_times, timeout)
 
-    # Normalize the data sizes
-    total_data = sum(data_sizes)
+    # Apply logarithmic scaling to data sizes
     bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
-    normalized_data_sizes = [size / total_data for size in data_sizes]
+    log_data_sizes = np.log1p(data_sizes)
+    normalized_log_data_sizes = log_data_sizes / np.sum(log_data_sizes)
     bt.logging.debug(f"Normalized data sizes: {normalized_data_sizes}")
 
     # Create a dictionary mapping UIDs to normalized times and data sizes
     uid_to_normalized = {
-        uid: (normalized_time, normalized_data)
-        for (uid, _), normalized_time, normalized_data in zip(sorted_axon_times, normalized_times, normalized_data_sizes)
+        uid: (normalized_time, normalized_log_data)
+        for (uid, _), normalized_time, normalized_log_data in zip(
+            sorted_axon_times, normalized_times, normalized_log_data_sizes
+        )
     }
 
-    bt.logging.debug(f"scale_rewards_sigmoid() uid_to_normalized: {uid_to_normalized}")
+    # Scale the rewards with normalized times and logarithmically scaled data sizes
+    combined_rewards = [
+        rewards[i] * uid_to_normalized[uid][0] * uid_to_normalized[uid][1]
+        for i, uid in enumerate(uids)
+    ]
+    bt.logging.debug(f"Combined rewards: {combined_rewards}")
 
-    # Scale the rewards with normalized times and data sizes
-    for i, uid in enumerate(uids):
-        normalized_time, normalized_data = uid_to_normalized[uid]
-        rewards[i] *= (normalized_time * normalized_data)
+    # Rescale the rewards to a similar magnitude as the original rewards
+    rescale_factor = np.sum(rewards) / np.sum(combined_rewards)
+    bt.logging.debug(f"Rescale factor: {rescale_factor}")
+    scaled_rewards = [
+        reward * rescale_factor for reward in combined_rewards
+    ]
+    bt.logging.debug(f"Rescaled rewards: {rescaled_rewards}")
 
-    return rewards
+    return scaled_rewards
 
 
 def apply_reward_scores(
