@@ -225,6 +225,7 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     retrieval_attempts = int(await database.hget(stats_key, "retrieve_attempts") or 0)
     store_successes = int(await database.hget(stats_key, "store_successes") or 0)
     store_attempts = int(await database.hget(stats_key, "store_attempts") or 0)
+    total_successes = int(await database.hget(stats_key, "total_successes") or 0)
 
     # Calculate Wilson score intervals for each task type
     challenge_success_rate_lower, _ = wilson_score_interval(
@@ -235,6 +236,9 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     )
     store_success_rate_lower, _ = wilson_score_interval(
         store_successes, store_attempts, confidence
+    )
+    bt.logging.trace(
+        f"Miner {stats_key} success rates: challenge={challenge_success_rate_lower}, retrieve={retrieval_success_rate_lower}, store={store_success_rate_lower}"
     )
 
     # Use the lower bounds of the intervals to determine the tier
@@ -285,10 +289,11 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
         storage_limit = STORAGE_LIMIT_BRONZE
 
     current_limit = await database.hget(stats_key, "storage_limit")
-    await database.hset(stats_key, "storage_limit", storage_limit)
-    bt.logging.trace(
-        f"Storage limit for {stats_key} set from {current_limit} -> {storage_limit} bytes."
-    )
+    if current_limit != storage_limit:
+        await database.hset(stats_key, "storage_limit", storage_limit)
+        bt.logging.trace(
+            f"Storage limit for {stats_key} set from {current_limit} -> {storage_limit} bytes."
+        )
 
 
 async def compute_all_tiers(database: aioredis.Redis):
