@@ -94,7 +94,7 @@ async def forward(self):
             await purge_challenges_for_all_hotkeys(self.database)
             self.last_purged_epoch = current_epoch
 
-    if self.step % self.config.neuron.compute_stats_interval == 0 and self.step > 0:
+    if self.step % 360 == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
         await compute_all_tiers(self.database)
 
