@@ -23,15 +23,15 @@ import time
 import bittensor as bt
 
 from pprint import pformat
-from storage.validator.config import config, check_config, add_args
 from storage.validator.state import log_event
 from storage.validator.bonding import compute_all_tiers
-from storage.validator.reward import apply_reward_scores
 from storage.validator.database import (
     total_validator_storage,
     get_all_chunk_hashes,
     get_miner_statistics,
+    purge_challenges_for_all_hotkeys,
 )
+from storage.validator.utils import get_current_epoch
 
 from .challenge import challenge_data
 from .retrieve import retrieve_data
@@ -87,7 +87,15 @@ async def forward(self):
                 hotkey_replaced=False,  # Don't delete challenge data (only in subscription handler)
             )
 
-    if self.step % 360 == 0 and self.step > 0:
+    # Purge all challenge data to start fresh and avoid requerying hotkeys with stale challenge data
+    current_epoch = get_current_epoch(self.subtensor)
+    if current_epoch % 10 == 0:
+        if self.last_purged_epoch < current_epoch:
+            bt.logging.info("initiating challenges purge")
+            await purge_challenges_for_all_hotkeys(self.database)
+            self.last_purged_epoch = current_epoch
+
+    if self.step % self.config.neuron.compute_stats_interval == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
         await compute_all_tiers(self.database)
 

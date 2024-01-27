@@ -16,18 +16,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
-import sys
-import copy
 import json
 import time
 import torch
 import base64
 import typing
 import asyncio
-import aioredis
+from redis import asyncio as aioredis
 import traceback
-import websocket
 import bittensor as bt
 import threading
 
@@ -39,11 +35,6 @@ from storage.validator.state import should_checkpoint
 from storage.validator.encryption import encrypt_data, setup_encryption_wallet
 from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
-from storage.validator.network import (
-    reroll_distribution,
-    compute_and_ping_chunks,
-    ping_uids,
-)
 
 from storage.validator.database import retrieve_encryption_payload
 
@@ -240,7 +231,7 @@ class neuron:
             - This property employs lazy loading and caching to efficiently manage the retrieval of top N validators.
             - The cache is updated based on specific conditions, such as crossing a checkpoint in the network.
         """
-        if self._top_n_validators == None or should_checkpoint(
+        if self._top_n_validators is None or should_checkpoint(
             get_current_block(self.subtensor),
             self.prev_step_block,
             self.config.neuron.checkpoint_block_length,
@@ -266,7 +257,7 @@ class neuron:
             - It relies on the 'store_broadband' method for actual storage and hash generation.
             - The method logs detailed information about the storage process for monitoring and debugging.
         """
-        bt.logging.debug(f"store_user_data() {synapse.dendrite.dict()}")
+        bt.logging.debug(f"store_user_data() {synapse.axon.dict()}")
 
         decoded_data = base64.b64decode(synapse.encrypted_data)
         decoded_data = (
@@ -300,17 +291,13 @@ class neuron:
     async def store_blacklist(
         self, synapse: protocol.StoreUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted"
 
         # Otherwise, reject.
         return (
@@ -382,17 +369,13 @@ class neuron:
     async def retrieve_blacklist(
         self, synapse: protocol.RetrieveUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted."
 
         # Otherwise, reject.
         return (
@@ -414,14 +397,12 @@ class neuron:
 
     def run(self):
         bt.logging.info("run()")
-        if not self.wallet.hotkey.ss58_address in self.metagraph.hotkeys:
+        if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
             raise Exception(
                 f"API is not registered - hotkey {self.wallet.hotkey.ss58_address} not in metagraph"
             )
         try:
             while not self.should_exit:
-                start_epoch = time.time()
-
                 # --- Wait until next epoch.
                 current_block = self.subtensor.get_current_block()
                 while current_block - self.prev_step_block < 3:
@@ -449,7 +430,7 @@ class neuron:
             exit()
 
         # In case of unforeseen errors, the API will log the error and continue operations.
-        except Exception as e:
+        except Exception:
             bt.logging.error(traceback.format_exc())
 
         # After all we have to ensure subtensor connection is closed properly

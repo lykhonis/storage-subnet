@@ -17,10 +17,10 @@
 # DEALINGS IN THE SOFTWARE.
 
 import json
-import aioredis
+from redis import asyncio as aioredis
 import asyncio
 import bittensor as bt
-from typing import Dict, List, Any, Union, Optional, Tuple
+from typing import Dict, List, Any, Union, Optional
 
 
 # Function to add metadata to a hash in Redis
@@ -898,7 +898,7 @@ async def purge_challenges_for_all_hotkeys(database: aioredis.Redis):
     Parameters:
     - database (aioredis.Redis): An instance of the Redis database used for data storage.
     """
-    bt.logging.debug(f"purging challenges for ALL hotkeys...")
+    bt.logging.debug("purging challenges for ALL hotkeys...")
     async for hotkey in database.scan_iter(match="hotkey:*"):
         hotkey = hotkey.decode().split(":")[1]
         await purge_challenges_for_hotkey(hotkey, database)

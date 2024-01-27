@@ -18,8 +18,6 @@
 
 import os
 import json
-import redis
-import aioredis
 import bittensor as bt
 
 
@@ -101,8 +99,8 @@ async def get_chunk_metadata(r, chunk_hash):
     """
     metadata = await r.hgetall(chunk_hash)
     if metadata:
-        metadata[b"size"] = int(metadata[b"size"])
-        metadata[b"seed"] = metadata[b"seed"].decode("utf-8")
+        metadata[b"size"] = int(metadata.get(b"size", 0))
+        metadata[b"seed"] = metadata.get(b"seed", b"").decode("utf-8")
     return metadata
 
 

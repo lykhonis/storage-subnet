@@ -110,15 +110,6 @@ def check_config(cls, config: "bt.Config"):
             os.path.join(config.neuron.full_path + "/" + "total_storage.csv")
         )
 
-        if config.database.purge_challenges:
-            bt.logging.warning(
-                "Purging all challenges from ALL miners! Waiting 60 sec in case this is unintentional..."
-            )
-            bt.logging.warning(
-                "Please abort the process if you are not intending to purge all your challenge data!"
-            )
-            time.sleep(60)
-
     bt.logging.info(f"Loaded config in fullpath: {config.neuron.full_path}")
 
 
@@ -339,9 +330,9 @@ def add_args(cls, parser):
         default=[],
     )
     parser.add_argument(
-        "--api.debug",
+        "--api.open_access",
         action="store_true",
-        help="If set, we whitelist by default to test easily.",
+        help="If set, we whitelist all hotkeys by default to test easily. (NOT RECOMMENDED FOR PRODUCTION)",
     )
 
     # Encryption wallet

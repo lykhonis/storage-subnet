@@ -22,17 +22,14 @@ import time
 import torch
 import functools
 import numpy as np
-import multiprocessing
 import random as pyrandom
 
-from math import comb
 from Crypto.Random import random
 from itertools import combinations, cycle
-from typing import Dict, List, Any, Union, Optional, Tuple
+from typing import List, Union
 
-from ..shared.ecc import hex_to_ecc_point, ecc_point_to_hex, hash_data, ECCommitment
-from ..shared.merkle import MerkleTree
-from ..validator.database import hotkey_at_capacity
+from storage.shared.ecc import hash_data
+from storage.validator.database import hotkey_at_capacity
 
 import bittensor as bt
 
@@ -95,7 +92,7 @@ def make_random_file(name: str = None, maxsize: int = None) -> Union[bytes, str]
     """
     size = (
         random.randint(random.randint(24, 128), maxsize)
-        if maxsize != None
+        if maxsize is not None
         else generate_file_size_with_lognormal()
     )
     data = os.urandom(size)
@@ -800,3 +797,39 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
             "uids": uid_group,
             "chunk_index": i,
         }
+
+
+def get_rebalance_script_path(current_dir: str):
+    """
+    Constructs and returns the path to the 'rebalance_deregistration.sh' script within a project directory.
+
+    This function takes the root path of a project and appends the relative path to the 'rebalance_deregistration.sh' script.
+    It assumes that the script is located within the 'scripts' subdirectory of the given project root.
+
+    Parameters:
+    project_root (str): The root path of the project directory.
+
+    Returns:
+    str: The full path to the 'rebalance_deregistration.sh' script.
+    """
+    project_root = os.path.join(current_dir, "..")
+    project_root = os.path.normpath(project_root)
+    script_path = os.path.join(project_root, "scripts", "rebalance_deregistration.sh")
+    return script_path
+
+
+def get_current_epoch(subtensor, netuid: int = 21) -> int:
+    """
+    Calculates the current epoch number from genesis of the network.
+
+    Parameters:
+    subtensor: An object representing the Subtensor network, which provides methods to get the current block and the network's tempo.
+    netuid (int, optional): The network ID for which the epoch is to be calculated. Default: 21.
+
+    Returns:
+    int: The current epoch calculated based on the elapsed blocks and the network's tempo.
+    """
+    registered_at = 2009702
+    blocks_since_registration = subtensor.get_current_block() - registered_at
+    current_epoch = blocks_since_registration // subtensor.tempo(netuid)
+    return current_epoch
