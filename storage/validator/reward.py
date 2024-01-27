@@ -220,7 +220,9 @@ def apply_reward_scores(
     # Normalize rewards based on total batch size
     bt.logging.debug(f"Total batch size: {total_batch_size}")
     rebal_size = zeros_with_same_length(total_batch_size)
-    scaled_rewards = [(reward / total_batch_size) * rebal_size for reward in rewards]
+    scaled_rewards = [
+        (reward / total_batch_size) * (total_batch_size / len(scaled_rewards)) for reward in rewards
+    ]
     bt.logging.debug(f"Normalized rewards: {scaled_rewards}")
     bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
