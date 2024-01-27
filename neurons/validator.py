@@ -30,12 +30,12 @@ from pprint import pformat
 from traceback import print_exception
 from substrateinterface.base import SubstrateInterface
 
+from stroage.shared.utils import get_redis_password
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
 from storage.validator.utils import (
     get_current_validtor_uid_round_robin,
     get_rebalance_script_path,
-    get_redis_password,
 )
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
