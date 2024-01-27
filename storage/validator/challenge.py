@@ -181,7 +181,7 @@ async def challenge_data(self):
     )
 
     remove_reward_idxs = []
-    total_batch_size = 0
+    data_sizes = []
     for idx, (uid, (verified, response)) in enumerate(zip(uids, responses)):
         response_dict = response[0].axon.dict() if response[0] is not None else None
         bt.logging.trace(
@@ -189,9 +189,8 @@ async def challenge_data(self):
         )
 
         # Calculate the size of the response and add it to the total batch size
-        weight = sys.getsizeof(response[0].challenge_hash)
-        total_batch_size += weight
-        bt.logging.trace(f"Size of response.data_chunk: {weight}")
+        data_size = sys.getsizeof(response[0].data_chunk)
+        data_sizes.append(data_size)
 
         hotkey = self.metagraph.hotkeys[uid]
 
@@ -245,10 +244,10 @@ async def challenge_data(self):
     bt.logging.trace("Applying challenge rewards")
     apply_reward_scores(
         self,
-        uids,
-        responses,
-        rewards,
-        total_batch_size,
+        uids=uids,
+        respones=responses,
+        rewards=rewards,
+        data_sizes=data_sizes,
         timeout=self.config.neuron.challenge_timeout,
     )
 

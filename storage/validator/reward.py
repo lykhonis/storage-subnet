@@ -148,14 +148,17 @@ def min_max_normalize(times):
     return [(time - max_time) / range_time for time in times]
 
 
-def scale_rewards(uids, responses, rewards, timeout: float):
+def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[float]):
     """
-    Scales the rewards for each axon based on their response times using sigmoid normalization.
+    Scales the rewards for each axon based on their response times and data sizes using sigmoid normalization.
+
     Args:
         uids (List[int]): A list of unique identifiers for each axon.
         responses (List[Response]): A list of Response objects corresponding to each axon.
         rewards (List[float]): A list of initial reward values for each axon.
         timeout (float): The timeout value used for response time calculations.
+        data_sizes (List[int]): A list of data sizes corresponding to each axon.
+
     Returns:
         List[float]: A list of scaled rewards for each axon.
     """
@@ -167,19 +170,25 @@ def scale_rewards(uids, responses, rewards, timeout: float):
     # Normalize the response times
     normalized_times = sigmoid_normalize(process_times, timeout)
 
-    # Create a dictionary mapping UIDs to normalized times
-    uid_to_normalized_time = {
-        uid: normalized_time
-        for (uid, _), normalized_time in zip(sorted_axon_times, normalized_times)
+    # Normalize the data sizes
+    total_data = sum(data_sizes)
+    bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
+    normalized_data_sizes = [size / total_data for size in data_sizes]
+    bt.logging.debug(f"Normalized data sizes: {normalized_data_sizes}")
+
+    # Create a dictionary mapping UIDs to normalized times and data sizes
+    uid_to_normalized = {
+        uid: (normalized_time, normalized_data)
+        for (uid, _), normalized_time, normalized_data in zip(sorted_axon_times, normalized_times, normalized_data_sizes)
     }
-    bt.logging.debug(
-        f"scale_rewards_sigmoid() uid_to_normalized_time: {uid_to_normalized_time}"
-    )
-    # Scale the rewards with normalized times
+
+    bt.logging.debug(f"scale_rewards_sigmoid() uid_to_normalized: {uid_to_normalized}")
+
+    # Scale the rewards with normalized times and data sizes
     for i, uid in enumerate(uids):
-        normalized_time_for_uid = uid_to_normalized_time[uid]
-        rewards[i] += rewards[i] * normalized_time_for_uid
-    bt.logging.debug(f"scale_rewards_sigmoid() rewards: {rewards}")
+        normalized_time, normalized_data = uid_to_normalized[uid]
+        rewards[i] *= (normalized_time * normalized_data)
+
     return rewards
 
 
@@ -188,7 +197,7 @@ def apply_reward_scores(
     uids,
     responses,
     rewards,
-    total_batch_size: int,
+    data_sizes: List[float],
     timeout: float,
 ):
     """
@@ -200,7 +209,7 @@ def apply_reward_scores(
         uids (List[int]): A list of UIDs for which rewards are being applied.
         responses (List[Response]): A list of response objects received from the nodes.
         rewards (torch.FloatTensor): A tensor containing the computed reward values.
-        total_batch_size (int): The total batch size used for the forward pass.
+        data_sizes (List[float]): The size of each data piece used for the forward pass.
         timeout (float): The timeout value used for response time calculations.
     """
 
@@ -214,17 +223,10 @@ def apply_reward_scores(
         bt.logging.debug(f"UIDs: {uids}")
 
     # Scale rewards based on response times
-    scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout)
-    bt.logging.debug(f"Prenormalized rewards: {scaled_rewards}")
-
-    # Normalize rewards based on total batch size
-    bt.logging.debug(f"Total batch size: {total_batch_size}")
-    rebal_size = zeros_with_same_length(total_batch_size)
-    scaled_rewards = [
-        (reward / total_batch_size) * (total_batch_size / len(scaled_rewards)) for reward in rewards
-    ]
+    scaled_rewards = scale_rewards(
+        uids, responses, rewards, timeout=timeout, data_sizes=data_sizes
+    )
     bt.logging.debug(f"Normalized rewards: {scaled_rewards}")
-    bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
     # shape: [ metagraph.n ]

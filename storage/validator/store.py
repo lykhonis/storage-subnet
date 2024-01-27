@@ -184,12 +184,13 @@ async def store_encrypted_data(
             ]
 
         bt.logging.trace(f"Applying store rewards for retry: {retries}")
+        data_size = sys.getsizeof(b64_encrypted_data)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
             timeout=self.config.neuron.store_timeout,
         )
 
@@ -361,12 +362,13 @@ async def store_broadband(
         )
         event.rewards.extend(rewards.tolist())
 
+        data_size = sys.getsizeof(b64_encrypted_data)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
             timeout=self.config.neuron.store_timeout,
         )
 
