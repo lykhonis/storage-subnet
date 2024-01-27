@@ -133,7 +133,7 @@ This Bash script is designed to configure UFW (Uncomplicated Firewall) to manage
 ##### Usage
 To run the script, use the following command in the terminal:
 ```bash
-sudo ./scripts/redis/close_redis_port.sh
+sudo ./scripts/redis/create_redis_firewall.sh
 ```
 Running this script will:
 - Check if UFW is installed and active. If UFW is not active, the script will attempt to enable it.
