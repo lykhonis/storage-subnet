@@ -48,10 +48,10 @@ if [ $config_needs_update -ne 0 ]; then
     echo "Redis persistence configuration updated."
 
     # Restart Redis server
-    sudo systemctl restart redis
+    sudo systemctl restart redis-server.service
     echo "Redis restarted."
 else
     echo "No update needed for Redis persistence configuration."
 fi
 
-sudo systemctl status redis
+sudo systemctl status redis-server.service

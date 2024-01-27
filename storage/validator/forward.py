@@ -47,13 +47,12 @@ async def forward(self):
     # Record forward time
     start = time.time()
 
-    if self.step % self.config.neuron.store_step_length == 0:
-        # Store some random data
-        bt.logging.info("initiating store random")
-        event = await store_random_data(self)
+    # Store some random data
+    bt.logging.info("initiating store random")
+    event = await store_random_data(self)
 
-        # Log event
-        log_event(self, event)
+    # Log store event
+    log_event(self, event)
 
     # Challenge every opportunity (e.g. every 2.5 blocks with 30 sec timeout)
     bt.logging.info("initiating challenge")
@@ -62,7 +61,7 @@ async def forward(self):
     # Log event
     log_event(self, event)
 
-    if self.step % self.config.neuron.retrieve_step_length == 0:
+    if self.step % 5 == 0:
         # Retrieve some data
         bt.logging.info("initiating retrieve")
         _, event = await retrieve_data(self)
@@ -70,13 +69,13 @@ async def forward(self):
         # Log event
         log_event(self, event)
 
-    if self.step % self.config.neuron.distribute_step_length == 0:
+    if self.step % 10 == 0:
         # Distribute data
         bt.logging.info("initiating distribute")
-        await distribute_data(self, self.config.neuron.store_redundancy)
+        await distribute_data(self, 4)
 
     # Monitor every 5 steps
-    if self.step % self.config.neuron.monitor_step_length == 0:
+    if self.step % 5 == 0:
         down_uids = await monitor(self)
         if len(down_uids) > 0:
             bt.logging.info(f"Downed uids marked for rebalance: {down_uids}")
@@ -89,13 +88,13 @@ async def forward(self):
 
     # Purge all challenge data to start fresh and avoid requerying hotkeys with stale challenge data
     current_epoch = get_current_epoch(self.subtensor)
-    if current_epoch % self.config.neuron.purge_epoch_length == 0:
+    if current_epoch % 10 == 0:
         if self.last_purged_epoch < current_epoch:
             bt.logging.info("initiating challenges purge")
             await purge_challenges_for_all_hotkeys(self.database)
             self.last_purged_epoch = current_epoch
 
-    if self.step % self.config.neuron.compute_stats_interval == 0 and self.step > 0:
+    if self.step % 360 == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
         await compute_all_tiers(self.database)
 

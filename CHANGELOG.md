@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 / 2024-01-27
+
+## What's Changed
+* Reward/normalized scaling v2 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/113
+* add confidence interval for tier calc by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/98
+* Reward/norm v3 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/114
+* update scripts and readme to reflect proper flow by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/116
+* Hardcode sensitive params by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/97
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.3.8...v1.4.0
+
+
 ## 1.3.8 / 2024-01-27
 
 ## What's Changed
