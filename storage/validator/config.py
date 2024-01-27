@@ -110,15 +110,6 @@ def check_config(cls, config: "bt.Config"):
             os.path.join(config.neuron.full_path + "/" + "total_storage.csv")
         )
 
-        if config.database.purge_challenges:
-            bt.logging.warning(
-                "Purging all challenges from ALL miners! Waiting 60 sec in case this is unintentional..."
-            )
-            bt.logging.warning(
-                "Please abort the process if you are not intending to purge all your challenge data!"
-            )
-            time.sleep(60)
-
     bt.logging.info(f"Loaded config in fullpath: {config.neuron.full_path}")
 
 
@@ -189,7 +180,7 @@ def add_args(cls, parser):
     parser.add_argument(
         "--neuron.purge_epoch_length",
         type=int,
-        default=2,
+        default=10, # 3600 blocks (12 hours)
         help="Number of epochs before purging all challenges.",
     )
     parser.add_argument(
