@@ -190,7 +190,6 @@ def apply_reward_scores(
     rewards,
     total_batch_size: int,
     timeout: float,
-    mode: str = "sigmoid",
 ):
     """
     Adjusts the moving average scores for a set of UIDs based on their response times and reward values.
@@ -203,15 +202,11 @@ def apply_reward_scores(
         rewards (torch.FloatTensor): A tensor containing the computed reward values.
         total_batch_size (int): The total batch size used for the forward pass.
         timeout (float): The timeout value used for response time calculations.
-        mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
     """
 
     def zeros_with_same_length(n):
         length = len(str(abs(n)))
         return int("1" + "0" * (length - 1))
-
-    if mode not in ["sigmoid", "minmax"]:
-        raise ValueError(f"Invalid mode: {mode}")
 
     if self.config.neuron.verbose:
         bt.logging.debug(f"Applying rewards: {rewards}")
@@ -226,7 +221,7 @@ def apply_reward_scores(
     bt.logging.debug(f"Normalized rewards: {rewards}")
 
     # Scale rewards based on response times
-    scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout, mode=mode)
+    scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout)
     bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
