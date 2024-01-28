@@ -20,50 +20,14 @@ import math
 import asyncio
 from redis import asyncio as aioredis
 import bittensor as bt
-
-# Constants for storage limits in bytes
-STORAGE_LIMIT_SUPER_SAIYAN = 1024**6 * 1  # 1 EB
-STORAGE_LIMIT_DIAMOND = 1024**5 * 1  # 1 PB
-STORAGE_LIMIT_GOLD = 1024**4 * 100  # 100 TB
-STORAGE_LIMIT_SILVER = 1024**4 * 10  # 10 TB
-STORAGE_LIMIT_BRONZE = 1024**4 * 1  # 1 TB
-
-# Requirements for each tier. These must be maintained for a miner to remain in that tier.
-SUPER_SAIYAN_STORE_SUCCESS_RATE = 0.999  # 1/1000 chance of failure
-SUPER_SAIYAN_RETIREVAL_SUCCESS_RATE = 0.999  # 1/1000 chance of failure
-SUPER_SAIYAN_CHALLENGE_SUCCESS_RATE = 0.999  # 1/1000 chance of failure
-
-DIAMOND_STORE_SUCCESS_RATE = 0.99  # 1/100 chance of failure
-DIAMOND_RETRIEVAL_SUCCESS_RATE = 0.99  # 1/100 chance of failure
-DIAMOND_CHALLENGE_SUCCESS_RATE = 0.99  # 1/100 chance of failure
-
-GOLD_STORE_SUCCESS_RATE = 0.975  # 1/50 chance of failure
-GOLD_RETRIEVAL_SUCCESS_RATE = 0.975  # 1/50 chance of failure
-GOLD_CHALLENGE_SUCCESS_RATE = 0.975  # 1/50 chance of failure
-
-SILVER_STORE_SUCCESS_RATE = 0.95  # 1/20 chance of failure
-SILVER_RETRIEVAL_SUCCESS_RATE = 0.95  # 1/20 chance of failure
-SILVER_CHALLENGE_SUCCESS_RATE = 0.95  # 1/20 chance of failure
-
-SUPER_SAIYAN_TIER_REWARD_FACTOR = 1.0  # Get 100% rewards
-DIAMOND_TIER_REWARD_FACTOR = 0.888  # Get 88.8% rewards
-GOLD_TIER_REWARD_FACTOR = 0.777  # Get 77.7% rewards
-SILVER_TIER_REWARD_FACTOR = 0.555  # Get 55.5% rewards
-BRONZE_TIER_REWARD_FACTOR = 0.444  # Get 44.4% rewards
-
-SUPER_SAIYAN_TIER_TOTAL_SUCCESSES = 10**5  # 100,000
-DIAMOND_TIER_TOTAL_SUCCESSES = 10**4 * 5  # 50,000
-GOLD_TIER_TOTAL_SUCCESSES = 10**3 * 5  # 5,000
-SILVER_TIER_TOTAL_SUCCESSES = 10**3  # 1,000
+from constants import *
 
 
-def wilson_score_interval(successes, total, confidence=0.95):
+def wilson_score_interval(successes, total):
     if total == 0:
-        return 0, 1
+        return 0.5 # chance
 
-    z_dict = {0.90: 1.645, 0.95: 1.96, 0.99: 2.576}
-
-    z = z_dict.get(confidence, 1.96)
+    z = 0.6744897501960817
 
     p = successes / total
     denominator = 1 + z**2 / total
@@ -79,7 +43,12 @@ def wilson_score_interval(successes, total, confidence=0.95):
         centre_adjusted_probability + z * adjusted_standard_deviation
     ) / denominator
 
-    return max(0, lower_bound), min(upper_bound, 1)
+    wilson_score = (max(0, lower_bound) +  min(upper_bound, 1)) / 2
+
+    bt.logging.trace(
+        f"Wilson score interval with {successes} / {total}: {wilson_score}"
+    )
+    return wilson_score
 
 
 async def reset_storage_stats(stats_key: str, database: aioredis.Redis):
@@ -92,17 +61,69 @@ async def reset_storage_stats(stats_key: str, database: aioredis.Redis):
         ss58_address (str): The unique address (hotkey) of the miner.
         database (redis.Redis): The Redis client instance for database operations.
     """
-    await database.hmset(
-        stats_key,
-        {
-            "store_attempts": 0,
-            "store_successes": 0,
-            "challenge_successes": 0,
-            "challenge_attempts": 0,
-            "retrieve_successes": 0,
-            "retrieve_attempts": 0,
-        },
-    )
+    stats = await database.hgetall(stats_key)
+    tier = stats.get(b"tier", b"Bronze").decode()
+    # Set min wilson score for each tier to preserve tier and can drop/go up from there based on future behavior
+    if tier == "Super Saiyan":
+        await database.hmset(
+            stats_key,
+            {
+                "store_attempts": 7,
+                "store_successes": 7,
+                "challenge_successes": 8,
+                "challenge_attempts": 8,
+                "retrieve_successes": 8,
+                "retrieve_attempts": 8,
+            },
+        )
+    elif tier == "Diamond":
+        await database.hmset(
+            stats_key,
+            {
+                "store_attempts": 3,
+                "store_successes": 3,
+                "challenge_successes": 3,
+                "challenge_attempts": 3,
+                "retrieve_successes": 3,
+                "retrieve_attempts": 3,
+            },
+        )
+    elif tier == "Gold":
+        await database.hmset(
+            stats_key,
+            {
+                "store_attempts": 2,
+                "store_successes": 2,
+                "challenge_successes": 2,
+                "challenge_attempts": 2,
+                "retrieve_successes": 1,
+                "retrieve_attempts": 1,
+            },
+        )
+    elif tier == "Silver":
+        await database.hmset(
+            stats_key,
+            {
+                "store_attempts": 1,
+                "store_successes": 1,
+                "challenge_successes": 1,
+                "challenge_attempts": 1,
+                "retrieve_successes": 0,
+                "retrieve_attempts": 0,
+            },
+        )
+    else:  # Bronze
+        await database.hmset(
+            stats_key,
+            {
+                "store_attempts": 0,
+                "store_successes": 0,
+                "challenge_successes": 0,
+                "challenge_attempts": 0,
+                "retrieve_successes": 0,
+                "retrieve_attempts": 0,
+            },
+        )
 
 
 async def rollover_storage_stats(database: aioredis.Redis):
@@ -151,8 +172,8 @@ async def register_miner(ss58_address: str, database: aioredis.Redis):
             "retrieve_successes": 0,
             "retrieve_attempts": 0,
             "total_successes": 0,
-            "tier": "Bronze",  # Init to bronze status
-            "storage_limit": STORAGE_LIMIT_BRONZE,  # in GB
+            "tier": "Bronze",
+            "storage_limit": STORAGE_LIMIT_BRONZE,
         },
     )
 
@@ -227,51 +248,35 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     store_attempts = int(await database.hget(stats_key, "store_attempts") or 0)
     total_successes = int(await database.hget(stats_key, "total_successes") or 0)
 
-    # Calculate Wilson score intervals for each task type
-    challenge_success_rate_lower, _ = wilson_score_interval(
-        challenge_successes, challenge_attempts, confidence
+    total_current_attempts = challenge_attempts + retrieval_attempts + store_attempts
+    total_current_successes = (
+        challenge_successes + retrieval_successes + store_successes
     )
-    retrieval_success_rate_lower, _ = wilson_score_interval(
-        retrieval_successes, retrieval_attempts, confidence
-    )
-    store_success_rate_lower, _ = wilson_score_interval(
-        store_successes, store_attempts, confidence
+
+    # Compute the overall success rate across all tasks
+    current_wilson_score = wilson_score_interval(
+        total_current_successes, total_current_attempts
     )
     bt.logging.trace(
-        f"Miner {stats_key} success rates: challenge={challenge_success_rate_lower}, retrieve={retrieval_success_rate_lower}, store={store_success_rate_lower}"
+        f"Miner {stats_key} current total success rate: {current_wilson_score}"
     )
 
     # Use the lower bounds of the intervals to determine the tier
-    tier = "Bronze"  # Default tier
-
-    if (
-        challenge_success_rate_lower >= SUPER_SAIYAN_CHALLENGE_SUCCESS_RATE
-        and retrieval_success_rate_lower >= SUPER_SAIYAN_RETIREVAL_SUCCESS_RATE
-        and store_success_rate_lower >= SUPER_SAIYAN_STORE_SUCCESS_RATE
-        and total_successes >= SUPER_SAIYAN_TIER_TOTAL_SUCCESSES
-    ):
+    if current_wilson_score >= SUPER_SAIYAN_SUCCESS_RATE:
+        bt.logging.trace(f"Setting {stats_key} to Super Saiyan tier.")
         tier = "Super Saiyan"
-    elif (
-        challenge_success_rate_lower >= DIAMOND_CHALLENGE_SUCCESS_RATE
-        and retrieval_success_rate_lower >= DIAMOND_RETRIEVAL_SUCCESS_RATE
-        and store_success_rate_lower >= DIAMOND_STORE_SUCCESS_RATE
-        and total_successes >= DIAMOND_TIER_TOTAL_SUCCESSES
-    ):
+    elif current_wilson_score >= DIAMOND_SUCCESS_RATE:
+        bt.logging.trace(f"Setting {stats_key} to Diamond tier.")
         tier = "Diamond"
-    elif (
-        challenge_success_rate_lower >= GOLD_CHALLENGE_SUCCESS_RATE
-        and retrieval_success_rate_lower >= GOLD_RETRIEVAL_SUCCESS_RATE
-        and store_success_rate_lower >= GOLD_STORE_SUCCESS_RATE
-        and total_successes >= GOLD_TIER_TOTAL_SUCCESSES
-    ):
+    elif current_wilson_score >= GOLD_SUCCESS_RATE:
+        bt.logging.trace(f"Setting {stats_key} to Gold tier.")
         tier = "Gold"
-    elif (
-        challenge_success_rate_lower >= SILVER_CHALLENGE_SUCCESS_RATE
-        and retrieval_success_rate_lower >= SILVER_RETRIEVAL_SUCCESS_RATE
-        and store_success_rate_lower >= SILVER_STORE_SUCCESS_RATE
-        and total_successes >= SILVER_TIER_TOTAL_SUCCESSES
-    ):
+    elif current_wilson_score >= SILVER_SUCCESS_RATE:
+        bt.logging.trace(f"Setting {stats_key} to Silver tier.")
         tier = "Silver"
+    else:
+        bt.logging.trace(f"Setting {stats_key} to Bronze tier.")
+        tier = "Bronze"
 
     # Update the tier in the database
     await database.hset(stats_key, "tier", tier)
@@ -289,6 +294,7 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
         storage_limit = STORAGE_LIMIT_BRONZE
 
     current_limit = await database.hget(stats_key, "storage_limit")
+    bt.logging.trace(f"Current storage limit for {stats_key}: {current_limit}")
     if current_limit.decode() != storage_limit:
         await database.hset(stats_key, "storage_limit", storage_limit)
         bt.logging.trace(
