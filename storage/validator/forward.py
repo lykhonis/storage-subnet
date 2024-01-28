@@ -31,6 +31,7 @@ from storage.validator.database import (
     get_miner_statistics,
     purge_challenges_for_all_hotkeys,
 )
+from storage.validator.state import save_state
 from storage.validator.utils import get_current_epoch
 
 from .challenge import challenge_data
@@ -87,11 +88,15 @@ async def forward(self):
 
     # Purge all challenge data to start fresh and avoid requerying hotkeys with stale challenge data
     current_epoch = get_current_epoch(self.subtensor)
+    bt.logging.info(
+        f"Current epoch: {current_epoch} | Last purged epoch: {self.last_purged_epoch}"
+    )
     if current_epoch % 10 == 0:
         if self.last_purged_epoch < current_epoch:
             bt.logging.info("initiating challenges purge")
             await purge_challenges_for_all_hotkeys(self.database)
             self.last_purged_epoch = current_epoch
+            save_state(self)
 
     if self.step % 360 == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
