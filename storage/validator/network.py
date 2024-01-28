@@ -186,7 +186,7 @@ async def monitor(self):
     list of UIDs to ping.
     """
     # Ping current subset of UIDs
-    query_uids = await get_available_query_miners(self, k=20)
+    query_uids = await get_available_query_miners(self, k=40)
     bt.logging.debug(f"monitor() uids: {query_uids}")
     _, failed_uids = await ping_uids(self, query_uids)
 
