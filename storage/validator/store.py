@@ -248,7 +248,7 @@ async def store_random_data(self):
         self,
         encrypted_data,
         encryption_payload,
-        k=10,
+        k=15,
         ttl=self.config.neuron.data_ttl,
     )
 
