@@ -193,7 +193,7 @@ async def monitor(self):
     down_uids = []
     for uid in failed_uids:
         self.monitor_lookup[uid] += 1
-        if self.monitor_lookup[uid] > 10:
+        if self.monitor_lookup[uid] > 3:
             self.monitor_lookup[uid] = 0
             down_uids.append(uid)
     bt.logging.debug(f"monitor() down uids: {down_uids}")
