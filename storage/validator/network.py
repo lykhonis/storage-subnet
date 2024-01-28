@@ -189,6 +189,7 @@ async def monitor(self):
     query_uids = await get_available_query_miners(self, k=40)
     bt.logging.debug(f"monitor() uids: {query_uids}")
     _, failed_uids = await ping_uids(self, query_uids)
+    bt.logging.debug(f"monitor() failed uids: {failed_uids}")
 
     down_uids = []
     for uid in failed_uids:
@@ -197,6 +198,7 @@ async def monitor(self):
             self.monitor_lookup[uid] = 0
             down_uids.append(uid)
     bt.logging.debug(f"monitor() down uids: {down_uids}")
+    bt.logging.trace(f"monitor() monitor_lookup: {self.monitor_lookup}")
 
     if down_uids:
         # Negatively reward

@@ -145,6 +145,7 @@ def save_state(self):
         neuron_state_dict = {
             "neuron_weights": self.moving_averaged_scores.to("cpu").tolist(),
             "last_purged_epoch": self.last_purged_epoch,
+            "monitor_lookup": self.monitor_lookup,
         }
         torch.save(neuron_state_dict, f"{self.config.neuron.full_path}/model.torch")
         bt.logging.success(
@@ -165,6 +166,9 @@ def load_state(self):
         state_dict = torch.load(f"{self.config.neuron.full_path}/model.torch")
         neuron_weights = torch.tensor(state_dict["neuron_weights"])
         self.last_purged_epoch = state_dict.get("last_purged_epoch", 0)
+        bt.logging.info(f"Loaded last_purged_epoch: {self.last_purged_epoch}")
+        self.monitor_lookup = state_dict.get("monitor_lookup", {uid: 0 for uid in self.metagraph.uids.tolist()})
+        bt.logging.info(f"Loaded monitor_lookup: {self.monitor_lookup}")
         # Check to ensure that the size of the neruon weights matches the metagraph size.
         if neuron_weights.shape != (self.metagraph.n,):
             bt.logging.warning(
