@@ -20,7 +20,7 @@ import math
 import asyncio
 from redis import asyncio as aioredis
 import bittensor as bt
-from constants import *
+from storage.constants import *
 
 
 def wilson_score_interval(successes, total):
