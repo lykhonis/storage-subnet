@@ -376,7 +376,7 @@ async def retrieve_broadband(self, full_hash: str):
             tasks.append(
                 asyncio.create_task(
                     retrieve_chunk_group(
-                        chunk_metadata["chunk_hash"], chunk_metadata["chunk_size"], uids
+                        chunk_metadata["chunk_hash"], chunk_metadata["size"], uids
                     )
                 )
             )
