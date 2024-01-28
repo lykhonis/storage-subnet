@@ -248,7 +248,7 @@ async def store_random_data(self):
         self,
         encrypted_data,
         encryption_payload,
-        k=10,
+        k=15,
         ttl=self.config.neuron.data_ttl,
     )
 
@@ -362,7 +362,7 @@ async def store_broadband(
         )
         event.rewards.extend(rewards.tolist())
 
-        data_size = sys.getsizeof(b64_encrypted_data)
+        data_size = sys.getsizeof(b64_encoded_chunk)
         apply_reward_scores(
             self,
             uids=uids,
@@ -522,6 +522,20 @@ async def store_broadband(
         return full_hash
 
     exclude_uids = copy.deepcopy(exclude_uids)
+    bt.logging.debug(f"Original exclude_uids: {exclude_uids}")
+
+    # Remove failed UIDs from consideration in chunk distributions
+    uids, failed_uids = await ping_and_retry_uids(
+        self,
+        k=50,
+        max_retries=1,
+        exclude_uids=exclude_uids,
+    )
+    bt.logging.debug(f"ping_and_retry_uids() failed uids: {failed_uids}")
+    if exclude_uids is None:
+        exclude_uids = []
+    exclude_uids = exclude_uids + list(failed_uids)
+    bt.logging.debug(f"Updated exclude_uids: {exclude_uids}")
 
     full_size = sys.getsizeof(encrypted_data)
     bt.logging.debug(f"full size: {full_size}")
