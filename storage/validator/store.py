@@ -461,7 +461,6 @@ async def store_broadband(
 
         bt.logging.debug(f"gathering broadband tasks: {pformat(tasks)}")
         results = await asyncio.gather(*tasks)
-        bt.logging.debug(f"store_chunk_group() results: {pformat(results)}")
         # Grab the responses and relevant data necessary for verify from the results
         for i, result_group in enumerate(results):
             responses, b64_encoded_chunk, random_seed = result_group
