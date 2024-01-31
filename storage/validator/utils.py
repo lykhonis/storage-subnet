@@ -54,7 +54,7 @@ def chunk_data_generator(data, chunk_size):
 
 
 def generate_file_size_with_lognormal(
-    mu: float = np.log(5 * 1024**2), sigma: float = 1.5
+    mu: float = np.log(3 * 1024**2), sigma: float = 1.5
 ) -> float:
     """
     Generate a single file size using a lognormal distribution.
@@ -799,7 +799,36 @@ async def compute_chunk_distribution_mut_exclusive_numpy_reuse_uids(
         }
 
 
-def get_current_epoch(subtensor, netuid=21):
+def get_rebalance_script_path(current_dir: str):
+    """
+    Constructs and returns the path to the 'rebalance_deregistration.sh' script within a project directory.
+
+    This function takes the root path of a project and appends the relative path to the 'rebalance_deregistration.sh' script.
+    It assumes that the script is located within the 'scripts' subdirectory of the given project root.
+
+    Parameters:
+    project_root (str): The root path of the project directory.
+
+    Returns:
+    str: The full path to the 'rebalance_deregistration.sh' script.
+    """
+    project_root = os.path.join(current_dir, "..")
+    project_root = os.path.normpath(project_root)
+    script_path = os.path.join(project_root, "scripts", "rebalance_deregistration.sh")
+    return script_path
+
+
+def get_current_epoch(subtensor, netuid: int = 21) -> int:
+    """
+    Calculates the current epoch number from genesis of the network.
+
+    Parameters:
+    subtensor: An object representing the Subtensor network, which provides methods to get the current block and the network's tempo.
+    netuid (int, optional): The network ID for which the epoch is to be calculated. Default: 21.
+
+    Returns:
+    int: The current epoch calculated based on the elapsed blocks and the network's tempo.
+    """
     registered_at = 2009702
     blocks_since_registration = subtensor.get_current_block() - registered_at
     current_epoch = blocks_since_registration // subtensor.tempo(netuid)

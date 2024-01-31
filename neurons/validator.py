@@ -30,9 +30,13 @@ from pprint import pformat
 from traceback import print_exception
 from substrateinterface.base import SubstrateInterface
 
+from storage.shared.utils import get_redis_password
 from storage.shared.subtensor import get_current_block
 from storage.shared.weights import should_set_weights
-from storage.shared.utils import get_redis_password
+from storage.validator.utils import (
+    get_current_validtor_uid_round_robin,
+    get_rebalance_script_path,
+)
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -177,9 +181,6 @@ class neuron:
             bt.logging.debug("loading wandb")
             init_wandb(self)
 
-        if self.config.neuron.challenge_sample_size == 0:
-            self.config.neuron.challenge_sample_size = self.metagraph.n
-
         self.prev_step_block = get_current_block(self.subtensor)
         self.step = 0
 
@@ -193,6 +194,10 @@ class neuron:
         self.subscription_thread: threading.Thread = None
         self.last_registered_block = 0
         self.rebalance_queue = []
+        self.rebalance_script_path = get_rebalance_script_path(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+        self.last_purged_epoch = 0
 
     def run(self):
         bt.logging.info("run()")
@@ -214,10 +219,7 @@ class neuron:
 
                 # --- Wait until next step epoch.
                 current_block = self.subtensor.get_current_block()
-                while (
-                    current_block - self.prev_step_block
-                    < self.config.neuron.blocks_per_step
-                ):
+                while current_block - self.prev_step_block < 3:
                     # --- Wait for next block.
                     time.sleep(1)
                     current_block = self.subtensor.get_current_block()
@@ -263,7 +265,7 @@ class neuron:
                 validator_should_set_weights = should_set_weights(
                     get_current_block(self.subtensor),
                     prev_set_weights_block,
-                    self.config.neuron.set_weights_epoch_length,
+                    360,  # tempo
                     self.config.neuron.disable_set_weights,
                 )
                 bt.logging.debug(
@@ -360,12 +362,9 @@ class neuron:
                 # Fire off the script
                 hotkeys_str = ",".join(map(str, hotkeys))
                 hotkeys_arg = quote(hotkeys_str)
-                path = os.path.join(
-                    os.path.abspath("."), "scripts/rebalance_deregistration.sh"
-                )
                 subprocess.Popen(
                     [
-                        path,
+                        self.rebalance_script_path,
                         hotkeys_arg,
                         self.subtensor.chain_endpoint,
                         str(self.config.database.index),

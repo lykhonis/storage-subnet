@@ -7,7 +7,7 @@ REDIS_PASSWORD=$(sudo grep -Po '^requirepass \K.*' $REDIS_CONF)
 redis-cli -a $REDIS_PASSWORD SET testkey "Hello, FileTao!"
 
 # Restart Redis server
-sudo systemctl restart redis
+sudo systemctl restart redis-server.service
 
 # Wait a bit to ensure Redis has restarted
 sleep 5

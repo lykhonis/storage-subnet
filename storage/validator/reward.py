@@ -129,34 +129,18 @@ def sigmoid_normalize(process_times, timeout):
     return adjusted_sigmoid_inverse(centered_times, steepness, shift)
 
 
-def min_max_normalize(times):
+def scale_rewards(
+    uids, responses, rewards, timeout: float, data_sizes: List[float], device
+):
     """
-    Normalizes the response times using Min-Max scaling.
-    Args:
-        times (List[float]): A list of response times.
-    Returns:
-        List[float]: Normalized response times scaled between 0 and 1.
-    """
-    if times == []:
-        return []
-    min_time = min(times)
-    max_time = max(times)
-    range_time = max_time - min_time
-    if range_time == 0:
-        # Avoid division by zero in case all times are the same
-        return [0.5 for _ in times]
-    return [(time - max_time) / range_time for time in times]
-
-
-def scale_rewards(uids, responses, rewards, timeout: float, mode: str):
-    """
-    Scales the rewards for each axon based on their response times using `mode` normalization.
+    Scales the rewards for each axon based on their response times using sigmoid normalization.
     Args:
         uids (List[int]): A list of unique identifiers for each axon.
         responses (List[Response]): A list of Response objects corresponding to each axon.
         rewards (List[float]): A list of initial reward values for each axon.
         timeout (float): The timeout value used for response time calculations.
-        mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
+        data_sizes (List[int]): A list of data sizes corresponding to each axon.
+
     Returns:
         List[float]: A list of scaled rewards for each axon.
     """
@@ -165,27 +149,40 @@ def scale_rewards(uids, responses, rewards, timeout: float, mode: str):
     # Extract only the process times
     process_times = [proc_time for _, proc_time in sorted_axon_times]
 
+    # Apply logarithmic scaling to data sizes
+    bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
+    log_data_sizes = np.log1p(data_sizes)
+    normalized_log_data_sizes = log_data_sizes / torch.sum(torch.tensor(log_data_sizes))
+    bt.logging.debug(f"Normalized data sizes: {normalized_log_data_sizes}")
+
+    # Scale initial rewards by normalized data sizes
+    data_size_scaled_rewards = rewards.to(device) * torch.tensor(
+        normalized_log_data_sizes
+    ).to(device)
+
     # Normalize the response times
-    normalized_times = (
-        min_max_normalize(process_times)
-        if mode == "minmax"
-        else sigmoid_normalize(process_times, timeout)
-    )
+    normalized_times = sigmoid_normalize(process_times, timeout)
 
     # Create a dictionary mapping UIDs to normalized times
     uid_to_normalized_time = {
         uid: normalized_time
         for (uid, _), normalized_time in zip(sorted_axon_times, normalized_times)
     }
-    bt.logging.debug(
-        f"scale_rewards_by_{mode}() uid_to_normalized_time: {uid_to_normalized_time}"
+
+    # Scale the data size-scaled rewards with normalized times
+    time_scaled_rewards = torch.tensor(
+        [
+            data_size_scaled_rewards[i] * uid_to_normalized_time[uid]
+            for i, uid in enumerate(uids)
+        ]
     )
-    # Scale the rewards with normalized times
-    for i, uid in enumerate(uids):
-        normalized_time_for_uid = uid_to_normalized_time[uid]
-        rewards[i] += rewards[i] * normalized_time_for_uid
-    bt.logging.debug(f"scale_rewards_by_{mode}() rewards: {rewards}")
-    return rewards
+
+    # Final normalization if needed
+    rescale_factor = torch.sum(rewards) / torch.sum(time_scaled_rewards)
+    bt.logging.debug(f"Rescale factor: {rescale_factor}")
+    scaled_rewards = [reward * rescale_factor for reward in time_scaled_rewards]
+
+    return scaled_rewards
 
 
 def apply_reward_scores(
@@ -193,57 +190,56 @@ def apply_reward_scores(
     uids,
     responses,
     rewards,
-    total_batch_size: int,
+    data_sizes: List[float],
     timeout: float,
-    mode: str = "sigmoid",
 ):
     """
     Adjusts the moving average scores for a set of UIDs based on their response times and reward values.
 
-    This should reflect the distribution of axon response times (minmax norm)
+    This should reflect the distribution of axon response times
 
     Parameters:
         uids (List[int]): A list of UIDs for which rewards are being applied.
         responses (List[Response]): A list of response objects received from the nodes.
         rewards (torch.FloatTensor): A tensor containing the computed reward values.
-        total_batch_size (int): The total batch size used for the forward pass.
+        data_sizes (List[float]): The size of each data piece used for the forward pass.
         timeout (float): The timeout value used for response time calculations.
-        mode (str): The normalization mode to use. Can be either 'sigmoid' or 'minmax'.
     """
-
-    def zeros_with_same_length(n):
-        length = len(str(abs(n)))
-        return int("1" + "0" * (length - 1))
-
-    if mode not in ["sigmoid", "minmax"]:
-        raise ValueError(f"Invalid mode: {mode}")
-
     if self.config.neuron.verbose:
         bt.logging.debug(f"Applying rewards: {rewards}")
         bt.logging.debug(f"Reward shape: {rewards.shape}")
         bt.logging.debug(f"UIDs: {uids}")
 
-    # Normalize rewards based on total batch size
-    bt.logging.debug(f"Total batch size: {total_batch_size}")
-    bt.logging.debug(f"Prenormalized rewards: {rewards}")
-    rebal_size = zeros_with_same_length(total_batch_size)
-    rewards = [(reward / total_batch_size) * rebal_size for reward in rewards]
-    bt.logging.debug(f"Normalized rewards: {rewards}")
-
     # Scale rewards based on response times
-    scaled_rewards = scale_rewards(uids, responses, rewards, timeout=timeout, mode=mode)
-    bt.logging.debug(f"apply_reward_scores() Scaled rewards: {scaled_rewards}")
+    scaled_rewards = scale_rewards(
+        uids,
+        responses,
+        rewards,
+        timeout=timeout,
+        data_sizes=data_sizes,
+        device=self.device,
+    )
+    scaled_rewards = torch.tensor(scaled_rewards).type(
+        torch.FloatTensor
+    )  # Ensure same type as rewards
+    bt.logging.debug(f"Normalized rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
     # shape: [ metagraph.n ]
-    scattered_rewards: torch.FloatTensor = self.moving_averaged_scores.scatter(
-        0, torch.tensor(uids).to(self.device), torch.tensor(scaled_rewards)
-    ).to(self.device)
+    scattered_rewards: torch.FloatTensor = (
+        self.moving_averaged_scores.to(self.device)
+        .scatter(
+            0,
+            torch.tensor(uids).to(self.device),
+            scaled_rewards.to(self.device),
+        )
+        .to(self.device)
+    )
     bt.logging.trace(f"Scattered rewards: {scattered_rewards}")
 
     # Update moving_averaged_scores with rewards produced by this step.
     # shape: [ metagraph.n ]
-    alpha: float = self.config.neuron.moving_average_alpha
+    alpha: float = 0.05
     self.moving_averaged_scores: torch.FloatTensor = alpha * scattered_rewards + (
         1 - alpha
     ) * self.moving_averaged_scores.to(self.device)

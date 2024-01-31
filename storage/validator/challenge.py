@@ -80,16 +80,12 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
     bt.logging.trace(f"Challenge data: {pformat(data)}")
 
     try:
-        chunk_size = (
-            self.config.neuron.override_chunk_size
-            if self.config.neuron.override_chunk_size > 0
-            else get_random_chunksize(
-                minsize=self.config.neuron.min_chunk_size,
-                maxsize=max(
-                    self.config.neuron.min_chunk_size,
-                    data["size"] // self.config.neuron.chunk_factor,
-                ),
-            )
+        chunk_size = get_random_chunksize(
+            minsize=self.config.neuron.min_chunk_size,
+            maxsize=max(
+                self.config.neuron.min_chunk_size,
+                data["size"] // self.config.neuron.chunk_factor,
+            ),
         )
     except:  # TODO: do not use bare except
         bt.logging.error(
@@ -124,7 +120,7 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
         [axon],
         synapse,
         deserialize=True,
-        timeout=self.config.neuron.challenge_timeout,
+        timeout=30,
     )
     verified = verify_challenge_with_seed(response[0], synapse.seed)
 
@@ -166,9 +162,7 @@ async def challenge_data(self):
 
     start_time = time.time()
     tasks = []
-    uids = await get_available_query_miners(
-        self, k=self.config.neuron.challenge_sample_size
-    )
+    uids = await get_available_query_miners(self, k=10)
     bt.logging.debug(f"challenge uids {uids}")
     responses = []
     for uid in uids:
@@ -181,7 +175,7 @@ async def challenge_data(self):
     )
 
     remove_reward_idxs = []
-    total_batch_size = 0
+    data_sizes = []
     for idx, (uid, (verified, response)) in enumerate(zip(uids, responses)):
         response_dict = response[0].axon.dict() if response[0] is not None else None
         bt.logging.trace(
@@ -189,9 +183,8 @@ async def challenge_data(self):
         )
 
         # Calculate the size of the response and add it to the total batch size
-        weight = sys.getsizeof(response[0].challenge_hash)
-        total_batch_size += weight
-        bt.logging.trace(f"Size of response.data_chunk: {weight}")
+        data_size = sys.getsizeof(response[0].data_chunk)
+        data_sizes.append(data_size)
 
         hotkey = self.metagraph.hotkeys[uid]
 
@@ -241,16 +234,19 @@ async def challenge_data(self):
     )
     rewards = remove_indices_from_tensor(rewards, remove_reward_idxs)
     bt.logging.debug(f"challenge_data() kept rewards: {rewards} | uids {uids}")
+    data_sizes = remove_indices_from_tensor(
+        torch.tensor(data_sizes), remove_reward_idxs
+    )
+    bt.logging.debug(f"challenge_data() kept sizes  : {data_sizes}")
 
     bt.logging.trace("Applying challenge rewards")
     apply_reward_scores(
         self,
-        uids,
-        responses,
-        rewards,
-        total_batch_size,
-        timeout=self.config.neuron.challenge_timeout,
-        mode=self.config.neuron.reward_mode,
+        uids=uids,
+        responses=responses,
+        rewards=rewards,
+        data_sizes=data_sizes,
+        timeout=30,
     )
 
     # Determine the best UID based on rewards
