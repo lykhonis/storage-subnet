@@ -222,8 +222,8 @@ def add_args(cls, parser):
     parser.add_argument(
         "--neuron.data_ttl",
         type=int,
-        help="The number of blocks before data expires.",
-        default=50000,  # 7 days
+        help="The number of blocks before data expires (seconds).",
+        default=60 * 60 * 24 * 30,  # 30 days
     )
     parser.add_argument(
         "--neuron.profile",

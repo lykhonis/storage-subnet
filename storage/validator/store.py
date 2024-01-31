@@ -62,7 +62,7 @@ async def store_encrypted_data(
     encrypted_data: typing.Union[bytes, str],
     encryption_payload: dict,
     exclude_uids: typing.List[str] = [],
-    ttl: int = 0,
+    ttl: int = None,
     k: int = None,
     max_retries: int = 3,
 ) -> bool:
@@ -110,6 +110,7 @@ async def store_encrypted_data(
         g=ecc_point_to_hex(g),
         h=ecc_point_to_hex(h),
         seed=get_random_bytes(32).hex(),  # 256-bit seed
+        ttl=ttl or self.config.neuron.data_ttl,
     )
 
     # Select subset of miners to query (e.g. redunancy factor of N)
@@ -158,12 +159,8 @@ async def store_encrypted_data(
                 data_hash,
                 response_storage,
                 self.database,
+                ttl=ttl or self.config.neuron.data_ttl,
             )
-            if ttl > 0:
-                await self.database.expire(
-                    f"{hotkey}:{data_hash}",
-                    ttl,
-                )
             bt.logging.debug(
                 f"Stored data in database with hotkey: {hotkey} | uid {uid} | {data_hash}"
             )
@@ -261,6 +258,7 @@ async def store_broadband(
     k=10,
     data_hash=None,
     exclude_uids=None,
+    ttl=None,
 ):
     """
     Asynchronously stores encrypted data across a distributed network by splitting it into chunks and
@@ -328,6 +326,7 @@ async def store_broadband(
             g=ecc_point_to_hex(g),
             h=ecc_point_to_hex(h),
             seed=random_seed,
+            ttl=ttl or self.config.neuron.data_ttl,
         )
 
         uids = [
@@ -420,6 +419,7 @@ async def store_broadband(
                 chunk_hash,
                 response_storage,  # seed + size + encryption keys
                 self.database,
+                ttl=ttl or self.config.neuron.data_ttl,
             )
             end = time.time()
             bt.logging.debug(

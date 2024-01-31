@@ -18,10 +18,11 @@
 
 import os
 import json
+import time
 import bittensor as bt
 
 
-async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed):
+async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl):
     """
     Stores the metadata of a chunk in a Redis database.
 
@@ -40,6 +41,8 @@ async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed):
         "hotkey": hotkey,
         "size": str(size),  # Convert size to string
         "seed": seed,  # Store seed directly
+        "ttl": ttl,
+        "generated": time.time(),
     }
 
     # Use hmset (or hset which is its modern equivalent) to store the hash
@@ -47,7 +50,9 @@ async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed):
         await r.hset(chunk_hash, key, value)
 
 
-async def store_or_update_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed):
+async def store_or_update_chunk_metadata(
+    r, chunk_hash, filepath, hotkey, size, seed, ttl
+):
     """
     Stores or updates the metadata of a chunk in a Redis database.
 
@@ -65,7 +70,7 @@ async def store_or_update_chunk_metadata(r, chunk_hash, filepath, hotkey, size, 
         await update_seed_info(r, chunk_hash, hotkey, seed)
     else:
         # Add new entry
-        await store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed)
+        await store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl)
 
 
 async def update_seed_info(r, chunk_hash, hotkey, seed):
@@ -100,6 +105,7 @@ async def get_chunk_metadata(r, chunk_hash):
     metadata = await r.hgetall(chunk_hash)
     if metadata:
         metadata[b"size"] = int(metadata.get(b"size", 0))
+        metadata[b"ttl"] = int(metadata.get(b"ttl", 0))
         metadata[b"seed"] = metadata.get(b"seed", b"").decode("utf-8")
     return metadata
 
@@ -190,3 +196,29 @@ async def migrate_data_directory(r, new_base_directory, return_failures=False):
         bt.logging.success("Successfully migrated all filepaths.")
 
     return failed_filepaths if return_failures else None
+
+
+async def purge_expired_ttl_keys(r, verbose=False):
+    """
+    Purges all expired TTL keys from the Redis database.
+
+    Args:
+        r (redis.Redis): The Redis connection instance.
+    """
+    async for key in r.scan_iter("*"):
+        ttl = await r.hget(key, b"ttl")
+        if ttl:
+            generated = await r.hget(key, b"generated")
+            if int(ttl) + generated >= time.time():
+                try:
+                    bt.logging.info(f"Purging expired TTL key {key}")
+                    # Delete on filesystem
+                    filepath = await r.hget(key, b"filepath")
+                    if filepath:
+                        os.remove(filepath.decode("utf-8"))
+                    # Delete in index
+                    await r.delete(key)
+                except Exception as e:
+                    if verbose:
+                        bt.logging.error(f"Failed to purge expired TTL key {key}: {e}")
+                    pass
