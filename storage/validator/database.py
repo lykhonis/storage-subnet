@@ -50,7 +50,7 @@ async def set_ttl_for_hash_and_hotkey(
 
 async def get_ttl_for_hash_and_hotkey(
     data_hash: str, ss58_address: str, database: aioredis.Redis
-) -> Optional[int]:
+) -> int:
     """
     Retrieves the TTL for a hash in Redis.
 
@@ -108,13 +108,37 @@ async def is_ttl_expired_for_hash_and_hotkey(
         True if the TTL has expired, False otherwise.
     """
     key = f"hotkey:{ss58_address}"
-    generated = await get_time_since_generation_for_hash_and_hotkey(
+    elapsed = await get_time_since_generation_for_hash_and_hotkey(
         data_hash, ss58_address, database
     )
-    if generated + ttl < time.time():
+    ttl = await get_ttl_for_hash_and_hotkey(data_hash, ss58_address, database)
+    if elapsed > ttl:
         return True
     else:
         return False
+
+
+async def purge_expired_ttl_keys(database: aioredis.Redis):
+    """
+    Purges all expired TTL keys from the database.
+
+    Parameters:
+        database (aioredis.Redis): The Redis client instance.
+    """
+    # Iterate over all hotkeys
+    async for hotkey in database.scan_iter("*"):
+        if not hotkey.startswith(b"hotkey:"):
+            continue
+        data_hashes = await database.hgetall(hotkey)
+        for data_hash in data_hashes:
+            data_hash = data_hash.decode("utf-8")
+            if data_hash.startswith("ttl:"):
+                hk = hotkey.decode("utf-8")[7:]
+                hs = data_hash[4:]
+                if await is_ttl_expired_for_hash_and_hotkey(
+                    hs, hk, database
+                ):
+                    await remove_metadata_from_hotkey(hk, hs, database)
 
 
 async def add_metadata_to_hotkey(
@@ -122,7 +146,7 @@ async def add_metadata_to_hotkey(
     data_hash: str,
     metadata: Dict,
     database: aioredis.Redis,
-    ttl: typing.Optional[int] = None,
+    ttl: Optional[int] = None,
 ):
     """
     Associates a data hash and its metadata with a hotkey in Redis.

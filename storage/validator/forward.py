@@ -29,6 +29,7 @@ from storage.validator.database import (
     total_validator_storage,
     get_all_chunk_hashes,
     get_miner_statistics,
+    purge_expired_ttl_keys,
     purge_challenges_for_all_hotkeys,
 )
 from storage.validator.state import save_state
@@ -97,6 +98,11 @@ async def forward(self):
             await purge_challenges_for_all_hotkeys(self.database)
             self.last_purged_epoch = current_epoch
             save_state(self)
+
+    # Purge expired TTL keys
+    if self.step % 60 == 0:
+        bt.logging.info("initiating TTL purge for expired keys") 
+        await purge_expired_ttl_keys(self.database)
 
     if self.step % 360 == 0 and self.step > 0:
         bt.logging.info("initiating compute stats")
