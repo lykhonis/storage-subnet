@@ -25,7 +25,7 @@ from storage.constants import *
 
 def wilson_score_interval(successes, total):
     if total == 0:
-        return 0.5 # chance
+        return 0.5  # chance
 
     z = 0.6744897501960817
 
@@ -43,7 +43,7 @@ def wilson_score_interval(successes, total):
         centre_adjusted_probability + z * adjusted_standard_deviation
     ) / denominator
 
-    wilson_score = (max(0, lower_bound) +  min(upper_bound, 1)) / 2
+    wilson_score = (max(0, lower_bound) + min(upper_bound, 1)) / 2
 
     bt.logging.trace(
         f"Wilson score interval with {successes} / {total}: {wilson_score}"

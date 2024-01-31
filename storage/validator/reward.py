@@ -129,7 +129,9 @@ def sigmoid_normalize(process_times, timeout):
     return adjusted_sigmoid_inverse(centered_times, steepness, shift)
 
 
-def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[float], device):
+def scale_rewards(
+    uids, responses, rewards, timeout: float, data_sizes: List[float], device
+):
     """
     Scales the rewards for each axon based on their response times using sigmoid normalization.
     Args:
@@ -154,7 +156,9 @@ def scale_rewards(uids, responses, rewards, timeout: float, data_sizes: List[flo
     bt.logging.debug(f"Normalized data sizes: {normalized_log_data_sizes}")
 
     # Scale initial rewards by normalized data sizes
-    data_size_scaled_rewards = rewards.to(device) * torch.tensor(normalized_log_data_sizes).to(device)
+    data_size_scaled_rewards = rewards.to(device) * torch.tensor(
+        normalized_log_data_sizes
+    ).to(device)
 
     # Normalize the response times
     normalized_times = sigmoid_normalize(process_times, timeout)
@@ -208,17 +212,29 @@ def apply_reward_scores(
 
     # Scale rewards based on response times
     scaled_rewards = scale_rewards(
-        uids, responses, rewards, timeout=timeout, data_sizes=data_sizes, device=self.device
+        uids,
+        responses,
+        rewards,
+        timeout=timeout,
+        data_sizes=data_sizes,
+        device=self.device,
     )
-    scaled_rewards = torch.tensor(scaled_rewards).type(torch.FloatTensor) # Ensure same type as rewards
+    scaled_rewards = torch.tensor(scaled_rewards).type(
+        torch.FloatTensor
+    )  # Ensure same type as rewards
     bt.logging.debug(f"Normalized rewards: {scaled_rewards}")
 
     # Compute forward pass rewards
     # shape: [ metagraph.n ]
-    scattered_rewards: torch.FloatTensor = self.moving_averaged_scores.to(self.device).scatter(
-        0, torch.tensor(uids).to(self.device), 
-        scaled_rewards.to(self.device),
-    ).to(self.device)
+    scattered_rewards: torch.FloatTensor = (
+        self.moving_averaged_scores.to(self.device)
+        .scatter(
+            0,
+            torch.tensor(uids).to(self.device),
+            scaled_rewards.to(self.device),
+        )
+        .to(self.device)
+    )
     bt.logging.trace(f"Scattered rewards: {scattered_rewards}")
 
     # Update moving_averaged_scores with rewards produced by this step.
