@@ -77,5 +77,6 @@ class TestIPFSCID(unittest.TestCase):
         self.assertEqual(decode_cid(cid1_3), expected_v1_hash)
         cid1_4 = make_cid(data, version=1)
 
+
 if __name__ == "__main__":
     unittest.main()
