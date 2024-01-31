@@ -101,7 +101,7 @@ async def forward(self):
 
     # Purge expired TTL keys
     if self.step % 60 == 0:
-        bt.logging.info("initiating TTL purge for expired keys") 
+        bt.logging.info("initiating TTL purge for expired keys")
         await purge_expired_ttl_keys(self.database)
 
     if self.step % 360 == 0 and self.step > 0:

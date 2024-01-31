@@ -135,9 +135,7 @@ async def purge_expired_ttl_keys(database: aioredis.Redis):
             if data_hash.startswith("ttl:"):
                 hk = hotkey.decode("utf-8")[7:]
                 hs = data_hash[4:]
-                if await is_ttl_expired_for_hash_and_hotkey(
-                    hs, hk, database
-                ):
+                if await is_ttl_expired_for_hash_and_hotkey(hs, hk, database):
                     await remove_metadata_from_hotkey(hk, hs, database)
 
 
