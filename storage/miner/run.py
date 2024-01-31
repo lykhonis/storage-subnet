@@ -19,6 +19,7 @@
 import json
 import time
 import wandb
+import asyncio
 import bittensor as bt
 
 from substrateinterface import SubstrateInterface
@@ -260,7 +261,7 @@ def run(self):
                 should_retry = False
 
             # --- Purge expired TTL keys.
-            await purge_expired_ttl_keys(self.database)
+            self.loop.run_until_complete(purge_expired_ttl_keys(self.database))
 
             # --- Update the miner storage information periodically.
             if not should_retry:
