@@ -40,6 +40,7 @@ class Store(bt.Synapse):
     commitment: typing.Optional[str] = None
     signature: typing.Optional[bytes] = None
     commitment_hash: typing.Optional[str] = None  # includes seed
+    ttl: typing.Optional[int] = None  # time to live (in seconds)
 
     required_hash_fields: typing.List[str] = pydantic.Field(
         [
@@ -78,6 +79,7 @@ class StoreUser(bt.Synapse):
     encryption_payload: str  # encrypted json serialized bytestring of encryption params
 
     data_hash: typing.Optional[str] = None  # Miner storage lookup key
+    ttl: typing.Optional[int] = None  # time to live (in seconds)
 
     required_hash_fields: typing.List[str] = pydantic.Field(
         ["encrypted_data", "encryption_payload"],

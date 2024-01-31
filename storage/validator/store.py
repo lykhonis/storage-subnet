@@ -110,6 +110,7 @@ async def store_encrypted_data(
         g=ecc_point_to_hex(g),
         h=ecc_point_to_hex(h),
         seed=get_random_bytes(32).hex(),  # 256-bit seed
+        ttl=ttl or self.config.neuron.data_ttl,
     )
 
     # Select subset of miners to query (e.g. redunancy factor of N)
@@ -160,11 +161,6 @@ async def store_encrypted_data(
                 self.database,
                 ttl=ttl or self.config.neuron.data_ttl,
             )
-            if ttl > 0:
-                await self.database.expire(
-                    f"{hotkey}:{data_hash}",
-                    ttl,
-                )
             bt.logging.debug(
                 f"Stored data in database with hotkey: {hotkey} | uid {uid} | {data_hash}"
             )
@@ -330,6 +326,7 @@ async def store_broadband(
             g=ecc_point_to_hex(g),
             h=ecc_point_to_hex(h),
             seed=random_seed,
+            ttl=ttl or self.config.neuron.data_ttl,
         )
 
         uids = [
