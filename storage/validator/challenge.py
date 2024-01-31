@@ -234,7 +234,9 @@ async def challenge_data(self):
     )
     rewards = remove_indices_from_tensor(rewards, remove_reward_idxs)
     bt.logging.debug(f"challenge_data() kept rewards: {rewards} | uids {uids}")
-    data_sizes = remove_indices_from_tensor(torch.tensor(data_sizes), remove_reward_idxs)
+    data_sizes = remove_indices_from_tensor(
+        torch.tensor(data_sizes), remove_reward_idxs
+    )
     bt.logging.debug(f"challenge_data() kept sizes  : {data_sizes}")
 
     bt.logging.trace("Applying challenge rewards")
