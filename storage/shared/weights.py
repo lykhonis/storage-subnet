@@ -13,16 +13,14 @@ def should_wait_to_set_weights(current_block, last_epoch_block, tempo):
 def should_set_weights(
     current_block,
     prev_step_block,
-    set_weights_epoch_length,
+    tempo,
     disable_set_weights: bool = False,
 ) -> bool:
     # Check if enough epoch blocks have elapsed since the last epoch.
     if disable_set_weights:
         return False
 
-    return not should_wait_to_set_weights(
-        current_block, prev_step_block, set_weights_epoch_length
-    )
+    return not should_wait_to_set_weights(current_block, prev_step_block, tempo)
 
 
 def set_weights(

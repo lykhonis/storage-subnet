@@ -183,9 +183,6 @@ class neuron:
         # Init the event loop.
         self.loop = asyncio.get_event_loop()
 
-        if self.config.neuron.challenge_sample_size == 0:
-            self.config.neuron.challenge_sample_size = self.metagraph.n
-
         self.prev_step_block = get_current_block(self.subtensor)
 
         # Instantiate runners
@@ -260,7 +257,7 @@ class neuron:
             - It relies on the 'store_broadband' method for actual storage and hash generation.
             - The method logs detailed information about the storage process for monitoring and debugging.
         """
-        bt.logging.debug(f"store_user_data() {synapse.dendrite.dict()}")
+        bt.logging.debug(f"store_user_data() {synapse.axon.dict()}")
 
         decoded_data = base64.b64decode(synapse.encrypted_data)
         decoded_data = (
@@ -294,17 +291,13 @@ class neuron:
     async def store_blacklist(
         self, synapse: protocol.StoreUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted"
 
         # Otherwise, reject.
         return (
@@ -376,17 +369,13 @@ class neuron:
     async def retrieve_blacklist(
         self, synapse: protocol.RetrieveUser
     ) -> typing.Tuple[bool, str]:
+        # If debug mode, whitelist everything (NOT RECOMMENDED)
+        if self.config.api.open_access:
+            return False, "Open access: WARNING all whitelisted"
+
         # If explicitly whitelisted hotkey, allow.
         if synapse.dendrite.hotkey in self.config.api.whitelisted_hotkeys:
             return False, f"Hotkey {synapse.dendrite.hotkey} whitelisted."
-
-        # If a validator with top n% stake, allow.
-        if synapse.dendrite.hotkey in self.top_n_validators:
-            return False, f"Hotkey {synapse.dendrite.hotkey} in top n% stake."
-
-        # If debug mode, whitelist everything (NOT RECOMMENDED)
-        if self.config.api.debug:
-            return False, "Debug all whitelisted."
 
         # Otherwise, reject.
         return (
@@ -416,10 +405,7 @@ class neuron:
             while not self.should_exit:
                 # --- Wait until next epoch.
                 current_block = self.subtensor.get_current_block()
-                while (
-                    current_block - self.prev_step_block
-                    < self.config.neuron.blocks_per_step
-                ):
+                while current_block - self.prev_step_block < 3:
                     # --- Wait for next bloc.
                     time.sleep(1)
                     current_block = self.subtensor.get_current_block()

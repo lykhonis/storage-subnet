@@ -110,15 +110,6 @@ def check_config(cls, config: "bt.Config"):
             os.path.join(config.neuron.full_path + "/" + "total_storage.csv")
         )
 
-        if config.database.purge_challenges:
-            bt.logging.warning(
-                "Purging all challenges from ALL miners! Waiting 60 sec in case this is unintentional..."
-            )
-            bt.logging.warning(
-                "Please abort the process if you are not intending to purge all your challenge data!"
-            )
-            time.sleep(60)
-
     bt.logging.info(f"Loaded config in fullpath: {config.neuron.full_path}")
 
 
@@ -157,78 +148,6 @@ def add_args(cls, parser):
         help="Minimum chunk size of random data to challenge (bytes).",
     )
     parser.add_argument(
-        "--neuron.override_chunk_size",
-        default=0,
-        type=int,
-        help="Override random chunk size to split data into for challenges.",
-    )
-    parser.add_argument(
-        "--neuron.store_redundancy",
-        type=int,
-        default=4,
-        help="Number of miners to store each piece of data on.",
-    )
-    parser.add_argument(
-        "--neuron.store_step_length",
-        type=int,
-        default=1,
-        help="Number of steps before random store epoch is complete.",
-    )
-    parser.add_argument(
-        "--neuron.store_sample_size",
-        type=int,
-        default=10,
-        help="Number of miners to store each piece of data on.",
-    )
-    parser.add_argument(
-        "--neuron.challenge_sample_size",
-        type=int,
-        default=10,
-        help="Number of miners to challenge at a time. Target is ~90 miners per epoch.",
-    )
-    parser.add_argument(
-        "--neuron.purge_epoch_length",
-        type=int,
-        default=2,
-        help="Number of epochs before purging all challenges.",
-    )
-    parser.add_argument(
-        "--neuron.retrieve_step_length",
-        type=int,
-        default=5,
-        help="Number of steps before random retrieve epoch is complete.",
-    )
-    parser.add_argument(
-        "--neuron.compute_stats_interval",
-        type=int,
-        default=360,
-        help="Number of steps before computing and logging all stats.",
-    )
-    parser.add_argument(
-        "--neuron.monitor_step_length",
-        type=int,
-        default=5,
-        help="Number of steps before calling monitor for down uids.",
-    )
-    parser.add_argument(
-        "--neuron.monitor_sample_size",
-        type=int,
-        default=20,
-        help="Number of miners to monitor each interval.",
-    )
-    parser.add_argument(
-        "--neuron.max_failed_pings",
-        type=int,
-        default=10,
-        help="Number of failed periodic pings before a miner is considered offline.",
-    )
-    parser.add_argument(
-        "--neuron.set_weights_epoch_length",
-        type=int,
-        help="Blocks until the miner sets weights on chain",
-        default=200,
-    )
-    parser.add_argument(
         "--neuron.disable_log_rewards",
         action="store_true",
         help="Disable all reward logging, suppresses reward functions and their values from being logged to wandb.",
@@ -259,52 +178,16 @@ def add_args(cls, parser):
         default=False,
     )
     parser.add_argument(
-        "--neuron.moving_average_alpha",
-        type=float,
-        help="Moving average alpha parameter, how much to add of the new observation.",
-        default=0.05,
-    )
-    parser.add_argument(
         "--neuron.semaphore_size",
         type=int,
         help="How many async calls to limit concurrently.",
         default=256,
     )
     parser.add_argument(
-        "--neuron.store_timeout",
-        type=float,
-        help="Store data query timeout.",
-        default=60,
-    )
-    parser.add_argument(
-        "--neuron.challenge_timeout",
-        type=float,
-        help="Challenge data query timeout.",
-        default=30,
-    )
-    parser.add_argument(
-        "--neuron.retrieve_timeout",
-        type=float,
-        help="Retreive data query timeout.",
-        default=60,
-    )
-    parser.add_argument(
         "--neuron.checkpoint_block_length",
         type=int,
         help="Blocks before a checkpoint is saved.",
         default=100,
-    )
-    parser.add_argument(
-        "--neuron.distribute_step_length",
-        type=int,
-        help="Blocks before a distribute step is taken.",
-        default=10,
-    )
-    parser.add_argument(
-        "--neuron.blocks_per_step",
-        type=int,
-        help="Blocks before a step is taken.",
-        default=3,
     )
     parser.add_argument(
         "--neuron.events_retention_size",
@@ -447,9 +330,9 @@ def add_args(cls, parser):
         default=[],
     )
     parser.add_argument(
-        "--api.debug",
+        "--api.open_access",
         action="store_true",
-        help="If set, we whitelist by default to test easily.",
+        help="If set, we whitelist all hotkeys by default to test easily. (NOT RECOMMENDED FOR PRODUCTION)",
     )
 
     # Encryption wallet

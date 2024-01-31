@@ -133,7 +133,7 @@ This Bash script is designed to configure UFW (Uncomplicated Firewall) to manage
 ##### Usage
 To run the script, use the following command in the terminal:
 ```bash
-sudo ./scripts/redis/close_redis_port.sh
+sudo ./scripts/redis/create_redis_firewall.sh
 ```
 Running this script will:
 - Check if UFW is installed and active. If UFW is not active, the script will attempt to enable it.
@@ -667,12 +667,12 @@ pm2 start /home/user/storage-subnet/neurons/miner.py --interpreter /home/user/mi
 - `--miner.set_weights_wait_for_inclusion`: Wether to wait for the set_weights extrinsic to enter a block. Default: False.
 - `--miner.set_weights_wait_for_finalization`: Wether to wait for the set_weights extrinsic to be finalized on the chain. Default: False.
 
-- `--miner.blacklist.blacklist`: List of hotkeys to blacklist. Default: [].
-- `--miner.blacklist.whitelist`: List of hotkeys to whitelist. Default: [].
-- `--miner.blacklist.force_validator_permit`: If True, only allows requests from validators. Default: False.
-- `--miner.blacklist.allow_non_registered`: If True, allows non-registered hotkeys to mine. Default: False.
-- `--miner.blacklist.minimum_stake_requirement`: Minimum stake requirement for participating hotkeys. Default: 0.0.
-- `--miner.blacklist.min_request_period`: Time period (in minutes) to serve a maximum number of requests per hotkey. Default: 5.
+- `--blacklist.blacklist_hotkeys`: List of hotkeys to blacklist. Default: [].
+- `--blacklist.whitelist_hotkeys`: List of hotkeys to whitelist. Default: [].
+- `--blacklist.force_validator_permit`: If True, only allows requests from validators. Default: False.
+- `--blacklist.allow_non_registered`: If True, allows non-registered hotkeys to mine. Default: False.
+- `--blacklist.minimum_stake_requirement`: Minimum stake requirement for participating hotkeys. Default: 0.0.
+- `--blacklist.min_request_period`: Time period (in minutes) to serve a maximum number of requests per hotkey. Default: 5.
 
 - `--miner.priority.default`: Default priority for non-registered requests. Default: 0.0.
 - `--miner.priority.time_stake_multiplicate`: Time (in minutes) to double the importance of stake in the priority queue. Default: 10.
@@ -748,24 +748,12 @@ pm2 start /home/user/storage-subnet/neurons/validator.py --interpreter /home/use
 - `--neuron.curve`: The elliptic curve used for cryptography. Only "P-256" is currently available.
 - `--neuron.maxsize`: The maximum size of random data to store. If `None`, a lognormal random Gaussian distribution is used (default: `None`).
 - `--neuron.min_chunk_size`: The minimum chunk size of random data for challenges. Default: 256.
-- `--neuron.override_chunk_size`: Overrides the random chunk size for splitting data into challenges. Default: 0 (no override).
-- `--neuron.store_redundancy`: The number of miners to store each piece of data on. Default: 3.
-- `--neuron.store_step_length`: Steps before a random store epoch is complete. Default: 5.
-- `--neuron.challenge_sample_size`: The number of miners to challenge at a time, targeting ~90 miners per epoch. Default: 10.
-- `--neuron.retrieve_step_length`: Steps before a random retrieve epoch is complete. Default: 5.
-- `--neuron.tier_update_step_length`: Steps before a tier update epoch is complete. Default: 100.
-- `--neuron.set_weights_epoch_length`: Blocks until the miner sets weights on chain. Default: 200.
 - `--neuron.disable_log_rewards`: If set, disables all reward logging to suppress function values from being logged (e.g., to WandB). Default: False.
 - `--neuron.chunk_factor`: The factor to divide data into chunks. Default: 4.
 - `--neuron.num_concurrent_forwards`: The number of concurrent forward requests running at any time. Default: 1.
 - `--neuron.disable_set_weights`: If set, disables setting weights on the chain. Default: False.
-- `--neuron.moving_average_alpha`: The alpha parameter for the moving average, indicating new observation weight. Default: 0.05.
 - `--neuron.semaphore_size`: The limit on concurrent asynchronous calls. Default: 256.
-- `--neuron.store_timeout`: Timeout for store data queries. Default: 60 seconds.
-- `--neuron.challenge_timeout`: Timeout for challenge data queries. Default: 30 seconds.
-- `--neuron.retrieve_timeout`: Timeout for retrieve data queries. Default: 60 seconds.
 - `--neuron.checkpoint_block_length`: Blocks before a checkpoint is saved. Default: 100.
-- `--neuron.blocks_per_step`: Blocks before a step is taken in the mining process. Default: 3.
 - `--neuron.events_retention_size`: File size for retaining event logs (e.g., "2 GB"). Default: "2 GB".
 - `--neuron.dont_save_events`: If set, event logs will not be saved to a file. Default: False.
 - `--neuron.vpermit_tao_limit`: The maximum TAO allowed for querying a validator with a vpermit. Default: 500.

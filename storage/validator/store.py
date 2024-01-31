@@ -115,7 +115,7 @@ async def store_encrypted_data(
     # Select subset of miners to query (e.g. redunancy factor of N)
     uids, _ = await ping_and_retry_uids(
         self,
-        k=k or self.config.neuron.store_redundancy,
+        k=k or 4,
         max_retries=max_retries,
         exclude_uids=exclude_uids,
     )
@@ -135,7 +135,7 @@ async def store_encrypted_data(
             axons,
             synapse,
             deserialize=False,
-            timeout=self.config.neuron.store_timeout,
+            timeout=60,
         )
 
         # Compute the rewards for the responses given proc time.
@@ -179,18 +179,19 @@ async def store_encrypted_data(
         if self.config.neuron.verbose and self.config.neuron.log_responses:
             bt.logging.debug(f"Store responses round: {retries}")
             [
-                bt.logging.debug(f"Store response: {response.dendrite.dict()}")
+                bt.logging.debug(f"Store response: {response.axon.dict()}")
                 for response in responses
             ]
 
         bt.logging.trace(f"Applying store rewards for retry: {retries}")
+        data_size = sys.getsizeof(b64_encrypted_data)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
-            timeout=self.config.neuron.store_timeout,
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
+            timeout=60,
         )
 
         # Get a new set of UIDs to query for those left behind
@@ -247,7 +248,7 @@ async def store_random_data(self):
         self,
         encrypted_data,
         encryption_payload,
-        k=self.config.neuron.store_sample_size,
+        k=15,
         ttl=self.config.neuron.data_ttl,
     )
 
@@ -340,7 +341,7 @@ async def store_broadband(
             axons,
             synapse,
             deserialize=False,
-            timeout=self.config.neuron.store_timeout,
+            timeout=60,
         )
 
         # Compute the rewards for the responses given proc time.
@@ -361,13 +362,14 @@ async def store_broadband(
         )
         event.rewards.extend(rewards.tolist())
 
+        data_size = sys.getsizeof(b64_encoded_chunk)
         apply_reward_scores(
             self,
-            uids,
-            responses,
-            rewards,
-            total_batch_size=sys.getsizeof(b64_encrypted_data) * len(responses),
-            timeout=self.config.neuron.store_timeout,
+            uids=uids,
+            responses=responses,
+            rewards=rewards,
+            data_sizes=[data_size] * len(responses),
+            timeout=60,
         )
 
         bt.logging.debug(f"Updated reward scores: {rewards.tolist()}")
@@ -467,7 +469,7 @@ async def store_broadband(
             bt.logging.debug(f"-- b64_encoded_chunk: {b64_encoded_chunk[:100]}")
             bt.logging.debug(f"-- random_seed: {random_seed}")
 
-            # Update the distributions with respones
+            # Update the distributions with responses
             distributions[i]["responses"] = responses
             distributions[i]["b64_encoded_chunk"] = b64_encoded_chunk
             distributions[i]["random_seed"] = random_seed
@@ -520,6 +522,20 @@ async def store_broadband(
         return full_hash
 
     exclude_uids = copy.deepcopy(exclude_uids)
+    bt.logging.debug(f"Original exclude_uids: {exclude_uids}")
+
+    # Remove failed UIDs from consideration in chunk distributions
+    uids, failed_uids = await ping_and_retry_uids(
+        self,
+        k=50,
+        max_retries=1,
+        exclude_uids=exclude_uids,
+    )
+    bt.logging.debug(f"ping_and_retry_uids() failed uids: {failed_uids}")
+    if exclude_uids is None:
+        exclude_uids = []
+    exclude_uids = exclude_uids + list(failed_uids)
+    bt.logging.debug(f"Updated exclude_uids: {exclude_uids}")
 
     full_size = sys.getsizeof(encrypted_data)
     bt.logging.debug(f"full size: {full_size}")
