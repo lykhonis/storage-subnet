@@ -11,6 +11,7 @@ async def check_environment():
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
+    _assert_setting_exists(redis_conf_path, 'requirepass')
     _check_redis_connection(redis_conf_path, redis_port)
     await _check_data_persistence(redis_conf_path, redis_port)
 
@@ -79,9 +80,14 @@ async def _check_data_persistence(redis_conf_path, port):
 
 def _check_redis_setting(file_path, setting, expected_values):
     """Check if Redis configuration contains all expected values for a given setting."""
+    actual_values = _assert_setting_exists(file_path, setting)
+    assert sorted(actual_values) == sorted(expected_values), f"Configuration for '{setting}' does not match expected values. Got '{actual_values}', expected '{expected_values}'"
+
+
+def _assert_setting_exists(file_path, setting):
     actual_values = _get_redis_setting(file_path, setting)
     assert actual_values is not None, f"Redis config missing setting '{setting}'"
-    assert sorted(actual_values) == sorted(expected_values), f"Configuration for '{setting}' does not match expected values. Got '{actual_values}', expected '{expected_values}'"
+    return actual_values
 
 
 def _get_redis_setting(file_path, setting):
