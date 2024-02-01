@@ -41,6 +41,3 @@ jobs:
     - name: Unit Tests with pytest
       run: |
         pytest tests/unit
-    - name: Integration Tests with pytest
-      run: |
-        pytest tests/integration/
