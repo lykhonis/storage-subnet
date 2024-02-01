@@ -408,6 +408,8 @@ async def total_hotkey_storage(
     total_storage = 0
     keys = await database.hkeys(f"hotkey:{hotkey}")
     for data_hash in keys:
+        if data_hash.startswith(b"ttl:"):
+            continue
         # Get the metadata for the current data hash
         metadata = await get_metadata_for_hotkey_and_hash(
             hotkey, data_hash, database, verbose
@@ -1062,3 +1064,12 @@ async def delete_file_from_database(file_hash: str, database: aioredis.Redis):
         await database.delete(f"file:{file_hash}")
 
     # TODO: call delete on miners to remove the file from their storage!
+
+
+def get_hash_keys(ss58_address, r):
+    """
+    Filter out the ttl: hashes from the hotkey hashes and return the list of keys.
+    """
+    return [
+        key for key in r.hkeys(f"hotkey:{ss58_address}") if not key.startswith(b"ttl:")
+    ]

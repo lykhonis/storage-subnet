@@ -618,6 +618,7 @@ class miner:
                 synapse.dendrite.hotkey,
                 sys.getsizeof(encrypted_byte_data),
                 synapse.seed,
+                synapse.ttl,
             )
 
         # Commit to the entire data block

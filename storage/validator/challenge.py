@@ -56,6 +56,8 @@ async def handle_challenge(self, uid: int) -> typing.Tuple[bool, protocol.Challe
     """
     hotkey = self.metagraph.hotkeys[uid]
     keys = await self.database.hkeys(f"hotkey:{hotkey}")
+    # Filter out TTL keys now (TODO: these should be merged)
+    keys = [key for key in keys if not key.startswith(b"ttl:")]
     bt.logging.trace(f"{len(keys)} hashes pulled for hotkey {hotkey}")
     if keys == []:
         bt.logging.debug(
