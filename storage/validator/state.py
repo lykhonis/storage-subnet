@@ -170,6 +170,14 @@ def load_state(self):
         self.monitor_lookup = state_dict.get(
             "monitor_lookup", {uid: 0 for uid in self.metagraph.uids.tolist()}
         )
+        if self.monitor_lookup.keys() != self.metagraph.uids.tolist():
+            bt.logging.warning(
+                "Monitor lookup keys do not match metagraph uids. Populating new monitor_lookup with zeros"
+            )
+            self.monitor_lookup = {
+                uid: self.monitor_lookup.get(uid, 0)
+                for uid in self.metagraph.uids.tolist()
+            }
         bt.logging.info(f"Loaded monitor_lookup: {self.monitor_lookup}")
         # Check to ensure that the size of the neruon weights matches the metagraph size.
         if neuron_weights.shape != (self.metagraph.n,):
