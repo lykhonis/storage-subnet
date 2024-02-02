@@ -22,7 +22,7 @@ import time
 import bittensor as bt
 
 
-async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl):
+async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl=None):
     """
     Stores the metadata of a chunk in a Redis database.
 
@@ -41,7 +41,7 @@ async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl)
         "hotkey": hotkey,
         "size": str(size),  # Convert size to string
         "seed": seed,  # Store seed directly
-        "ttl": ttl,
+        "ttl": ttl or 60 * 60 * 24 * 30,  # Default to 30 days if not provided
         "generated": time.time(),
     }
 
@@ -51,7 +51,7 @@ async def store_chunk_metadata(r, chunk_hash, filepath, hotkey, size, seed, ttl)
 
 
 async def store_or_update_chunk_metadata(
-    r, chunk_hash, filepath, hotkey, size, seed, ttl
+    r, chunk_hash, filepath, hotkey, size, seed, ttl=None
 ):
     """
     Stores or updates the metadata of a chunk in a Redis database.
@@ -105,7 +105,7 @@ async def get_chunk_metadata(r, chunk_hash):
     metadata = await r.hgetall(chunk_hash)
     if metadata:
         metadata[b"size"] = int(metadata.get(b"size", 0))
-        metadata[b"ttl"] = int(metadata.get(b"ttl", 0))
+        metadata[b"ttl"] = int(metadata.get(b"ttl", 60 * 60 * 24 * 30))
         metadata[b"seed"] = metadata.get(b"seed", b"").decode("utf-8")
     return metadata
 
