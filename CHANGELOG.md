@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.0 / 2024-02-02
+
+## What's Changed
+* Package by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/49
+* Improve miner stats visibility in logging by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/44
+* add migration script and database func to move filepaths of data index by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/50
+* Release/1.4.1 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/117
+* bonding tier based on tot success by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/119
+* black formatting by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/120
+* Fix CICD failure caused by redis test by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/118
+* Feature/cid ipfs parity by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/74
+* Data TTL, default expiry, configurable by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/102
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.4.1...v1.5.0
+
+
 ## 1.4.1 / 2024-01-28
 
 ## What's Changed
