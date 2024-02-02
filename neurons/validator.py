@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import sys
 import time
 import torch
 import asyncio
@@ -37,6 +38,7 @@ from storage.validator.utils import (
     get_current_validtor_uid_round_robin,
     get_rebalance_script_path,
 )
+from storage.shared.checks import check_environment
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -405,6 +407,11 @@ class neuron:
 
 
 def main():
+    try:
+        asyncio.run(check_environment())
+    except AssertionError as e:
+        bt.logging.error(f"Something is missing in your environment: {e}")
+        sys.exit(1)
     neuron().run()
 
 

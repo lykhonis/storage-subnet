@@ -47,6 +47,8 @@ from storage.shared.utils import (
     get_redis_password,
 )
 
+from storage.shared.checks import check_environment
+
 from storage.miner import (
     run,
 )
@@ -948,6 +950,12 @@ def main():
     This function initializes and runs the neuron. It handles the main loop, state management, and interaction
     with the Bittensor network.
     """
+    try:
+        asyncio.run(check_environment())
+    except AssertionError as e:
+        bt.logging.error(f"Something is missing in your environment: {e}")
+        sys.exit(1)
+
     miner().run_in_background_thread()
 
     try:
