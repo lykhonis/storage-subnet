@@ -63,6 +63,7 @@ from storage.miner.utils import (
     load_request_log,
     log_request,
     RateLimiter,
+    get_purge_ttl_script_path,
 )
 
 from storage.miner.config import (
@@ -171,6 +172,9 @@ class miner:
             socket_keepalive=True,
             socket_connect_timeout=300,
             password=redis_password,
+        )
+        self.purge_ttl_path = get_purge_ttl_script_path(
+            os.path.dirname(os.path.abspath(__file__))
         )
 
         self.my_subnet_uid = self.metagraph.hotkeys.index(
