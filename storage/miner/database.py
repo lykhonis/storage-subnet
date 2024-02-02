@@ -209,6 +209,10 @@ async def purge_expired_ttl_keys(r, verbose=False):
         ttl = await r.hget(key, b"ttl")
         if ttl:
             generated = await r.hget(key, b"generated")
+            try:
+                generated = int(generated)
+            except Exception as e:
+                generated = time.time()  # don't delete incase needed
             if int(ttl) + generated >= time.time():
                 try:
                     bt.logging.info(f"Purging expired TTL key {key}")
