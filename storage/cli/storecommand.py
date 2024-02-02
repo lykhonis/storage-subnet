@@ -159,6 +159,7 @@ class StoreData:
         synapse = storage.protocol.StoreUser(
             encrypted_data=encoded_data,
             encryption_payload=encryption_payload,
+            ttl=self.config.ttl,
         )
         bittensor.logging.debug(f"sending synapse: {synapse.dendrite.dict()}")
 
@@ -308,6 +309,12 @@ class StoreData:
             "--encrypt",
             action="store_true",
             help="Encrypt the data before storing it on the Bittensor network with bittensor wallet coldkey.",
+        )
+        store_parser.add_argument(
+            "--ttl",
+            type=int,
+            default=60*60*24*30,
+            help="Time to live for the data on the Bittensor network. (Default 30 days)",
         )
 
         bittensor.wallet.add_args(store_parser)
