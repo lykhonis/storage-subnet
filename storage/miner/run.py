@@ -221,7 +221,7 @@ def run(self):
             subprocess.Popen(
                 [
                     self.purge_ttl_path,
-                    self.subtensor.chain_endpoint,
+                    str(21),  # netuid
                     str(self.config.database.index),
                 ]
             )
