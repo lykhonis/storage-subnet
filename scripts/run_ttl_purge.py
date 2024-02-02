@@ -18,11 +18,8 @@ async def main(args):
 
         await purge_expired_ttl_keys(database)
 
-    finally:
-        if "subtensor" in locals():
-            subtensor.close()
-            bt.logging.debug("closing subtensor connection")
-
+    except Exception as e:
+        bt.logging.error(f"Error purging ttl keys: {e}")
 
 if __name__ == "__main__":
     try:
