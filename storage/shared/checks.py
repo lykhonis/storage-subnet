@@ -12,7 +12,7 @@ async def check_environment():
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, 'requirepass')
-    _check_redis_connection(redis_conf_path, redis_port)
+    await _check_redis_connection(redis_conf_path, redis_port)
     await _check_data_persistence(redis_conf_path, redis_port)
 
 
@@ -32,7 +32,7 @@ def _check_redis_settings(redis_conf_path):
         )
 
 
-def _check_redis_connection(redis_conf_path, port):
+async def _check_redis_connection(redis_conf_path, port):
     redis_password = _get_redis_password(redis_conf_path)
 
     assert port is not None, "Redis server port not found"
