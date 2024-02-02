@@ -159,7 +159,7 @@ class StoreData:
         synapse = storage.protocol.StoreUser(
             encrypted_data=encoded_data,
             encryption_payload=encryption_payload,
-            ttl=self.config.ttl,
+            ttl=cli.config.ttl,
         )
         bittensor.logging.debug(f"sending synapse: {synapse.dendrite.dict()}")
 
