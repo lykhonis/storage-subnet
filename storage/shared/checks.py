@@ -35,6 +35,8 @@ def _check_redis_settings(redis_conf_path):
 async def _check_redis_connection(redis_conf_path, port):
     redis_password = _get_redis_password(redis_conf_path)
 
+    print(f"DEBUG {redis_password}")
+
     assert port is not None, "Redis server port not found"
     try:
         client = aioredis.StrictRedis(
