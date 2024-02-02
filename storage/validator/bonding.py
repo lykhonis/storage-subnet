@@ -25,7 +25,7 @@ from storage.constants import *
 
 def wilson_score_interval(successes, total):
     if total == 0:
-        return 0.5 # chance
+        return 0.5  # chance
 
     z = 0.6744897501960817
 
@@ -43,7 +43,7 @@ def wilson_score_interval(successes, total):
         centre_adjusted_probability + z * adjusted_standard_deviation
     ) / denominator
 
-    wilson_score = (max(0, lower_bound) +  min(upper_bound, 1)) / 2
+    wilson_score = (max(0, lower_bound) + min(upper_bound, 1)) / 2
 
     bt.logging.trace(
         f"Wilson score interval with {successes} / {total}: {wilson_score}"
@@ -262,16 +262,28 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     )
 
     # Use the lower bounds of the intervals to determine the tier
-    if current_wilson_score >= SUPER_SAIYAN_SUCCESS_RATE:
+    if (
+        current_wilson_score >= SUPER_SAIYAN_SUCCESS_RATE
+        and total_successes >= SUPER_SAIYAN_TIER_TOTAL_SUCCESSES
+    ):
         bt.logging.trace(f"Setting {stats_key} to Super Saiyan tier.")
         tier = "Super Saiyan"
-    elif current_wilson_score >= DIAMOND_SUCCESS_RATE:
+    elif (
+        current_wilson_score >= DIAMOND_SUCCESS_RATE
+        and total_successes >= DIAMOND_TIER_TOTAL_SUCCESSES
+    ):
         bt.logging.trace(f"Setting {stats_key} to Diamond tier.")
         tier = "Diamond"
-    elif current_wilson_score >= GOLD_SUCCESS_RATE:
+    elif (
+        current_wilson_score >= GOLD_SUCCESS_RATE
+        and total_successes >= GOLD_TIER_TOTAL_SUCCESSES
+    ):
         bt.logging.trace(f"Setting {stats_key} to Gold tier.")
         tier = "Gold"
-    elif current_wilson_score >= SILVER_SUCCESS_RATE:
+    elif (
+        current_wilson_score >= SILVER_SUCCESS_RATE
+        and total_successes >= SILVER_TIER_TOTAL_SUCCESSES
+    ):
         bt.logging.trace(f"Setting {stats_key} to Silver tier.")
         tier = "Silver"
     else:

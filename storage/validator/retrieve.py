@@ -50,6 +50,8 @@ async def handle_retrieve(self, uid):
     bt.logging.trace(f"handle_retrieve uid: {uid}")
     hotkey = self.metagraph.hotkeys[uid]
     keys = await self.database.hkeys(f"hotkey:{hotkey}")
+    # Filter out ttl keys
+    keys = [key for key in keys if not key.decode("utf-8").startswith("ttl")]
 
     if keys == []:
         bt.logging.warning(

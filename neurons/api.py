@@ -37,7 +37,7 @@ from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
 
 from storage.validator.database import retrieve_encryption_payload
-
+from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import decrypt_data_with_private_key
 
 
@@ -270,22 +270,22 @@ class neuron:
         )
 
         # Hash the original data to avoid data confusion
-        data_hash = hash_data(decoded_data)
+        content_id = generate_cid_string(decoded_data)
 
         if isinstance(validator_encryption_payload, dict):
             validator_encryption_payload = json.dumps(validator_encryption_payload)
 
         await self.database.set(
-            f"payload:validator:{data_hash}", validator_encryption_payload
+            f"payload:validator:{content_id}", validator_encryption_payload
         )
 
         _ = await store_broadband(
             self,
             encrypted_data=validator_encrypted_data,
             encryption_payload=synapse.encryption_payload,
-            data_hash=data_hash,
+            data_hash=content_id,
         )
-        synapse.data_hash = data_hash
+        synapse.data_hash = content_id
         return synapse
 
     async def store_blacklist(

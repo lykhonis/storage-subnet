@@ -19,12 +19,14 @@
 import json
 import time
 import wandb
+import asyncio
 import bittensor as bt
 
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
 
 from .utils import update_storage_stats
+from .database import purge_expired_ttl_keys
 
 
 tagged_tx_queue_registry = {
@@ -190,7 +192,7 @@ def run(self):
                 checked_extrinsics_count = 0
             except Exception:
                 checked_extrinsics_count += 1
-                bt.logging.debug("An error occurred, extrinsic not found in block.")
+                bt.logging.trace("An error occurred, extrinsic not found in block.")
             finally:
                 if checked_extrinsics_count >= 20:
                     should_retry = True
@@ -257,6 +259,9 @@ def run(self):
 
                 last_extrinsic_hash = response.extrinsic_hash
                 should_retry = False
+
+            # --- Purge expired TTL keys.
+            self.loop.run_until_complete(purge_expired_ttl_keys(self.database))
 
             # --- Update the miner storage information periodically.
             if not should_retry:
