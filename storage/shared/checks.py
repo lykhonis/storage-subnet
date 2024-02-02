@@ -41,7 +41,7 @@ def _check_redis_connection(redis_conf_path, port):
             port=port, db=0,
             password=redis_password,
             socket_connect_timeout=1)
-        client.ping()
+        await client.ping()
     # TODO: To Be fixed, not working rn
     except aioredis.exceptions.ConnectionError as e:
         assert False, f"Redis connection failed. ConnectionError'{e}'"
