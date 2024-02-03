@@ -1063,8 +1063,6 @@ async def delete_file_from_database(file_hash: str, database: aioredis.Redis):
         bt.logging.debug(f"all chunks deleted for file {file_hash}.")
         await database.delete(f"file:{file_hash}")
 
-    # TODO: call delete on miners to remove the file from their storage!
-
 
 def get_hash_keys(ss58_address, r):
     """
