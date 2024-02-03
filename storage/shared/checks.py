@@ -16,7 +16,10 @@ async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf"):
 
 
 def _check_redis_config(path):
-    assert os.path.isfile(path), f"Redis config file path: '{path}' does not exist."
+    try:
+        subprocess.run(["sudo", "test", "-f", path], check=True)
+    except subprocess.CalledProcessError:
+        raise AssertionError(f"Redis config file path: '{path}' does not exist.")
 
 
 def _check_redis_settings(redis_conf_path):
