@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import sys
 import time
 import torch
 import asyncio
@@ -37,6 +38,7 @@ from storage.validator.utils import (
     get_current_validtor_uid_round_robin,
     get_rebalance_script_path,
 )
+from storage.shared.checks import check_environment
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import (
     should_checkpoint,
@@ -93,6 +95,13 @@ class neuron:
         self.check_config(self.config)
         bt.logging(config=self.config, logging_dir=self.config.neuron.full_path)
         print(self.config)
+
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.error(f"Something is missing in your environment: {e}")
+            sys.exit(1)
+
         bt.logging.info("neuron.__init__()")
 
         # Init device.
@@ -401,7 +410,8 @@ class neuron:
         """
         Stops the subscription handler thread.
         """
-        self.stop_subscription_thread()
+        if hasattr(self, "subscription_is_running"):
+            self.stop_subscription_thread()
 
 
 def main():

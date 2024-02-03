@@ -20,12 +20,13 @@ import json
 import time
 import wandb
 import asyncio
+import subprocess
 import bittensor as bt
 
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
 
-from .utils import update_storage_stats
+from .utils import update_storage_stats, get_purge_ttl_script_path
 from .database import purge_expired_ttl_keys
 
 
@@ -165,6 +166,15 @@ def run(self):
     checked_extrinsics_count = 0
     should_retry = False
 
+    bt.logging.info("Starting purge of expired TTL keys in separate process.")
+    subprocess.Popen(
+        [
+            self.purge_ttl_path,
+            str(21),  # netuid
+            str(self.config.database.index),
+        ]
+    )
+
     def handler(obj, update_nr, subscription_id):
         current_block = obj["header"]["number"]
         block_hash = block_handler_substrate.get_block_hash(current_block)
@@ -206,6 +216,15 @@ def run(self):
                     json.dump(self.request_log, f)
             except Exception as e:
                 bt.logging.error(f"Unable to save request log to disk {e}")
+
+            bt.logging.info("Starting purge of expired TTL keys in separate process.")
+            subprocess.Popen(
+                [
+                    self.purge_ttl_path,
+                    str(21),  # netuid
+                    str(self.config.database.index),
+                ]
+            )
 
             bt.logging.info(
                 f"New epoch started, setting weights at block {current_block}"
@@ -259,9 +278,6 @@ def run(self):
 
                 last_extrinsic_hash = response.extrinsic_hash
                 should_retry = False
-
-            # --- Purge expired TTL keys.
-            self.loop.run_until_complete(purge_expired_ttl_keys(self.database))
 
             # --- Update the miner storage information periodically.
             if not should_retry:

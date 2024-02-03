@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.2 / 2024-02-02
+
+## What's Changed
+* ttl default values by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/124
+* eduardogr/109/fixing cicd redis testing by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/122
+* fix asyncio diff loop -> run in subprocess by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/125
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.5.1...v1.5.2
+
+
 ## 1.5.1 / 2024-02-02
 
 ## What's Changed

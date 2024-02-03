@@ -330,3 +330,22 @@ class RateLimiter:
             return True
         else:
             return False
+
+
+def get_purge_ttl_script_path(current_dir):
+    """
+    Constructs and returns the path to the 'rebalance_deregistration.sh' script within a project directory.
+
+    This function takes the root path of a project and appends the relative path to the 'rebalance_deregistration.sh' script.
+    It assumes that the script is located within the 'scripts' subdirectory of the given project root.
+
+    Parameters:
+    project_root (str): The root path of the project directory.
+
+    Returns:
+    str: The full path to the 'rebalance_deregistration.sh' script.
+    """
+    project_root = os.path.join(current_dir, "..")
+    project_root = os.path.normpath(project_root)
+    script_path = os.path.join(project_root, "scripts", "run_ttl_purge.sh")
+    return script_path

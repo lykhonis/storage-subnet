@@ -313,7 +313,7 @@ class StoreData:
         store_parser.add_argument(
             "--ttl",
             type=int,
-            default=60*60*24*30,
+            default=60 * 60 * 24 * 30,
             help="Time to live for the data on the Bittensor network. (Default 30 days)",
         )
 

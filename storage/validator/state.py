@@ -170,7 +170,7 @@ def load_state(self):
         self.monitor_lookup = state_dict.get(
             "monitor_lookup", {uid: 0 for uid in self.metagraph.uids.tolist()}
         )
-        if self.monitor_lookup.keys() != self.metagraph.uids.tolist():
+        if list(self.monitor_lookup.keys()) != self.metagraph.uids.tolist():
             bt.logging.warning(
                 "Monitor lookup keys do not match metagraph uids. Populating new monitor_lookup with zeros"
             )

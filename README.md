@@ -228,14 +228,6 @@ bash ./scripts/redis/test_persistence.sh
 
 > Note these scripts and operations REQUIRE sudo
 
-After these steps have been completed, you may test your installation and redis configuration by running the tests in `tests/redis`:
-
-```bash
-pytest tests/redis
-```
-
-> Note these scripts and operations REQUIRE sudo
-
 
 #### Redis Troubleshooting
 If you encounter issues with Redis, follow these steps:

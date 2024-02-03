@@ -47,6 +47,8 @@ from storage.shared.utils import (
     get_redis_password,
 )
 
+from storage.shared.checks import check_environment
+
 from storage.miner import (
     run,
 )
@@ -61,6 +63,7 @@ from storage.miner.utils import (
     load_request_log,
     log_request,
     RateLimiter,
+    get_purge_ttl_script_path,
 )
 
 from storage.miner.config import (
@@ -124,6 +127,12 @@ class miner:
         bt.logging(config=self.config, logging_dir=self.config.miner.full_path)
         bt.logging.info(f"{self.config}")
 
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.error(f"Something is missing in your environment: {e}")
+            sys.exit(1)
+
         bt.logging.info("miner.__init__()")
 
         # Init device.
@@ -169,6 +178,9 @@ class miner:
             socket_keepalive=True,
             socket_connect_timeout=300,
             password=redis_password,
+        )
+        self.purge_ttl_path = get_purge_ttl_script_path(
+            os.path.dirname(os.path.abspath(__file__))
         )
 
         self.my_subnet_uid = self.metagraph.hotkeys.index(
@@ -948,6 +960,7 @@ def main():
     This function initializes and runs the neuron. It handles the main loop, state management, and interaction
     with the Bittensor network.
     """
+
     miner().run_in_background_thread()
 
     try:
