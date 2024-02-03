@@ -410,7 +410,8 @@ class neuron:
         """
         Stops the subscription handler thread.
         """
-        self.stop_subscription_thread()
+        if hasattr(self, "subscription_is_running"):
+            self.stop_subscription_thread()
 
 
 def main():
