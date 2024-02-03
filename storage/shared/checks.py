@@ -6,8 +6,7 @@ import os
 from redis import asyncio as aioredis
 
 
-async def check_environment():
-    redis_conf_path = "/etc/redis/redis.conf"
+async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf"):
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)

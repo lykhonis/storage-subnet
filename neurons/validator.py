@@ -95,6 +95,13 @@ class neuron:
         self.check_config(self.config)
         bt.logging(config=self.config, logging_dir=self.config.neuron.full_path)
         print(self.config)
+
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.error(f"Something is missing in your environment: {e}")
+            sys.exit(1)
+
         bt.logging.info("neuron.__init__()")
 
         # Init device.
@@ -407,11 +414,6 @@ class neuron:
 
 
 def main():
-    try:
-        asyncio.run(check_environment())
-    except AssertionError as e:
-        bt.logging.error(f"Something is missing in your environment: {e}")
-        sys.exit(1)
     neuron().run()
 
 

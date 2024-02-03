@@ -251,10 +251,16 @@ def add_args(cls, parser):
         help="The database number of the redis database.",
     )
     parser.add_argument(
-        "--database.purge_challenges",
-        action="store_true",
-        help="If set, we will purge all challenges from ALL miners on start.",
-        default=False,
+        "--database.redis_password",
+        type=str,
+        default=None,
+        help="The redis password.",
+    )
+    parser.add_argument(
+        "--database.redis_conf_path",
+        type=str,
+        help="Redis configuration path.",
+        default="/etc/redis/redis.conf",
     )
 
     # Wandb args

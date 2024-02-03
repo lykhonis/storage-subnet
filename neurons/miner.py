@@ -127,6 +127,12 @@ class miner:
         bt.logging(config=self.config, logging_dir=self.config.miner.full_path)
         bt.logging.info(f"{self.config}")
 
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.error(f"Something is missing in your environment: {e}")
+            sys.exit(1)
+
         bt.logging.info("miner.__init__()")
 
         # Init device.
@@ -954,11 +960,6 @@ def main():
     This function initializes and runs the neuron. It handles the main loop, state management, and interaction
     with the Bittensor network.
     """
-    try:
-        asyncio.run(check_environment())
-    except AssertionError as e:
-        bt.logging.error(f"Something is missing in your environment: {e}")
-        sys.exit(1)
 
     miner().run_in_background_thread()
 

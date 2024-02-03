@@ -165,6 +165,12 @@ def add_args(cls, parser):
         default=None,
         help="The redis password.",
     )
+    parser.add_argument(
+        "--database.redis_conf_path",
+        type=str,
+        help="Redis configuration path.",
+        default="/etc/redis/redis.conf",
+    )
 
     # Run config.
     parser.add_argument(
