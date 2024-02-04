@@ -29,17 +29,17 @@ import threading
 
 from storage import protocol
 from storage.shared.ecc import hash_data
+from storage.shared.checks import check_environment
+from storage.shared.utils import get_redis_password
 from storage.shared.subtensor import get_current_block
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import should_checkpoint
 from storage.validator.encryption import encrypt_data, setup_encryption_wallet
 from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
-
 from storage.validator.database import retrieve_encryption_payload
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import decrypt_data_with_private_key
-
 
 def MockDendrite():
     pass
@@ -77,6 +77,14 @@ class neuron:
         self.check_config(self.config)
         bt.logging(config=self.config, logging_dir=self.config.neuron.full_path)
         print(self.config)
+
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.warning(
+                f"Something is missing in your environment: {e}. Please check your configuration, use the README for help, and try again."
+            )
+
         bt.logging.info("neuron.__init__()")
 
         # Init device.
@@ -126,10 +134,15 @@ class neuron:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
+        bt.logging.info("loading database")
+        redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
+            socket_keepalive=True,
+            socket_connect_timeout=300,
+            password=redis_password,
         )
         self.db_semaphore = asyncio.Semaphore()
 
