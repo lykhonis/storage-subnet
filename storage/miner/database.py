@@ -196,33 +196,3 @@ async def migrate_data_directory(r, new_base_directory, return_failures=False):
         bt.logging.success("Successfully migrated all filepaths.")
 
     return failed_filepaths if return_failures else None
-
-
-async def purge_expired_ttl_keys(r, verbose=False):
-    """
-    Purges all expired TTL keys from the Redis database.
-
-    Args:
-        r (redis.Redis): The Redis connection instance.
-    """
-    async for key in r.scan_iter("*"):
-        ttl = await r.hget(key, b"ttl")
-        if ttl:
-            generated = await r.hget(key, b"generated")
-            try:
-                generated = int(generated)
-            except Exception as e:
-                generated = time.time()  # don't delete incase needed
-            if int(ttl) + generated >= time.time():
-                try:
-                    bt.logging.info(f"Purging expired TTL key {key}")
-                    # Delete on filesystem
-                    filepath = await r.hget(key, b"filepath")
-                    if filepath:
-                        os.remove(filepath.decode("utf-8"))
-                    # Delete in index
-                    await r.delete(key)
-                except Exception as e:
-                    if verbose:
-                        bt.logging.error(f"Failed to purge expired TTL key {key}: {e}")
-                    pass
