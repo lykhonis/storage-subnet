@@ -207,51 +207,6 @@ class neuron:
 
         self.step = 0
 
-        self._top_n_validators = None
-        self.get_top_n_validators()
-
-    def get_top_n_validators(self):
-        """
-        Retrieves a list of the top N validators based on the stake value from the metagraph.
-        This list represents the top 10% of validators by stake.
-
-        Returns:
-            list: A list of UIDs (unique identifiers) for the top N validators.
-
-        Note:
-            - The method filters out the UID of the current instance (self) if it is in the top N list.
-            - This function is typically used to identify validators with the highest stake in the network,
-            which can be crucial for decision-making processes in a distributed system.
-        """
-        top_uids = torch.where(
-            self.metagraph.S > torch.quantile(self.metagraph.S, 1 - 0.1)
-        )[0].tolist()
-        if self.my_subnet_uid in top_uids:
-            top_uids.remove(self.my_subnet_uid)
-        return top_uids
-
-    @property
-    def top_n_validators(self):
-        """
-        A property that provides access to the top N validators' UIDs. It calculates the top N validators
-        if they have not been computed yet or if a checkpoint condition is met (indicated by the
-        'should_checkpoint' function).
-
-        Returns:
-            list: A list of UIDs for the top N validators.
-
-        Note:
-            - This property employs lazy loading and caching to efficiently manage the retrieval of top N validators.
-            - The cache is updated based on specific conditions, such as crossing a checkpoint in the network.
-        """
-        if self._top_n_validators is None or should_checkpoint(
-            get_current_block(self.subtensor),
-            self.prev_step_block,
-            self.config.neuron.checkpoint_block_length,
-        ):
-            self._top_n_validators = self.get_top_n_validators()
-        return self._top_n_validators
-
     async def store_user_data(self, synapse: protocol.StoreUser) -> protocol.StoreUser:
         """
         Asynchronously handles the storage of user data by processing a store user request. It stores the
