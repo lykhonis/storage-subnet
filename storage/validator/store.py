@@ -51,6 +51,7 @@ from storage.validator.database import (
     get_ordered_metadata,
     hotkey_at_capacity,
 )
+from storage.validator.cid import generate_cid_string
 from storage.validator.bonding import update_statistics
 
 from .reward import create_reward_vector
@@ -512,7 +513,7 @@ async def store_broadband(
 
     bt.logging.debug(f"store_broadband() {encrypted_data[:100]}")
 
-    full_hash = data_hash or hash_data(encrypted_data)
+    full_hash = data_hash or generate_cid_string(encrypted_data)
     bt.logging.debug(f"full hash: {full_hash}")
 
     # Check and see if hash already exists, reject if so.
