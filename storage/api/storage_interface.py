@@ -10,8 +10,18 @@ from storage.protocol import StoreUser, RetrieveUser
 
 async def ping_uids(dendrite, metagraph, uids, timeout=3):
     """
-    Ping a list of UIDs to check their availability.
-    Returns a tuple with a list of successful UIDs and a list of failed UIDs.
+    Pings a list of UIDs to check their availability on the Bittensor network.
+
+    Args:
+        dendrite (bittensor.dendrite): The dendrite instance to use for pinging.
+        metagraph (bittensor.metagraph): The metagraph instance containing network information.
+        uids (list): A list of UIDs (unique identifiers) to ping.
+        timeout (int, optional): The timeout in seconds for each ping. Defaults to 3.
+
+    Returns:
+        tuple: A tuple containing two lists:
+            - The first list contains UIDs that were successfully pinged.
+            - The second list contains UIDs that failed to respond.
     """
     axons = [metagraph.axons[uid] for uid in uids]
     try:
@@ -41,7 +51,18 @@ async def ping_uids(dendrite, metagraph, uids, timeout=3):
 
 
 async def get_query_api_nodes(dendrite, metagraph, n=0.1, timeout=3):
-    """Fetch the available API nodes to query for the particular subnet."""
+    """
+    Fetches the available API nodes to query for the particular subnet.
+
+    Args:
+        dendrite (bittensor.dendrite): The dendrite instance to use for querying.
+        metagraph (bittensor.metagraph): The metagraph instance containing network information.
+        n (float, optional): The fraction of top nodes to consider based on stake. Defaults to 0.1.
+        timeout (int, optional): The timeout in seconds for pinging nodes. Defaults to 3.
+
+    Returns:
+        list: A list of UIDs representing the available API nodes.
+    """
     bt.logging.debug(f"Fetching available API nodes for subnet {metagraph.netuid}")
     vtrust_uids = [
         uid.item() for uid in metagraph.uids if metagraph.validator_trust[uid] > 0
@@ -59,6 +80,18 @@ async def get_query_api_nodes(dendrite, metagraph, n=0.1, timeout=3):
 
 
 async def get_query_api_axons(dendrite, metagraph, n=0.1, timeout=3):
+    """
+    Retrieves the axons of query API nodes based on their availability and stake.
+
+    Args:
+        dendrite (bittensor.dendrite): The dendrite instance to use for querying.
+        metagraph (bittensor.metagraph): The metagraph instance containing network information.
+        n (float, optional): The fraction of top nodes to consider based on stake. Defaults to 0.1.
+        timeout (int, optional): The timeout in seconds for pinging nodes. Defaults to 3.
+
+    Returns:
+        list: A list of axon objects for the available API nodes.
+    """
     query_uids = await get_query_api_nodes(dendrite, metagraph, n=n, timeout=timeout)
     return [metagraph.axons[uid] for uid in query_uids]
 
@@ -75,7 +108,24 @@ async def store_data(
     ping_timeout=3,
     encoding="utf-8",
 ) -> str:
+    """
+    Stores data on the Bittensor network, optionally encrypting it.
 
+    Args:
+        data (bytes): The data to store.
+        wallet (bt.wallet): The wallet to use for transactions.
+        metagraph (bt.metagraph, optional): The metagraph instance. If None, defaults to metagraph 21.
+        deserialize (bool, optional): Whether to deserialize the response. Defaults to False.
+        encrypt (bool, optional): Whether to encrypt the data before storing. Defaults to False.
+        ttl (int, optional): Time-to-live for the stored data in seconds. Defaults to 2592000 (30 days).
+        timeout (int, optional): Timeout for the store operation in seconds. Defaults to 180.
+        n (float, optional): Fraction of top nodes to consider for storing data. Defaults to 0.1.
+        ping_timeout (int, optional): Timeout for pinging nodes in seconds. Defaults to 3.
+        encoding (str, optional): The encoding of the input data if it's a string. Defaults to "utf-8".
+
+    Returns:
+        str: The CID (Content Identifier) of the stored data, or an empty string if the operation failed.
+    """
     data = bytes(data, encoding) if isinstance(data, str) else data
     encrypted_data, encryption_payload = encrypt_data(data, wallet) if encrypt else (data, "{}")
     expected_cid = generate_cid_string(encrypted_data)
@@ -146,7 +196,20 @@ async def store_data(
 
 
 async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph = None", n=0.1, timeout: int = 180, ping_timeout: int = 3) -> bytes:
+    """
+    Retrieves data from the Bittensor network using its CID.
 
+    Args:
+        cid (str): The CID (Content Identifier) of the data to retrieve.
+        wallet (bt.wallet): The wallet to use for transactions.
+        metagraph (bt.metagraph, optional): The metagraph instance. If None, defaults to metagraph 21.
+        n (float, optional): Fraction of top nodes to consider for retrieving data. Defaults to 0.1.
+        timeout (int, optional): Timeout for the retrieve operation in seconds. Defaults to 180.
+        ping_timeout (int, optional): Timeout for pinging nodes in seconds. Defaults to 3.
+
+    Returns:
+        bytes: The retrieved data, or an empty byte string if the operation failed.
+    """ 
     synapse = RetrieveUser(data_hash=cid)
     dendrite = bt.dendrite(wallet=wallet)
 
