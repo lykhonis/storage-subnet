@@ -168,7 +168,9 @@ async def is_old_version(
     return await r.hgetall(chunk_hash) and not await r.hget(chunk_hash, hotkey)
 
 
-async def get_chunk_metadata(r: "aioredis.Strictredis", chunk_hash: str, hotkey: str) -> Dict[str, Any]:
+async def get_chunk_metadata(
+    r: "aioredis.Strictredis", chunk_hash: str, hotkey: str
+) -> Dict[str, Any]:
     """
     Retrieves the metadata for a specific chunk from the Redis database.
 

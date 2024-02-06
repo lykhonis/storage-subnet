@@ -707,9 +707,9 @@ class miner:
 
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database, 
+            self.database,
             chunk_hash=synapse.challenge_hash,
-            hotkey=synapse.dendrite.hotkey
+            hotkey=synapse.dendrite.hotkey,
         )
         if data is None:
             bt.logging.error(f"No data found for {synapse.challenge_hash}")
@@ -854,9 +854,7 @@ class miner:
         # Fetch the data from the miner database
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database,
-            chunk_hash=synapse.data_hash,
-            hotkey=synapse.dendrite.hotkey
+            self.database, chunk_hash=synapse.data_hash, hotkey=synapse.dendrite.hotkey
         )
 
         # Decode the data + metadata from bytes to json
@@ -902,10 +900,10 @@ class miner:
         # store new seed
         bt.logging.trace("entering update_seed_info()")
         await update_seed_info(
-            self.database, 
+            self.database,
             chunk_hash=synapse.data_hash,
             hotkey=synapse.dendrite.hotkey,
-            seed=synapse.seed
+            seed=synapse.seed,
         )
         bt.logging.debug(f"udpated retrieve miner storage: {pformat(data)}")
 

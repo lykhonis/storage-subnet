@@ -102,7 +102,7 @@ async def store_data(
     metagraph: "bt.metagraph" = None,
     deserialize: bool = False,
     encrypt=False,
-    ttl=60 * 60 * 24 * 30, # 30 days default
+    ttl=60 * 60 * 24 * 30,  # 30 days default
     timeout=90,
     n=0.1,
     ping_timeout=3,
@@ -127,7 +127,9 @@ async def store_data(
         str: The CID (Content Identifier) of the stored data, or an empty string if the operation failed.
     """
     data = bytes(data, encoding) if isinstance(data, str) else data
-    encrypted_data, encryption_payload = encrypt_data(data, wallet) if encrypt else (data, "{}")
+    encrypted_data, encryption_payload = (
+        encrypt_data(data, wallet) if encrypt else (data, "{}")
+    )
     expected_cid = generate_cid_string(encrypted_data)
     encoded_data = base64.b64encode(encrypted_data)
 
@@ -149,12 +151,7 @@ async def store_data(
     )
 
     with bt.__console__.status(":satellite: Retreiving data..."):
-        responses = await dendrite(
-            axons, 
-            synapse, 
-            timeout=timeout, 
-            deserialize=False
-        )
+        responses = await dendrite(axons, synapse, timeout=timeout, deserialize=False)
 
         bt.logging.debug(
             "axon responses:", [resp.dendrite.dict() for resp in responses]
@@ -183,9 +180,7 @@ async def store_data(
         break
 
     if success:
-        bt.logging.info(
-            f"Stored data on the Bittensor network with hash {stored_cid}"
-        )
+        bt.logging.info(f"Stored data on the Bittensor network with hash {stored_cid}")
     else:
         bt.logging.error(
             f"Failed to store data. Response failure codes & messages {failure_modes}"
@@ -195,7 +190,14 @@ async def store_data(
     return stored_cid
 
 
-async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph" = None, n=0.1, timeout: int = 90, ping_timeout: int = 3) -> bytes:
+async def retrieve_data(
+    cid: str,
+    wallet: "bt.wallet",
+    metagraph: "bt.metagraph" = None,
+    n=0.1,
+    timeout: int = 90,
+    ping_timeout: int = 3,
+) -> bytes:
     """
     Retrieves data from the Bittensor network using its CID.
 
@@ -209,7 +211,7 @@ async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph"
 
     Returns:
         bytes: The retrieved data, or an empty byte string if the operation failed.
-    """ 
+    """
     synapse = RetrieveUser(data_hash=cid)
     dendrite = bt.dendrite(wallet=wallet)
 
@@ -221,39 +223,25 @@ async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph"
     )
 
     with bt.__console__.status(":satellite: Retreiving data..."):
-        responses = await dendrite(
-            axons, 
-            synapse, 
-            timeout=timeout, 
-            deserialize=False
-        )
+        responses = await dendrite(axons, synapse, timeout=timeout, deserialize=False)
 
     success = False
     decrypted_data = b""
     for response in responses:
         bt.logging.trace(f"response: {response.dendrite.dict()}")
-        if (
-            response.dendrite.status_code != 200
-            or response.encrypted_data is None
-        ):
+        if response.dendrite.status_code != 200 or response.encrypted_data is None:
             continue
 
         # Decrypt the response
-        bt.logging.trace(
-            f"encrypted_data: {response.encrypted_data[:100]}"
-        )
+        bt.logging.trace(f"encrypted_data: {response.encrypted_data[:100]}")
         encrypted_data = base64.b64decode(response.encrypted_data)
-        bt.logging.debug(
-            f"encryption_payload: {response.encryption_payload}"
-        )
+        bt.logging.debug(f"encryption_payload: {response.encryption_payload}")
         if (
             response.encryption_payload is None
             or response.encryption_payload == ""
             or response.encryption_payload == "{}"
         ):
-            bt.logging.warning(
-                "No encryption payload found. Unencrypted data."
-            )
+            bt.logging.warning("No encryption payload found. Unencrypted data.")
             decrypted_data = encrypted_data
         else:
             decrypted_data = decrypt_data_with_private_key(

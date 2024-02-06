@@ -41,6 +41,7 @@ from storage.validator.database import retrieve_encryption_payload
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import decrypt_data_with_private_key
 
+
 def MockDendrite():
     pass
 

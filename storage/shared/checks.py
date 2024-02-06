@@ -10,7 +10,7 @@ async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf"):
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
-    _assert_setting_exists(redis_conf_path, 'requirepass')
+    _assert_setting_exists(redis_conf_path, "requirepass")
     await _check_redis_connection(redis_conf_path, redis_port)
     await _check_data_persistence(redis_conf_path, redis_port)
 
@@ -29,9 +29,7 @@ def _check_redis_settings(redis_conf_path):
     ]
 
     for setting, expected_values in settings_to_check:
-        _check_redis_setting(
-            redis_conf_path, setting, expected_values
-        )
+        _check_redis_setting(redis_conf_path, setting, expected_values)
 
 
 async def _check_redis_connection(redis_conf_path, port):
@@ -40,9 +38,8 @@ async def _check_redis_connection(redis_conf_path, port):
     assert port is not None, "Redis server port not found"
     try:
         client = aioredis.StrictRedis(
-            port=port, db=0,
-            password=redis_password,
-            socket_connect_timeout=1)
+            port=port, db=0, password=redis_password, socket_connect_timeout=1
+        )
         await client.ping()
     except Exception as e:
         assert False, f"Redis connection failed. ConnectionError'{e}'"
@@ -82,7 +79,9 @@ async def _check_data_persistence(redis_conf_path, port):
 def _check_redis_setting(file_path, setting, expected_values):
     """Check if Redis configuration contains all expected values for a given setting."""
     actual_values = _assert_setting_exists(file_path, setting)
-    assert sorted(actual_values) == sorted(expected_values), f"Configuration for '{setting}' does not match expected values. Got '{actual_values}', expected '{expected_values}'"
+    assert sorted(actual_values) == sorted(
+        expected_values
+    ), f"Configuration for '{setting}' does not match expected values. Got '{actual_values}', expected '{expected_values}'"
 
 
 def _assert_setting_exists(file_path, setting):
@@ -115,6 +114,3 @@ def _get_redis_password(redis_conf_path):
         assert False, f"An error occurred: {e}"
 
     return None
-
-
-
