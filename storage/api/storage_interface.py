@@ -195,7 +195,7 @@ async def store_data(
     return stored_cid
 
 
-async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph = None", n=0.1, timeout: int = 180, ping_timeout: int = 3) -> bytes:
+async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph" = None, n=0.1, timeout: int = 180, ping_timeout: int = 3) -> bytes:
     """
     Retrieves data from the Bittensor network using its CID.
 
@@ -229,6 +229,7 @@ async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph 
         )
 
     success = False
+    decrypted_data = b""
     for response in responses:
         bt.logging.trace(f"response: {response.dendrite.dict()}")
         if (
@@ -266,8 +267,7 @@ async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph 
 
     if success:
         bt.logging.info(f"Returning retrieved data: {decrypted_data[:100]}")
-        return decrypted_data
     else:
         bt.logging.error("Failed to retrieve data.")
 
-    return b""
+    return decrypted_data
