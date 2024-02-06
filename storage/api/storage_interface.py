@@ -265,8 +265,8 @@ async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph 
         break
 
     if success:
+        bt.logging.info(f"Returning retrieved data: {decrypted_data[:100]}")
         return decrypted_data
-        bt.logging.info("Saved retrieved data to: {}".format(outpath))
     else:
         bt.logging.error("Failed to retrieve data.")
 
