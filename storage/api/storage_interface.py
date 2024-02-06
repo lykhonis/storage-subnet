@@ -103,7 +103,7 @@ async def store_data(
     deserialize: bool = False,
     encrypt=False,
     ttl=60 * 60 * 24 * 30, # 30 days default
-    timeout=180,
+    timeout=90,
     n=0.1,
     ping_timeout=3,
     encoding="utf-8",
@@ -195,7 +195,7 @@ async def store_data(
     return stored_cid
 
 
-async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph" = None, n=0.1, timeout: int = 180, ping_timeout: int = 3) -> bytes:
+async def retrieve_data(cid: str, wallet: "bt.wallet", metagraph: "bt.metagraph" = None, n=0.1, timeout: int = 90, ping_timeout: int = 3) -> bytes:
     """
     Retrieves data from the Bittensor network using its CID.
 
