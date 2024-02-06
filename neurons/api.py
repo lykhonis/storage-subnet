@@ -29,13 +29,14 @@ import threading
 
 from storage import protocol
 from storage.shared.ecc import hash_data
+from storage.shared.checks import check_environment
+from storage.shared.utils import get_redis_password
 from storage.shared.subtensor import get_current_block
 from storage.validator.config import config, check_config, add_args
 from storage.validator.state import should_checkpoint
 from storage.validator.encryption import encrypt_data, setup_encryption_wallet
 from storage.validator.store import store_broadband
 from storage.validator.retrieve import retrieve_broadband
-
 from storage.validator.database import retrieve_encryption_payload
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import decrypt_data_with_private_key
@@ -77,6 +78,14 @@ class neuron:
         self.check_config(self.config)
         bt.logging(config=self.config, logging_dir=self.config.neuron.full_path)
         print(self.config)
+
+        try:
+            asyncio.run(check_environment(self.config.database.redis_conf_path))
+        except AssertionError as e:
+            bt.logging.warning(
+                f"Something is missing in your environment: {e}. Please check your configuration, use the README for help, and try again."
+            )
+
         bt.logging.info("neuron.__init__()")
 
         # Init device.
@@ -126,10 +135,15 @@ class neuron:
         bt.logging.debug(str(self.metagraph))
 
         # Setup database
+        bt.logging.info("loading database")
+        redis_password = get_redis_password(self.config.database.redis_password)
         self.database = aioredis.StrictRedis(
             host=self.config.database.host,
             port=self.config.database.port,
             db=self.config.database.index,
+            socket_keepalive=True,
+            socket_connect_timeout=300,
+            password=redis_password,
         )
         self.db_semaphore = asyncio.Semaphore()
 
@@ -193,51 +207,6 @@ class neuron:
         self.request_timestamps: typing.Dict = {}
 
         self.step = 0
-
-        self._top_n_validators = None
-        self.get_top_n_validators()
-
-    def get_top_n_validators(self):
-        """
-        Retrieves a list of the top N validators based on the stake value from the metagraph.
-        This list represents the top 10% of validators by stake.
-
-        Returns:
-            list: A list of UIDs (unique identifiers) for the top N validators.
-
-        Note:
-            - The method filters out the UID of the current instance (self) if it is in the top N list.
-            - This function is typically used to identify validators with the highest stake in the network,
-            which can be crucial for decision-making processes in a distributed system.
-        """
-        top_uids = torch.where(
-            self.metagraph.S > torch.quantile(self.metagraph.S, 1 - 0.1)
-        )[0].tolist()
-        if self.my_subnet_uid in top_uids:
-            top_uids.remove(self.my_subnet_uid)
-        return top_uids
-
-    @property
-    def top_n_validators(self):
-        """
-        A property that provides access to the top N validators' UIDs. It calculates the top N validators
-        if they have not been computed yet or if a checkpoint condition is met (indicated by the
-        'should_checkpoint' function).
-
-        Returns:
-            list: A list of UIDs for the top N validators.
-
-        Note:
-            - This property employs lazy loading and caching to efficiently manage the retrieval of top N validators.
-            - The cache is updated based on specific conditions, such as crossing a checkpoint in the network.
-        """
-        if self._top_n_validators is None or should_checkpoint(
-            get_current_block(self.subtensor),
-            self.prev_step_block,
-            self.config.neuron.checkpoint_block_length,
-        ):
-            self._top_n_validators = self.get_top_n_validators()
-        return self._top_n_validators
 
     async def store_user_data(self, synapse: protocol.StoreUser) -> protocol.StoreUser:
         """

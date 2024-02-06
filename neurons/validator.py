@@ -99,8 +99,9 @@ class neuron:
         try:
             asyncio.run(check_environment(self.config.database.redis_conf_path))
         except AssertionError as e:
-            bt.logging.error(f"Something is missing in your environment: {e}")
-            sys.exit(1)
+            bt.logging.warning(
+                f"Something is missing in your environment: {e}. Please check your configuration, use the README for help, and try again."
+            )
 
         bt.logging.info("neuron.__init__()")
 

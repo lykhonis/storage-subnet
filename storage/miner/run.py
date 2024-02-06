@@ -26,8 +26,7 @@ import bittensor as bt
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
 
-from .utils import update_storage_stats, get_purge_ttl_script_path
-from .database import purge_expired_ttl_keys
+from .utils import update_storage_stats
 
 
 tagged_tx_queue_registry = {
@@ -166,15 +165,6 @@ def run(self):
     checked_extrinsics_count = 0
     should_retry = False
 
-    bt.logging.info("Starting purge of expired TTL keys in separate process.")
-    subprocess.Popen(
-        [
-            self.purge_ttl_path,
-            str(21),  # netuid
-            str(self.config.database.index),
-        ]
-    )
-
     def handler(obj, update_nr, subscription_id):
         current_block = obj["header"]["number"]
         block_hash = block_handler_substrate.get_block_hash(current_block)
@@ -216,15 +206,6 @@ def run(self):
                     json.dump(self.request_log, f)
             except Exception as e:
                 bt.logging.error(f"Unable to save request log to disk {e}")
-
-            bt.logging.info("Starting purge of expired TTL keys in separate process.")
-            subprocess.Popen(
-                [
-                    self.purge_ttl_path,
-                    str(21),  # netuid
-                    str(self.config.database.index),
-                ]
-            )
 
             bt.logging.info(
                 f"New epoch started, setting weights at block {current_block}"
