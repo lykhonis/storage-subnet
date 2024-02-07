@@ -111,6 +111,7 @@ async def store_data(
     n=0.1,
     ping_timeout=3,
     encoding="utf-8",
+    uid: int = None,
 ) -> str:
     """
     Stores data on the Bittensor network, optionally encrypting it.
@@ -126,6 +127,7 @@ async def store_data(
         n (float, optional): Fraction of top nodes to consider for storing data. Defaults to 0.1.
         ping_timeout (int, optional): Timeout for pinging nodes in seconds. Defaults to 3.
         encoding (str, optional): The encoding of the input data if it's a string. Defaults to "utf-8".
+        uid (int, optional): The UID of the node to store the data on. If None, the top nodes are considered.
 
     Returns:
         str: The CID (Content Identifier) of the stored data, or an empty string if the operation failed.
@@ -147,12 +149,15 @@ async def store_data(
     if metagraph is None:
         metagraph = bt.metagraph(21)
 
-    axons = await get_query_api_axons(
-        dendrite=dendrite,
-        metagraph=metagraph,
-        n=n,
-        timeout=ping_timeout,
-    )
+    if uid is not None:
+        axons = [metagraph.axons[uid]]
+    else:
+        axons = await get_query_api_axons(
+            dendrite=dendrite,
+            metagraph=metagraph,
+            n=n,
+            timeout=ping_timeout,
+        )
 
     with bt.__console__.status(":satellite: Storing data..."):
         tasks = [
@@ -205,6 +210,7 @@ async def retrieve_data(
     n=0.1,
     timeout: int = 90,
     ping_timeout: int = 3,
+    uid: int = None,
 ) -> bytes:
     """
     Retrieves data from the Bittensor network using its CID.
@@ -216,6 +222,7 @@ async def retrieve_data(
         n (float, optional): Fraction of top nodes to consider for retrieving data. Defaults to 0.1.
         timeout (int, optional): Timeout for the retrieve operation in seconds. Defaults to 180.
         ping_timeout (int, optional): Timeout for pinging nodes in seconds. Defaults to 3.
+        uid (int, optional): The UID of the node to retrieve the data from. If None, the top nodes are considered.
 
     Returns:
         bytes: The retrieved data, or an empty byte string if the operation failed.
@@ -223,12 +230,15 @@ async def retrieve_data(
     synapse = RetrieveUser(data_hash=cid)
     dendrite = bt.dendrite(wallet=wallet)
 
-    axons = await get_query_api_axons(
-        dendrite=dendrite,
-        metagraph=metagraph or bt.metagraph(21),
-        n=n,
-        timeout=ping_timeout,
-    )
+    if uid is not None:
+        axons = [metagraph.axons[uid]]
+    else:
+        axons = await get_query_api_axons(
+            dendrite=dendrite,
+            metagraph=metagraph or bt.metagraph(21),
+            n=n,
+            timeout=ping_timeout,
+        )
 
     with bt.__console__.status(":satellite: Retreiving data..."):
         tasks = [
