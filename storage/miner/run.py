@@ -261,7 +261,7 @@ def run(self):
                     last_extrinsic_hash = response.extrinsic_hash
                     should_retry = False
 
-                except Exception as e:
+                except BaseException as e:
                     bt.logging.error(f"Error while submitting set weights extrinsic: {e}")
                     should_retry = True
 
