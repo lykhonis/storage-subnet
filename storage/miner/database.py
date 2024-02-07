@@ -254,7 +254,7 @@ async def get_filepath(r: "aioredis.StrictRedis", chunk_hash: str, hotkey: str) 
     """
 
     filepath = ""
-    metadata_str = await r.hget(data_hash, hotkey)
+    metadata_str = await r.hget(chunk_hash, hotkey)
     if metadata_str is not None:
         metadata = json.loads(metadata_str)
         filepath = metadata.get("filepath")
