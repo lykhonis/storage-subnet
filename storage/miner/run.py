@@ -164,6 +164,7 @@ def run(self):
     last_extrinsic_hash = None
     checked_extrinsics_count = 0
     should_retry = False
+    account_nonce = block_handler_substrate.get_account_nonce(self.wallet.hotkey.ss58_address)
 
     def handler(obj, update_nr, subscription_id):
         current_block = obj["header"]["number"]
@@ -174,9 +175,7 @@ def run(self):
             f"Blocks since epoch: {(current_block + netuid + 1) % (tempo + 1)}"
         )
 
-        nonlocal last_extrinsic_hash
-        nonlocal checked_extrinsics_count
-        nonlocal should_retry
+        nonlocal last_extrinsic_hash, checked_extrinsics_count, should_retry, account_nonce
 
         if last_extrinsic_hash is not None:
             try:
@@ -224,7 +223,7 @@ def run(self):
 
                 # Period dictates how long the extrinsic will stay as part of waiting pool
                 extrinsic = substrate.create_signed_extrinsic(
-                    call=call, keypair=self.wallet.hotkey, era={"period": 1000}
+                    call=call, keypair=self.wallet.hotkey, era={"period": 10}, nonce=account_nonce
                 )
 
                 dry_run = runtime_call(
@@ -260,6 +259,7 @@ def run(self):
 
                     last_extrinsic_hash = response.extrinsic_hash
                     should_retry = False
+                    account_nonce = account_nonce + 1
 
                 except BaseException as e:
                     bt.logging.error(f"Error while submitting set weights extrinsic: {e}")
