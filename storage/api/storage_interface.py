@@ -154,7 +154,7 @@ async def store_data(
         timeout=ping_timeout,
     )
 
-    with bt.__console__.status(":satellite: Retreiving data..."):
+    with bt.__console__.status(":satellite: Storing data..."):
         tasks = [
             asyncio.create_task(dendrite(axon, synapse, timeout=timeout, deserialize=deserialize))
             for axon in axons
@@ -231,7 +231,11 @@ async def retrieve_data(
     )
 
     with bt.__console__.status(":satellite: Retreiving data..."):
-        responses = await dendrite(axons, synapse, timeout=timeout, deserialize=False)
+        tasks = [
+            asyncio.create_task(dendrite(axon, synapse, timeout=timeout, deserialize=False))
+            for axon in axons
+        ]
+        responses = await asyncio.gather(*tasks)
 
     success = False
     decrypted_data = b""
