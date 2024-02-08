@@ -17,6 +17,8 @@
 # DEALINGS IN THE SOFTWARE.
 
 from argparse import ArgumentParser
+from bittensor import config as bt_config
+
 from neurons.miner import run_miner
 from neurons.validator import run_validator
 from neurons.api import run_api
@@ -30,7 +32,7 @@ class RunApi:
         run_api()
     
     @staticmethod
-    def check_config(config: "bittensor.config"):
+    def check_config(config: "bt_config"):
         pass
 
     @staticmethod
@@ -46,7 +48,7 @@ class RunMiner:
         run_miner()
     
     @staticmethod
-    def check_config(config: "bittensor.config"):
+    def check_config(config: "bt_config"):
         pass
 
     @staticmethod
@@ -62,7 +64,7 @@ class RunValidator:
         run_validator()
     
     @staticmethod
-    def check_config(config: "bittensor.config"):
+    def check_config(config: "bt_config"):
         pass
 
     @staticmethod
