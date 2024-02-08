@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.4 / 2024-02-08
+
+## What's Changed
+* Release/1.5.3 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/127
+* define filepath if already exists on store requests by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/130
+* handle uncaught extrinsic exception to not kill background thread by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/129
+* Api/subsample query axons by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/131
+* Catch all errors from substrateinterface when sending self-weights, custom nonce tracking by @Rubberbandits in https://github.com/ifrit98/storage-subnet/pull/132
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.5.3...v1.5.4
+
+
 ## 1.5.3 / 2024-02-06
 
 ## What's Changed
