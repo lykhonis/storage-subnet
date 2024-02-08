@@ -969,7 +969,7 @@ class miner:
         self.stop_run_thread()
 
 
-def main():
+def run_miner():
     """
     Main function to run the neuron.
 
@@ -992,4 +992,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_miner()

@@ -415,9 +415,9 @@ class neuron:
             self.stop_subscription_thread()
 
 
-def main():
+def run_validator():
     neuron().run()
 
 
 if __name__ == "__main__":
-    main()
+    run_validator()

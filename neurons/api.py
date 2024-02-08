@@ -455,9 +455,9 @@ class neuron:
         self.stop_run_thread()
 
 
-def main():
+def run_api():
     neuron().run()
 
 
 if __name__ == "__main__":
-    main()
+    run_api()
