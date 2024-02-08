@@ -31,7 +31,7 @@ async def safe_key_search(database: aioredis.Redis, pattern: str) -> List[str]:
     Safely search for keys in the database that doesn't block.
     `scan_iter` uses cursor under the hood.
     """
-    return [key for key in await database.scan_iter(pattern)]
+    return [key async for key in database.scan_iter(pattern)]
 
 
 def b64_encode(data: Union[bytes, str, List[str], List[bytes], dict]) -> str:

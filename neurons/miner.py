@@ -308,14 +308,15 @@ class miner:
 
         # Filter out keys that contain a period (temporary, remove later)
         filtered_keys = [key for key in all_keys if b"." not in key]
-
-        # Get the size of each data object and sum them up
-        total_size = sum(
-            [
-                await get_chunk_metadata(self.database, key).get(b"size", 0)
-                for key in filtered_keys
-            ]
-        )
+        total_size = 0
+        for key in filtered_keys:
+            try:
+                key_dict = await self.database.hgetall(key)
+                first_hotkey = list(key_dict)[0]
+                size = int(json.loads(key_dict[first_hotkey]).get("size", 0))
+            except Exception as e:
+                size = 0
+            total_size += size
         return total_size
 
     def store_blacklist_fn(
