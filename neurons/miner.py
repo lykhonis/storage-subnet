@@ -18,6 +18,7 @@
 
 import os
 import sys
+import json
 import time
 import torch
 import typing
@@ -76,6 +77,7 @@ from storage.miner.database import (
     store_chunk_metadata,
     update_seed_info,
     get_chunk_metadata,
+    get_filepath,
     store_or_update_chunk_metadata,
 )
 
@@ -307,14 +309,15 @@ class miner:
 
         # Filter out keys that contain a period (temporary, remove later)
         filtered_keys = [key for key in all_keys if b"." not in key]
-
-        # Get the size of each data object and sum them up
-        total_size = sum(
-            [
-                await get_chunk_metadata(self.database, key).get(b"size", 0)
-                for key in filtered_keys
-            ]
-        )
+        total_size = 0
+        for key in filtered_keys:
+            try:
+                key_dict = await self.database.hgetall(key)
+                first_hotkey = list(key_dict)[0]
+                size = int(json.loads(key_dict[first_hotkey]).get("size", 0))
+            except Exception as e:
+                size = 0
+            total_size += size
         return total_size
 
     def store_blacklist_fn(
@@ -619,6 +622,9 @@ class miner:
                 encrypted_byte_data, self.config.database.directory, str(data_hash)
             )
             bt.logging.trace(f"stored data {data_hash} in filepath: {filepath}")
+        else:
+            filepath = await get_filepath(self.database, data_hash, synapse.dendrite.hotkey)
+
         # Add the initial chunk, size, and validator seed information
         # If data exists and is the same hotkey caller, overwrite prev seed, otherwise add a new entry
         await store_or_update_chunk_metadata(
@@ -707,7 +713,7 @@ class miner:
 
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database,
+            r=self.database,
             chunk_hash=synapse.challenge_hash,
             hotkey=synapse.dendrite.hotkey,
         )
@@ -854,7 +860,7 @@ class miner:
         # Fetch the data from the miner database
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database, chunk_hash=synapse.data_hash, hotkey=synapse.dendrite.hotkey
+            r=self.database, chunk_hash=synapse.data_hash, hotkey=synapse.dendrite.hotkey
         )
 
         # Decode the data + metadata from bytes to json
