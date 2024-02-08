@@ -713,7 +713,7 @@ class miner:
 
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database,
+            r=self.database,
             chunk_hash=synapse.challenge_hash,
             hotkey=synapse.dendrite.hotkey,
         )
@@ -860,7 +860,7 @@ class miner:
         # Fetch the data from the miner database
         bt.logging.trace("entering get_chunk_metadata()")
         data = await get_chunk_metadata(
-            self.database, chunk_hash=synapse.data_hash, hotkey=synapse.dendrite.hotkey
+            r=self.database, chunk_hash=synapse.data_hash, hotkey=synapse.dendrite.hotkey
         )
 
         # Decode the data + metadata from bytes to json
