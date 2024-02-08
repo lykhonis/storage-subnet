@@ -217,3 +217,8 @@ class cli:
         else:
             print(f":cross_mark:[red]Unknown command: {self.config.command}[/red]")
             sys.exit()
+
+
+def filetao():
+    args = sys.argv[1:]
+    cli(args=args).run()
