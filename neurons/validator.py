@@ -97,7 +97,7 @@ class neuron:
         print(self.config)
 
         try:
-            asyncio.run(check_environment(self.config.database.redis_conf_path))
+            asyncio.run(check_environment(self.config.database.redis_conf_path, self.config.database.host))
         except AssertionError as e:
             bt.logging.warning(
                 f"Something is missing in your environment: {e}. Please check your configuration, use the README for help, and try again."
