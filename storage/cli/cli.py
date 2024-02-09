@@ -27,6 +27,7 @@ from .retrievecommand import RetrieveData
 from .storecommand import StoreData
 from .listcommand import ListLocalHashes
 from .statscommand import ListMinerStats
+from .neuroncommand import RunMiner, RunValidator, RunApi
 
 # Create a console instance for CLI display.
 console = bittensor.__console__
@@ -38,9 +39,11 @@ ALIAS_TO_COMMAND = {
     "s": "store",
     "r": "retrieve",
     "m": "miner",
+    "n": "run",
     "retrieve": "retrieve",
     "store": "store",
     "miner": "miner",
+    "run": "run",
 }
 
 COMMANDS = {
@@ -67,6 +70,16 @@ COMMANDS = {
         "help": "Commands for retrieving statistics from the Bittensor network.",
         "commands": {
             "stats": ListMinerStats,  # lists all miner stats associated with hotkey
+        },
+    },
+    "run": {
+        "name": "run",
+        "aliases": ["n", "run"],
+        "help": "Commands for running neurons in this subnetwork.",
+        "commands": {
+            "miner": RunMiner,
+            "validator": RunValidator,
+            "api": RunApi,
         },
     },
 }
@@ -217,3 +230,8 @@ class cli:
         else:
             print(f":cross_mark:[red]Unknown command: {self.config.command}[/red]")
             sys.exit()
+
+
+def filetao():
+    args = sys.argv[1:]
+    cli(args=args).run()
