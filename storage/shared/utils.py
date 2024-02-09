@@ -26,6 +26,16 @@ from typing import List, Union
 from redis import asyncio as aioredis
 
 
+def is_running_in_docker():
+    if os.path.exists('/.dockerenv'):
+        return True
+    try:
+        with open('/proc/self/cgroup', 'rt') as f:
+            return any('docker' in line or 'kubepods' in line for line in f)
+    except Exception:
+        return False
+
+
 async def safe_key_search(database: aioredis.Redis, pattern: str) -> List[str]:
     """
     Safely search for keys in the database that doesn't block.

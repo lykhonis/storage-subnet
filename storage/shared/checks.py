@@ -5,19 +5,22 @@ import re
 import os
 from redis import asyncio as aioredis
 
+from storage.shared.utils import is_running_in_docker
 
-async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf"):
+
+async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redis_host: str = "localhost"):
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, "requirepass")
-    await _check_redis_connection(redis_conf_path, redis_port)
-    await _check_data_persistence(redis_conf_path, redis_port)
+    await _check_redis_connection(redis_conf_path, redis_host, redis_port)
+    await _check_data_persistence(redis_conf_path, redis_host, redis_port)
 
 
 def _check_redis_config(path):
+    cmd = ["test", "-f", path] if is_running_in_docker() else ["sudo", "test", "-f", path]
     try:
-        subprocess.run(["sudo", "test", "-f", path], check=True)
+        subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
         raise AssertionError(f"Redis config file path: '{path}' does not exist.")
 
@@ -32,12 +35,13 @@ def _check_redis_settings(redis_conf_path):
         _check_redis_setting(redis_conf_path, setting, expected_values)
 
 
-async def _check_redis_connection(redis_conf_path, port):
+async def _check_redis_connection(redis_conf_path, host, port):
     redis_password = _get_redis_password(redis_conf_path)
 
     assert port is not None, "Redis server port not found"
     try:
         client = aioredis.StrictRedis(
+            host=host,
             port=port, db=0, password=redis_password, socket_connect_timeout=1
         )
         await client.ping()
@@ -45,17 +49,20 @@ async def _check_redis_connection(redis_conf_path, port):
         assert False, f"Redis connection failed. ConnectionError'{e}'"
 
 
-async def _check_data_persistence(redis_conf_path, port):
+async def _check_data_persistence(redis_conf_path, host, port):
     redis_password = _get_redis_password(redis_conf_path)
 
     assert port is not None, "Redis server port not found"
-    client = aioredis.StrictRedis(port=port, db=0, password=redis_password)
+    client = aioredis.StrictRedis(host=host, port=port, db=0, password=redis_password)
 
     # Insert data into Redis
     await client.set("testkey", "Hello, Redis!")
 
     # Restart Redis server
-    subprocess.run(["sudo", "systemctl", "restart", "redis-server.service"], check=True)
+    cmd = ["systemctl", "restart", "redis-server.service"] if is_running_in_docker() else [
+        "sudo", "systemctl", "restart", "redis-server.service"
+    ]
+    subprocess.run(cmd, check=True)
 
     # Wait a bit to ensure Redis has restarted
     await asyncio.sleep(5)
@@ -95,9 +102,12 @@ def _assert_setting_exists(file_path, setting):
 
 def _get_redis_setting(file_path, setting):
     """Retrieve specific settings from the Redis configuration file."""
+    cmd = ["grep", f"^{setting}", file_path] if is_running_in_docker() else [
+        "sudo", "grep", f"^{setting}", file_path
+    ]
     try:
         result = subprocess.check_output(
-            ["sudo", "grep", f"^{setting}", file_path], text=True
+            cmd, text=True
         )
         return result.strip().split("\n")
     except subprocess.CalledProcessError:
@@ -106,7 +116,8 @@ def _get_redis_setting(file_path, setting):
 
 def _get_redis_password(redis_conf_path):
     try:
-        cmd = f"sudo grep -Po '^requirepass \K.*' {redis_conf_path}"
+        cmd = f"grep -Po '^requirepass \K.*' {redis_conf_path}" if is_running_in_docker(
+        ) else f"sudo grep -Po '^requirepass \K.*' {redis_conf_path}"
         result = subprocess.run(
             cmd, shell=True, text=True, capture_output=True, check=True
         )
