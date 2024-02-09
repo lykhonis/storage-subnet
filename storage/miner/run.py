@@ -22,7 +22,6 @@ import wandb
 import asyncio
 import subprocess
 import bittensor as bt
-import multiprocessing
 
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
@@ -158,10 +157,6 @@ def run(self):
             f"Please register the hotkey using `btcli subnets register` before trying again"
         )
         exit()
-
-    bt.logging.info("Ensuring database has proper schema...")
-    run_async_in_sync_context(convert_all_to_hotkey_format, self.loop, 100, self.database)
-    bt.logging.info("Database schema verification complete!")
 
     tempo = block_handler_substrate.query(
         module="SubtensorModule", storage_function="Tempo", params=[netuid]

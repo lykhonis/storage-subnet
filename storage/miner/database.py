@@ -216,6 +216,13 @@ async def get_chunk_metadata(
 
 
 async def safe_remove_old_keys(r, chunk_hash: str):
+    """
+    Removes outdated schema keys for the specific hash.
+
+    Args:
+        r (redis.Redis): The Redis connection instance.
+        chunk_hash (str): The unique hash identifying the chunk.
+    """
     metadata_dict = await r.hgetall(chunk_hash)
     if b"hotkey" in metadata_dict:
         await r.hdel(chunk_hash, b"hotkey")
@@ -231,6 +238,17 @@ async def safe_remove_old_keys(r, chunk_hash: str):
         await r.hdel(chunk_hash, b"generated")
 
 
+async def safe_remove_all_old_keys(r):
+    """
+    Removes all outdated schema keys from the Redis database.
+
+    Args:
+        r (redis.Redis): The Redis connection instance.
+    """
+    async for key in r.scan_iter("*"):
+        await safe_remove_old_keys(r, key)
+
+
 async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
     """
     Converts all chunk metadata in the Redis database to the new format using caller as subkey.
@@ -242,7 +260,6 @@ async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
         try:
             if await is_old_version(r, key):
                 await convert_to_new_format(r, key)
-            await safe_remove_old_keys(r, key) # Remove old keys if they still exist
         except Exception as e:
             bt.logging.error(f"Error converting {key} with error: {e}")
 
