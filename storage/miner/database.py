@@ -170,7 +170,7 @@ async def is_old_version(
 
 async def get_chunk_metadata(
     r: "aioredis.Strictredis", chunk_hash: str, hotkey: str
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Retrieves the metadata for a specific chunk from the Redis database.
 
@@ -188,14 +188,47 @@ async def get_chunk_metadata(
         await convert_to_new_format(r, chunk_hash, hotkey)
 
     metadata = await r.hget(chunk_hash, hotkey)
-    metadata = json.loads(metadata)
     if metadata:
-        metadata["size"] = int(metadata.get("size", 0))
-        metadata["ttl"] = int(metadata.get("ttl", 60 * 60 * 24 * 30))
-        metadata["seed"] = metadata.get("seed", "")
-        metadata["generated"] = float(metadata.get("generated", 0))
-
+        # New key structure as of 1.5.3
+        try:
+            metadata = json.loads(metadata)
+            metadata["size"] = int(metadata.get("size", 0))
+            metadata["ttl"] = int(metadata.get("ttl", 60 * 60 * 24 * 30))
+            metadata["seed"] = metadata.get("seed", "")
+            metadata["generated"] = float(metadata.get("generated", 0))
+        except json.JSONDecodeError as e:
+            bt.logging.error(f"Error decoding metadata for {chunk_hash}: {e}")
+            metadata = None
+        except Exception as e:
+            bt.logging.error(f"Error getting metadata for {chunk_hash}: {e}")
+            metadata = None
+    else:
+        # attempt to fetch via old key structure for reverse compatibility < 1.5.3
+        metadata = await r.hgetall(chunk_hash)
+        if metadata:
+            try:
+                metadata = {k.decode("utf-8"): v.decode("utf-8") for k, v in metadata.items()}
+                metadata["size"] = int(metadata.get("size", 0))
+            except Exception as e:
+                bt.logging.error(f"Error getting metadata for {chunk_hash}: {e}")
+                metadata = None
     return metadata
+
+
+async def safe_remove_old_keys(r, chunk_hash: str):
+    metadata_dict = await r.hgetall(chunk_hash)
+    if b"hotkey" in metadata_dict:
+        await r.hdel(chunk_hash, b"hotkey")
+    if b"seed" in metadata_dict:
+        await r.hdel(chunk_hash, b"seed")
+    if b"filepath" in metadata_dict:
+        await r.hdel(chunk_hash, b"filepath")
+    if b"size" in metadata_dict:
+        await r.hdel(chunk_hash, b"size")
+    if b"ttl" in metadata_dict:
+        await r.hdel(chunk_hash, b"ttl")
+    if b"generated" in metadata_dict:
+        await r.hdel(chunk_hash, b"generated")
 
 
 async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
@@ -209,6 +242,7 @@ async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
         try:
             if await is_old_version(r, key):
                 await convert_to_new_format(r, key)
+            await safe_remove_old_keys(r, key) # Remove old keys if they still exist
         except Exception as e:
             bt.logging.error(f"Error converting {key} with error: {e}")
 

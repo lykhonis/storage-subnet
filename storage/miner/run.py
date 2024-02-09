@@ -22,11 +22,13 @@ import wandb
 import asyncio
 import subprocess
 import bittensor as bt
+import multiprocessing
 
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
 
-from .utils import update_storage_stats
+from .utils import update_storage_stats, run_async_in_sync_context
+from .database import convert_all_to_hotkey_format
 
 
 tagged_tx_queue_registry = {
@@ -157,6 +159,10 @@ def run(self):
         )
         exit()
 
+    bt.logging.info("Ensuring database has proper schema...")
+    run_async_in_sync_context(convert_all_to_hotkey_format, self.loop, 100, self.database)
+    bt.logging.info("Database schema verification complete!")
+
     tempo = block_handler_substrate.query(
         module="SubtensorModule", storage_function="Tempo", params=[netuid]
     ).value
@@ -182,7 +188,7 @@ def run(self):
                 receipt = block_handler_substrate.retrieve_extrinsic_by_hash(
                     block_hash, last_extrinsic_hash
                 )
-                bt.logging.debug(
+                bt.logging.trace(
                     f"Last set-weights call: {'Success' if receipt.is_success else format('Failure, reason: %s', receipt.error_message['name'] if receipt.error_message is not None else 'nil')}"
                 )
 
@@ -204,7 +210,7 @@ def run(self):
                 with open(self.config.miner.request_log_path, "w") as f:
                     json.dump(self.request_log, f)
             except Exception as e:
-                bt.logging.error(f"Unable to save request log to disk {e}")
+                bt.logging.warning(f"Unable to save request log to disk {e}")
 
             bt.logging.info(
                 f"New epoch started, setting weights at block {current_block}"
@@ -262,7 +268,7 @@ def run(self):
                     account_nonce = account_nonce + 1
 
                 except BaseException as e:
-                    bt.logging.error(f"Error while submitting set weights extrinsic: {e}")
+                    bt.logging.warning(f"Error while submitting set weights extrinsic: {e}. Retrying...")
                     should_retry = True
 
             # --- Update the miner storage information periodically.
