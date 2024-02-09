@@ -32,7 +32,7 @@ async def main(args):
         db=args.database_index,
         password=redis_password,
     )
-    failed_uids = await migrate_data_directory(r, new_directory, return_failures=True)
+    failed_uids = await migrate_data_directory(database, new_directory, return_failures=True)
 
     if failed_uids is not None:
         bt.logging.error(
