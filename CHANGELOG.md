@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.6 / 2024-02-09
+
+## What's Changed
+* fix schema port, add run_async_in_sync utility, port error->trace by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/136
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.5.5...v1.5.6
+
+
 ## 1.5.5 / 2024-02-09
 
 ## What's Changed

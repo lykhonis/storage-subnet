@@ -55,6 +55,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Running the API](#running-the-api)
    - [(Optional) Setup WandB](#setup-wandb)
 1. [Local Subtensor](#local-subtensor)
+1. [Database Migration](#database-migration)
 
 # Storage CLI Interface
 
@@ -957,3 +958,45 @@ pm2 logs subtensor
 1|subtensor  | 2023-12-22 14:21:40 ⏩ Warping, Downloading state, 11.25 Mib (110 peers), best: #0 (0x2f05…6c03), finalized #0 (0x2f05…6c03), ⬇ 1.1MiB/s ⬆ 37.0kiB/s    
 1|subtensor  | 2023-12-22 14:21:45 ⏩ Warping, Downloading state, 20.22 Mib (163 peers), best: #0 (0x2f05…6c03), finalized #0 (0x2f05…6c03), ⬇ 1.2MiB/s ⬆ 48.7kiB/s 
 ```
+
+## Database Schema Migration
+
+As over version `1.5.3` FileTao has a new miner database schema to work with the API. It is REQUIRED to update the schema for proper functioning of the FileTao network to participate. This tool will help you convert if you have data from <`1.5.3`.
+
+Converts the schema of a Redis database to the new hotkey format. It automates the process of checking the environment for necessary configurations and performing the schema conversion on the specified Redis database, as well as cleanup after conversion (separate script).
+
+This is done in two stages:
+1. Conversion
+2. Cleanup
+
+Both scripts are labeled with the prefix `01` and `02` in order to distinguish the proper order to run.
+
+## Usage
+
+Both scripts need to specify the Redis database connection details and the path to the Redis configuration file. The tool supports the following command-line arguments:
+
+- `--redis_password`: Password for the Redis database (if applicable).
+- `--redis_conf_path`: Path to the Redis configuration file. Default is `/etc/redis/redis.conf`.
+- `--database_host`: Hostname of the Redis database. Default is `localhost`.
+- `--database_port`: Port number of the Redis database. Default is `6379`.
+- `--database_index`: Database index to use. Default is `0`.
+
+### Script 1 Example
+
+```bash
+python scripts/redis/schema_migration/01_migrate.py --redis_password=mysecretpassword --database_host=localhost --database_port=6379 --database_index=0
+```
+
+This converts the current index to the new hotkey format.
+
+### Script 2 Example
+
+```bash
+python scripts/redis/schema_migration/02_clean.py --redis_password=mysecretpassword --database_host=localhost --database_port=6379 --database_index=0
+```
+This cleans up any lingering old keys left after conversion.
+
+## Important Notes
+
+- Ensure that the Redis database is accessible and that the provided credentials are correct.
+- It's recommended to back up your Redis database before performing the schema conversion to prevent data loss.
