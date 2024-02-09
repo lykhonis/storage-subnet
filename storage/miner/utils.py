@@ -75,7 +75,7 @@ def commit_data_with_seed(committer, data_chunks, n_chunks, seed):
     return randomness, chunks, points, merkle_tree
 
 
-def save_data_to_filesystem(data, directory, filename):
+def save_data_to_filesystem(data, directory, hotkey, filename):
     """
     Saves data to the filesystem at the specified directory and filename. If the directory does
     not exist, it is created.
@@ -83,6 +83,7 @@ def save_data_to_filesystem(data, directory, filename):
     Parameters:
     - data: The data to be saved.
     - directory (str): The directory path where the data should be saved.
+    - hotkey (str): The hotkey associated with the data.
     - filename (str): The name of the file to save the data in.
 
     Returns:
@@ -91,7 +92,7 @@ def save_data_to_filesystem(data, directory, filename):
     This function is useful for persisting data to the disk.
     """
     # Ensure the directory exists
-    directory = os.path.expanduser(directory)
+    directory = os.path.join(os.path.expanduser(directory), hotkey)
     os.makedirs(directory, exist_ok=True)
     file_path = os.path.join(directory, filename)
     with open(file_path, "wb") as file:

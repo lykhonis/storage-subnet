@@ -616,10 +616,11 @@ class miner:
 
         # If already storing this hash, simply update the validator seeds and return challenge
         bt.logging.trace("checking if data already exists...")
-        if not await self.database.exists(data_hash):
+        
+        if not await self.database.hexists(data_hash, synapse.dendrite.hotkey):
             # Store the data in the filesystem
             filepath = save_data_to_filesystem(
-                encrypted_byte_data, self.config.database.directory, str(data_hash)
+                encrypted_byte_data, self.config.database.directory, synapse.dendrite.hotkey, str(data_hash)
             )
             bt.logging.trace(f"stored data {data_hash} in filepath: {filepath}")
         else:
@@ -731,14 +732,33 @@ class miner:
             )
 
             # fallback to load the data from the filesystem via database path construction
-            filepath = os.path.expanduser(
-                f"{self.config.database.directory}/{synapse.challenge_hash}"
+            # use new path construction by hotkey and challenge hash
+            file_not_found = True
+            new_filepath = os.path.expanduser(
+                f"{self.config.database.directory}/{synapse.dendrite.hotkey}/{synapse.challenge_hash}"
             )
-            if not os.path.isfile(filepath):
-                bt.logging.error(
-                    f"No file found for {synapse.challenge_hash} in {self.config.database.directory}."
+            if os.path.isfile(new_filepath):
+                bt.logging.debug(f"challenge() File found for {synapse.challenge_hash} in {new_filepath}")
+                file_not_found = False
+                filepath = new_filepath
+
+            if file_not_found:
+                # Use old path construction by just challenge hash
+                fallback_filepath = os.path.expanduser(
+                    f"{self.config.database.directory}/{synapse.challenge_hash}"
                 )
-                return synapse
+                if not os.path.isfile(fallback_filepath):
+                    bt.logging.error(
+                        f"challenge() No file found for {synapse.challenge_hash} in {fallback_filepath}."
+                    )
+                    synapse.axon.status_code = 404
+                    synapse.axon.status_message = "File not found"
+                    return synapse
+                else:
+                    filepath = fallback_filepath
+                    bt.logging.debug(
+                        f"challenge() File found for {synapse.challenge_hash} in {filepath}."
+                    )
 
         bt.logging.trace("entering load_from_filesystem()")
         try:
@@ -751,7 +771,8 @@ class miner:
 
         # Construct the next commitment hash using previous commitment and hash
         # of the data to prove storage over time
-        prev_seed = data.get(b"seed", "").encode()
+        prev_seed = data.get("seed", "").encode()
+        bt.logging.debug(f"challenge() prev_seed: {prev_seed}")
         if prev_seed is None:
             # TODO: this should raise an error that would trigger a 404 response in the axon
             # Currently, the synapse logs show this as successful, because axon recieves a synapse without
@@ -866,22 +887,41 @@ class miner:
         # Decode the data + metadata from bytes to json
         bt.logging.debug(f"retrieved data: {pformat(data)}")
 
-        # load the data from the filesystem
+        # Get the data from filesystem to retrieve
         filepath = data.get("filepath", None)
-        if filepath is None:
+        if True: #filepath is None:
             bt.logging.warning(
                 f"No file found for {synapse.data_hash} in index, trying path construction..."
             )
 
             # fallback to load the data from the filesystem via database path construction
-            filepath = os.path.expanduser(
-                f"{self.config.database.directory}/{synapse.data_hash}"
+            # use new path construction by hotkey and retrieve hash
+            file_not_found = True
+            new_filepath = os.path.expanduser(
+                f"{self.config.database.directory}/{synapse.dendrite.hotkey}/{synapse.data_hash}"
             )
-            if not os.path.isfile(filepath):
-                bt.logging.error(
-                    f"No file found for {synapse.data_hash} in {self.config.database.directory}"
+            if os.path.isfile(new_filepath):
+                bt.logging.debug(f"retrieve() File found for {synapse.data_hash} in {new_filepath}")
+                file_not_found = False
+                filepath = new_filepath
+
+            if file_not_found:
+                # Use old path construction by just retrieve hash
+                fallback_filepath = os.path.expanduser(
+                    f"{self.config.database.directory}/{synapse.data_hash}"
                 )
-                return synapse
+                if not os.path.isfile(fallback_filepath):
+                    bt.logging.error(
+                        f"retrieve() No file found for {synapse.data_hash} in {fallback_filepath}."
+                    )
+                    synapse.axon.status_code = 404
+                    synapse.axon.status_message = "File not found"
+                    return synapse
+                else:
+                    filepath = fallback_filepath
+                    bt.logging.debug(
+                        f"retrieve() File found for {synapse.data_hash} in {filepath}."
+                    )
 
         bt.logging.trace("entering load_from_filesystem()")
         try:
