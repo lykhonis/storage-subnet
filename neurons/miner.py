@@ -345,7 +345,10 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        self.request_log = log_request(synapse, self.request_log)
+        try:
+            self.request_log = log_request(synapse, self.request_log)
+        except Exception as e:
+            bt.logging.error(f"Error logging request: {e}")
 
         caller = synapse.dendrite.hotkey
         if caller in self.config.blacklist.blacklist_hotkeys:
@@ -429,7 +432,10 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        self.request_log = log_request(synapse, self.request_log)
+        try:
+            self.request_log = log_request(synapse, self.request_log)
+        except Exception as e:
+            bt.logging.error(f"Error logging request: {e}")
 
         caller = synapse.dendrite.hotkey
         if caller in self.config.blacklist.blacklist_hotkeys:
@@ -513,7 +519,10 @@ class miner:
         This method is internally used by the network to ensure that only recognized
         entities can participate in communication or transactions.
         """
-        self.request_log = log_request(synapse, self.request_log)
+        try:
+            self.request_log = log_request(synapse, self.request_log)
+        except Exception as e:
+            bt.logging.error(f"Error logging request: {e}")
 
         caller = synapse.dendrite.hotkey
         if caller in self.config.blacklist.blacklist_hotkeys:
