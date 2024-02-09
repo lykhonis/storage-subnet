@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.5 / 2024-02-09
+
+## What's Changed
+* Release/1.5.4 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/134
+
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.5.4...v1.5.5
+
+
 ## 1.5.4 / 2024-02-08
 
 ## What's Changed

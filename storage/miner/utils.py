@@ -23,6 +23,8 @@ import shutil
 import storage
 import wandb
 import copy
+import asyncio
+import multiprocessing
 import bittensor as bt
 from collections import deque
 
@@ -285,6 +287,7 @@ def load_request_log(request_log_path: str) -> dict:
     This method loads the request log from disk if it exists. If not, it returns an empty dictionary.
     """
     if os.path.exists(request_log_path):
+        print("path to log: ", request_log_path)
         with open(request_log_path, "r") as f:
             request_log = json.load(f)
     else:
@@ -349,3 +352,46 @@ def get_purge_ttl_script_path(current_dir):
     project_root = os.path.normpath(project_root)
     script_path = os.path.join(project_root, "scripts", "run_ttl_purge.sh")
     return script_path
+
+
+def run_async_in_sync_context(
+    coroutine_function: callable,
+    loop: asyncio.unix_events._UnixSelectorEventLoop = None,
+    ttl: int = 100,
+    *args,
+):
+    """
+    Runs an asynchronous coroutine in a synchronous context using a separate process.
+
+    This function is useful for running asynchronous coroutines in a synchronous context, such as in a synchronous
+    function or method. It creates a separate process to run the asynchronous coroutine and waits for it to complete
+    before returning control to the caller.
+
+    Parameters:
+    - coroutine_function (callable): The asynchronous coroutine function to be run.
+    - loop (asyncio.unix_events._UnixSelectorEventLoop): The event loop to be used for running the coroutine.
+    - ttl (int): The time-to-live (TTL) for the process. If the process does not complete within this time, it will be terminated.
+    - *args: The arguments to be passed to the coroutine function.
+
+    Usage:
+    ```python
+    async def async_function():
+        await asyncio.sleep(1)
+        print("Async function completed")
+
+    def sync_function():
+        run_async_in_sync_context(async_function)
+        print("Sync function completed")
+    ```
+    """
+    if loop is None:
+        loop = asyncio.get_event_loop()
+
+    def sync_wrapper(self):
+        async def run_async_coro():
+            await asyncio.gather(coroutine_function(*args))
+        loop.run_until_complete(run_async_coro())
+
+    process = multiprocessing.Process(target=sync_wrapper, args=args)
+    process.start()
+    process.join(timeout=ttl)
