@@ -921,7 +921,7 @@ sudo docker compose up -d
 Provided are two scripts to build subtensor, and then to run it inside a pm2 process as a convenience. If you have more complicated needs, see the [subtensor](https://github.com/opentensor/subtensor/) repo for more details and understanding.
 ```bash
 # Installs dependencies and builds the subtensor binary
-./scripts/build_subtensor_linux.sh
+./scripts/subtensor/build_subtensor_linux.sh
 
 # Runs local subtensor in a pm2 process (NOTE: this can take several hours to sync chain history)
 # Make sure the directory is configured properly to run from the built subtensor binary
@@ -930,7 +930,7 @@ Provided are two scripts to build subtensor, and then to run it inside a pm2 pro
 # cd ~/storage-subnet/subtensor
 
 # Run the script to start subtensor
-./scripts/start_local_subtensor.sh
+./scripts/subtensor/start_local_subtensor.sh
 ```
 
 You should see output like this in your pm2 logs for the process at startup:
