@@ -199,7 +199,7 @@ def add_args(cls, parser):
         required=False,
         nargs="*",
         help="Blacklist certain hotkeys",
-        default=["5HEKJuVZXtLhUUu5xmKwvEz3d5ZpDWXDSSH3sT3DeLV3Nsdo"],
+        default=[],
     )
     parser.add_argument(
         "--blacklist.whitelist_hotkeys",
