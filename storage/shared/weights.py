@@ -3,6 +3,7 @@ from bittensor import logging as bt_logging
 from bittensor import subtensor
 from bittensor import wallet
 from torch import Tensor
+from typing import Tuple
 
 
 def should_wait_to_set_weights(current_block, last_epoch_block, tempo):
@@ -33,7 +34,7 @@ def set_weights(
     wandb_on: bool = False,
     wait_for_inclusion: bool = False,
     wait_for_finalization: bool = False,
-) -> bool:
+) -> Tuple[bool, str]:
     """
     Sets the miner's weights on the Bittensor network.
 
@@ -62,13 +63,15 @@ def set_weights(
         success (bool):
             flag is true if extrinsic was finalized or uncluded in the block.
             If we did not wait for finalization / inclusion, the response is true.
+        message (str):
+            message returned by the chain.
 
     Raises:
         Exception: If there's an error while setting weights, the exception is logged for diagnosis.
     """
     try:
         # --- Set weights.
-        success = subtensor.set_weights(
+        success, message = subtensor.set_weights(
             wallet=wallet,
             netuid=netuid,
             uids=uids,
@@ -80,9 +83,9 @@ def set_weights(
         if wandb_on:
             wandb.log({"set_weights": 1})
 
-        return success
+        return success, message
     except Exception as e:
         if wandb_on:
             wandb.log({"set_weights": 0})
         bt_logging.error(f"Failed to set weights on chain with exception: { e }")
-        return False
+        return False, message

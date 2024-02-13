@@ -151,14 +151,12 @@ def scale_rewards(
 
     # Apply logarithmic scaling to data sizes
     bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
-    log_data_sizes = np.log1p(data_sizes)
-    normalized_log_data_sizes = log_data_sizes / torch.sum(torch.tensor(log_data_sizes))
+    log_data_sizes = torch.from_numpy(np.log1p(data_sizes)).float()
+    normalized_log_data_sizes = log_data_sizes / torch.sum(log_data_sizes)
     bt.logging.debug(f"Normalized data sizes: {normalized_log_data_sizes}")
 
     # Scale initial rewards by normalized data sizes
-    data_size_scaled_rewards = rewards.to(device) * torch.tensor(
-        normalized_log_data_sizes
-    ).to(device)
+    data_size_scaled_rewards = rewards.to(device) * normalized_log_data_sizes.to(device)
 
     # Normalize the response times
     normalized_times = sigmoid_normalize(process_times, timeout)

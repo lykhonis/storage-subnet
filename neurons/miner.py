@@ -736,10 +736,6 @@ class miner:
         # Chunk the data according to the specified (random) chunk size
         filepath = data.get("filepath", None)
         if filepath is None:
-            bt.logging.warning(
-                f"No file found for {synapse.challenge_hash} in index, trying path construction..."
-            )
-
             # fallback to load the data from the filesystem via database path construction
             # use new path construction by hotkey and challenge hash
             file_not_found = True
@@ -747,7 +743,6 @@ class miner:
                 f"{self.config.database.directory}/{synapse.dendrite.hotkey}/{synapse.challenge_hash}"
             )
             if os.path.isfile(new_filepath):
-                bt.logging.debug(f"challenge() File found for {synapse.challenge_hash} in {new_filepath}")
                 file_not_found = False
                 filepath = new_filepath
 
@@ -898,11 +893,7 @@ class miner:
 
         # Get the data from filesystem to retrieve
         filepath = data.get("filepath", None)
-        if True: #filepath is None:
-            bt.logging.warning(
-                f"No file found for {synapse.data_hash} in index, trying path construction..."
-            )
-
+        if filepath is None:
             # fallback to load the data from the filesystem via database path construction
             # use new path construction by hotkey and retrieve hash
             file_not_found = True
@@ -910,7 +901,6 @@ class miner:
                 f"{self.config.database.directory}/{synapse.dendrite.hotkey}/{synapse.data_hash}"
             )
             if os.path.isfile(new_filepath):
-                bt.logging.debug(f"retrieve() File found for {synapse.data_hash} in {new_filepath}")
                 file_not_found = False
                 filepath = new_filepath
 

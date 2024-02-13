@@ -808,6 +808,24 @@ When should you run the migration script?:
 - if you want to specify a different --database.directory
 - if your data has moved but your redis index has not reflected this change
 
+**NOTE:** Please ensure you manually save a backup of the redis database.
+
+Run:
+```
+# Enter the redis cli
+redis-cli -a $REDIS_PASSWORD
+
+# Run the save command manually and exit the redis session
+SAVE
+exit
+
+# Make a backup of the dump
+sudo cp /var/lib/redis/dump.rdb /var/lib/redis/dump.bak.rdb
+```
+
+It is wise to do this **before** running migration in case any unexpected issues arise.
+
+
 ```bash
 bash scripts/migrate_database_directory.sh <OLD_PATH> <NEW_PATH> <DATABASE_INDEX>
 ```
@@ -990,7 +1008,7 @@ sudo docker compose up -d
 Provided are two scripts to build subtensor, and then to run it inside a pm2 process as a convenience. If you have more complicated needs, see the [subtensor](https://github.com/opentensor/subtensor/) repo for more details and understanding.
 ```bash
 # Installs dependencies and builds the subtensor binary
-./scripts/build_subtensor_linux.sh
+./scripts/subtensor/build_subtensor_linux.sh
 
 # Runs local subtensor in a pm2 process (NOTE: this can take several hours to sync chain history)
 # Make sure the directory is configured properly to run from the built subtensor binary
@@ -999,7 +1017,7 @@ Provided are two scripts to build subtensor, and then to run it inside a pm2 pro
 # cd ~/storage-subnet/subtensor
 
 # Run the script to start subtensor
-./scripts/start_local_subtensor.sh
+./scripts/subtensor/start_local_subtensor.sh
 ```
 
 You should see output like this in your pm2 logs for the process at startup:
@@ -1039,6 +1057,29 @@ This is done in two stages:
 2. Cleanup
 
 Both scripts are labeled with the prefix `01` and `02` in order to distinguish the proper order to run.
+
+## Backup
+Please ensure you run the following to enter an authenticated session for redis:
+```bash
+redis-cli -a $REDIS_PASSWORD 
+```
+
+Then run save inside the session:
+
+```bash
+127.0.0.1:6379> SAVE
+> OK
+
+exit # exit the session to terminal
+```
+
+Finally, go to where the dump.rdb file is (`/var/lib/redis`` by default), and copy it as a backup **before** commencing the schema migration:
+
+```bash
+sudo cp /var/lib/redis/dump.rdb /var/lib/redis/dump.bak.rdb
+```
+
+> Shoutout to shr1ftyy for his step!
 
 ## Usage
 
