@@ -61,10 +61,4 @@ from . import validator
 from . import miner
 from . import cli
 from .api.registry import StoreUserAPI, RetrieveUserAPI
-
-
-# MAYBE:
-# Subnets expose basic functions
-# Registry is built on client side from developers
-# Then they add each bespoke functions to the registry they want
-# Just import from subnet.interface to add to regisry
+from .api.subnets_api import APIRegistry, register_handler, SubnetsAPI

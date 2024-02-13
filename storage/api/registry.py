@@ -22,11 +22,11 @@ import base64
 import bittensor as bt
 from abc import ABC, abstractmethod
 from typing import Any, List, Union
-from bittensor.subnets import APIRegistry, register_handler, SubnetsAPI
-
 from storage.protocol import StoreUser, RetrieveUser
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import encrypt_data, decrypt_data_with_private_key
+
+from .subnets_api import APIRegistry, register_handler, SubnetsAPI
 
 
 @register_handler("store_user")
