@@ -33,6 +33,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Examples](#examples)
    - [General Options](#general-options)
    - [Notes](#notes)
+1. [Storage API](#storage-api)
 1. [What is a Decentralized Storage Network (DSN)?](#what-is-a-decentralized-storage-network-dsn)
    - [Role of a Miner (Prover)](#role-of-a-miner-prover)
    - [Role of a Validator (Verifier)](#role-of-a-validator-verifier)
@@ -352,15 +353,83 @@ ftcli miner stats --index 0
 - `--index <id>`: (Optional) Integer index of the Redis database (default: 0)
 
 
-## General Options
-- `--help`: Displays help information about CLI commands and options.
-
-## Notes
+### Notes
 - Ensure your wallet is configured and accessible.
 - File paths should be absolute or relative to your current directory.
 - Data hashes are unique identifiers for your stored data on the Bittensor network.
 
 For detailed instructions and more information, visit the [Bittensor Documentation](https://docs.bittensor.com).
+
+
+## Storage API
+In addition to the command-line interface, FileTao can be accessed via the bittensor subnets python API.
+
+The subnets API requires two abstract functions to be implemented: `prepare_synapse`, and `process_responses`. This allows for all subnets to be queried through exposed axons, typically on the validator side.
+
+To instantiate the API for any given request type (`store` or `retrieve`), you only need a bittensor `wallet`.
+```python
+# Import the API handler you wish to use
+from storage import StoreUserAPI
+
+# Load the wallet desired
+wallet = bt.wallet(name="sn21", hotkey="query")
+
+# Instantiate the API handler object
+store = StoreUserAPI(wallet)
+```
+
+### API Storing Data
+Here is a complete example to store data on `FileTao` programmatically.
+
+```python
+import bittensor as bt
+from storage import StoreUserAPI
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+store = StoreUserAPI(wallet)
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Store data on the decentralized network!
+cid = await store(
+   metagraph=metagraph,
+   # add any arguments for the `StoreUser` synapse
+   data=b"some data", # Any data (must be bytes) to store
+   encrypt=True, # encrpyt the data using the bittensor wallet provided
+   ttl=60 * 60 * 24 * 30,
+   encoding="utf-8",
+   uid=None, # query a specific validator UID if desired
+)
+
+print(cid)
+> QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g
+```
+
+> NOTE: Make sure you store the CID of your data, otherwise you will not be able to retrieve it!
+
+### API Retrieving Data 
+```python
+from storage import RetrieveUserAPI
+
+# Fetch the content-identifier for your data to retrieve
+cid = "QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g"
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Instantiate the API with wallet
+retrieve_handler = RetrieveUserAPI(wallet)
+
+# Get the data back from the decentralized network!
+data = await retrieve_handler(metagraph=metagraph, cid=cid)
+print(data)
+> b"\x12 K\x1b\x80\x9cr\xce\x0e\xf8\xd8\x15\x`"...
+```
 
 
 ## What is a Decentralized Storage Network (DSN)?

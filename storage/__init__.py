@@ -60,3 +60,5 @@ from . import protocol
 from . import validator
 from . import miner
 from . import cli
+from .api.registry import StoreUserAPI, RetrieveUserAPI
+from .api.subnets_api import APIRegistry, register_handler, SubnetsAPI
