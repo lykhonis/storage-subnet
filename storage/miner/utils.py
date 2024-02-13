@@ -271,7 +271,7 @@ def update_storage_stats(self):
     bt.logging.info(f"Free memory: {self.free_memory} bytes")
     self.current_storage_usage = get_directory_size(self.config.database.directory)
     bt.logging.info(f"Miner storage usage: {self.current_storage_usage} bytes")
-    self.percent_disk_usage = self.current_storage_usage / self.free_memory
+    self.percent_disk_usage = self.current_storage_usage / (self.free_memory + self.current_storage_usgae)
     bt.logging.info(f"Miner % disk usage : {100 * self.percent_disk_usage:.3f}%")
 
 
