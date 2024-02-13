@@ -48,8 +48,8 @@ async def test_registry():
     )
 
     # Dynamically get a RetrieveUserAPI handler
-    bt.logging.info(f"Initiating retrieve_handler: {retrieve_handler}")
     retrieve_handler = APIRegistry.get_api_handler("retrieve_user", wallet)
+    bt.logging.info(f"Initiating retrieve_handler: {retrieve_handler}")
     retrieve_response = await retrieve_handler(metagraph=metagraph, cid=cid)
 
 
