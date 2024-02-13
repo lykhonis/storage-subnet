@@ -1,5 +1,5 @@
 import bittensor as bt
-from storage import StoreUserAPI, RetrieveUserAPI
+from storage import StoreUserAPI, RetrieveUserAPI, APIRegistry
 bt.trace()
 
 async def test_vanilla():
