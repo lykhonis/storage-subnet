@@ -47,10 +47,10 @@ services:
     restart: always
     command:
       - redis-server
-      - /usr/local/etc/redis/redis.conf
+      - /etc/redis/redis.conf
       - daemonize no
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
-      - ${REDIS_CONF}:/usr/local/etc/redis/redis.conf
+      - ${REDIS_CONF}:/etc/redis/redis.conf
