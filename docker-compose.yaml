@@ -56,5 +56,5 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redis-data:/var/lib/redis
       #- ${REDIS_CONF}:/etc/redis/redis.conf
