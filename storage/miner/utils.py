@@ -288,9 +288,12 @@ def load_request_log(request_log_path: str) -> dict:
     This method loads the request log from disk if it exists. If not, it returns an empty dictionary.
     """
     if os.path.exists(request_log_path):
-        print("path to log: ", request_log_path)
-        with open(request_log_path, "r") as f:
-            request_log = json.load(f)
+        try:
+            with open(request_log_path, "r") as f:
+                request_log = json.load(f)
+        except Exception as e:
+            bt.logging.error(f"Error loading request log: {e}. Resetting.")
+            request_log = {}
     else:
         request_log = {}
     return request_log
