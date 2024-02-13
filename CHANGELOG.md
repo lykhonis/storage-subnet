@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.6.0 / 2024-02-13
+
+## What's Changed
+* Run neurons using the CLI by @eduardogr in https://github.com/ifrit98/storage-subnet/pull/135
+* Release/1.5.6 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/137
+* Update README.md by @steffencruz in https://github.com/ifrit98/storage-subnet/pull/138
+* Feature/api registry by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/140
+
+## New Contributors
+* @steffencruz made their first contribution in https://github.com/ifrit98/storage-subnet/pull/138
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.5.6...v1.6.0
+
+
 ## 1.5.6 / 2024-02-09
 
 ## What's Changed
