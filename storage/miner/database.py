@@ -249,7 +249,7 @@ async def safe_remove_all_old_keys(r):
         try:
             await safe_remove_old_keys(r, key)
         except Exception as e:
-            bt.logging.trace(f"Could not remove old key {key} with error: {e}")
+            bt.logging.error(f"Could not remove old key {key} with error: {e}")
 
 
 async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
