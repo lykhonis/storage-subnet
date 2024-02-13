@@ -40,7 +40,7 @@ services:
           --netuid ${FILETAO_NETUID} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --wandb.off --logging.debug \
-          --database.host redis --database.redis_password $REDIS_PASSWORD
+          --database.host redis --database.redis_password ${REDIS_PASSWORD}
 
   redis:
     build:
