@@ -739,6 +739,24 @@ When should you run the migration script?:
 - if you want to specify a different --database.directory
 - if your data has moved but your redis index has not reflected this change
 
+**NOTE:** Please ensure you manually save a backup of the redis database.
+
+Run:
+```
+# Enter the redis cli
+redis-cli -a $REDIS_PASSWORD
+
+# Run the save command manually and exit the redis session
+SAVE
+exit
+
+# Make a backup of the dump
+sudo cp /var/lib/redis/dump.rdb /var/lib/redis/dump.bak.rdb
+```
+
+It is wise to do this **before** running migration in case any unexpected issues arise.
+
+
 ```bash
 bash scripts/migrate_database_directory.sh <OLD_PATH> <NEW_PATH> <DATABASE_INDEX>
 ```
