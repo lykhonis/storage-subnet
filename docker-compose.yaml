@@ -34,11 +34,11 @@ services:
       - /bin/bash
       - -c
       - |
-        filetao run miner \
-          --wallet.name testnet_wallet_subnet  \
-          --wallet.hotkey default \
-          --netuid 22 \
-          --subtensor.network test \
+        filetao run ${FILETAO_NODE} \
+          --wallet.name ${FILETAO_WALLET}  \
+          --wallet.hotkey ${FILETAO_HOTKEY} \
+          --netuid ${FILETAO_NETUID} \
+          --subtensor.network ${FILETAO_SUBTENSOR} \
           --wandb.off --logging.debug --database.host redis
 
   redis:
