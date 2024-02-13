@@ -146,8 +146,9 @@ def get_redis_password(
     redis_password = os.getenv("REDIS_PASSWORD") or redis_password
     if redis_password is None:
         try:
+            cmd = ["grep", "-Po", "^requirepass \K.*", redis_conf] if is_running_in_docker() else ["sudo", "grep", "-Po", "^requirepass \K.*", redis_conf]
             redis_password = subprocess.check_output(
-                ["sudo", "grep", "-Po", "^requirepass \K.*", redis_conf],
+                cmd,
                 text=True,
             ).strip()
         except Exception as e:
