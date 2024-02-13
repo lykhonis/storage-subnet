@@ -1,0 +1,61 @@
+version: '3.8'
+
+volumes:
+  redis-data:
+
+networks:
+  filetao-net:
+    driver: host
+
+services:
+  common: &common
+    #image: noimage
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "6091:6091"
+    expose:
+      - "6091"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      - filetao-net
+    links:
+      - redis
+    depends_on:
+      - redis
+    volumes:
+      - ${USERHOME}/.bittensor/wallets:/root/.bittensor/wallets
+      - .:/install
+      - ${REDIS_CONF}:/etc/redis/redis.conf
+
+  filetao-prod:
+    <<: *common
+    build:
+      target: filetao-prod
+    container_name: filetao-prod
+    command:
+      - /bin/bash
+      - -c
+      - |
+        filetao run miner \
+          --wallet.name testnet_wallet_subnet  \
+          --wallet.hotkey default \
+          --netuid 22 \
+          --subtensor.network test \
+          --wandb.off --logging.debug --database.host redis
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+      - ${REDIS_CONF}:/usr/local/etc/redis/redis.conf
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - filetao-net
