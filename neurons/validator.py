@@ -186,10 +186,7 @@ class neuron:
         # Init the event loop.
         self.loop = asyncio.get_event_loop()
 
-        # Init wandb.
-        if not self.config.wandb.off:
-            bt.logging.debug("loading wandb")
-            init_wandb(self)
+        self.wandb = None
 
         self.prev_step_block = get_current_block(self.subtensor)
         self.step = 0
@@ -253,6 +250,11 @@ class neuron:
                     await asyncio.gather(*coroutines)
 
                 self.loop.run_until_complete(run_forward())
+
+                # Init wandb.
+                if not self.config.wandb.off:
+                    bt.logging.debug("loading wandb")
+                    init_wandb(self)
 
                 # Resync the network state
                 bt.logging.info("Checking if should checkpoint")
