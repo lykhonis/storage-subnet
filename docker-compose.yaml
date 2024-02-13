@@ -14,8 +14,6 @@ services:
       - "8091:8091"
     expose:
       - "8091"
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     links:
       - redis
     depends_on:
@@ -40,7 +38,8 @@ services:
           --netuid ${FILETAO_NETUID} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --wandb.off --logging.debug \
-          --database.host redis --database.redis_password ${REDIS_PASSWORD}
+          --database.host redis \
+          --database.redis_password ${REDIS_PASSWORD}
 
   redis:
     build:
