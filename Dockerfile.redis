@@ -4,3 +4,6 @@ ARG REDIS_CONF
 ENV REDIS_CONF=$REDIS_CONF
 
 COPY $REDIS_CONF /usr/local/etc/redis/redis.conf
+
+RUN chown redis /usr/local/etc/redis/redis.conf && \
+    chgrp redis /usr/local/etc/redis/redis.conf
