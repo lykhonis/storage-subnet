@@ -42,7 +42,11 @@ services:
           --wandb.off --logging.debug --database.host redis
 
   redis:
-    image: redis:latest
+    build:
+      context: .
+      args:
+        REDIS_CONF: ${REDIS_CONF}
+      dockerfile: Dockerfile.redis
     container_name: redis
     restart: always
     command:
@@ -53,4 +57,4 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-      - ${REDIS_CONF}:/etc/redis/redis.conf
+      #- ${REDIS_CONF}:/etc/redis/redis.conf
