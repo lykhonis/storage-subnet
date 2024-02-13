@@ -3,10 +3,6 @@ version: '3.8'
 volumes:
   redis-data:
 
-networks:
-  filetao-net:
-    driver: host
-
 services:
   common: &common
     #image: noimage
@@ -20,8 +16,6 @@ services:
       - "6091"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    networks:
-      - filetao-net
     links:
       - redis
     depends_on:
@@ -57,5 +51,3 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    networks:
-      - filetao-net
