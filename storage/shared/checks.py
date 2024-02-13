@@ -14,7 +14,8 @@ async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redi
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, "requirepass")
     await _check_redis_connection(redis_conf_path, redis_host, redis_port)
-    await _check_data_persistence(redis_conf_path, redis_host, redis_port)
+    if not is_running_in_docker:
+        await _check_data_persistence(redis_conf_path, redis_host, redis_port)
 
 
 def _check_redis_config(path):
