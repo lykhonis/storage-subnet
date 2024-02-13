@@ -8,14 +8,14 @@ from redis import asyncio as aioredis
 from storage.shared.utils import is_running_in_docker
 
 
-async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redis_host: str = "localhost"):
+async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redis_host: str = "localhost", redis_password: str = "nopasswd"):
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, "requirepass")
-    await _check_redis_connection(redis_conf_path, redis_host, redis_port)
+    await _check_redis_connection(redis_conf_path, redis_host, redis_port, redis_password)
     if not is_running_in_docker:
-        await _check_data_persistence(redis_conf_path, redis_host, redis_port)
+        await _check_data_persistence(redis_conf_path, redis_host, redis_port, redis_password)
 
 
 def _check_redis_config(path):
@@ -36,25 +36,22 @@ def _check_redis_settings(redis_conf_path):
         _check_redis_setting(redis_conf_path, setting, expected_values)
 
 
-async def _check_redis_connection(redis_conf_path, host, port):
-    redis_password = _get_redis_password(redis_conf_path)
-
+async def _check_redis_connection(redis_conf_path, host, port, passwd):
     assert port is not None, "Redis server port not found"
     try:
         client = aioredis.StrictRedis(
             host=host,
-            port=port, db=0, password=redis_password, socket_connect_timeout=1
+            port=port, db=0,
+            password=passwd, socket_connect_timeout=1
         )
         await client.ping()
     except Exception as e:
         assert False, f"Redis connection failed. ConnectionError'{e}'"
 
 
-async def _check_data_persistence(redis_conf_path, host, port):
-    redis_password = _get_redis_password(redis_conf_path)
-
+async def _check_data_persistence(redis_conf_path, host, port, passwd):
     assert port is not None, "Redis server port not found"
-    client = aioredis.StrictRedis(host=host, port=port, db=0, password=redis_password)
+    client = aioredis.StrictRedis(host=host, port=port, db=0, password=passwd)
 
     # Insert data into Redis
     await client.set("testkey", "Hello, Redis!")
@@ -113,19 +110,3 @@ def _get_redis_setting(file_path, setting):
         return result.strip().split("\n")
     except subprocess.CalledProcessError:
         return None
-
-
-def _get_redis_password(redis_conf_path):
-    try:
-        cmd = f"grep -Po '^requirepass \K.*' {redis_conf_path}" if is_running_in_docker(
-        ) else f"sudo grep -Po '^requirepass \K.*' {redis_conf_path}"
-        result = subprocess.run(
-            cmd, shell=True, text=True, capture_output=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        assert False, f"Command failed: {e}"
-    except Exception as e:
-        assert False, f"An error occurred: {e}"
-
-    return None
