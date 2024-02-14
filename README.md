@@ -278,7 +278,7 @@ This command encrypts and stores data on the Bittensor network.
 
 #### Usage
 ```bash
-ftcli store put --filepath <path-to-data> [options]
+filetao store put --filepath <path-to-data> [options]
 ```
 
 #### Options
@@ -297,7 +297,7 @@ This command retrieves previously stored data from the Bittensor network.
 
 #### Usage
 ```bash
-ftcli retrieve get --data_hash <hash> [options]
+filetao retrieve get --data_hash <hash> [options]
 ```
 
 #### Options
@@ -313,7 +313,7 @@ Lists all data hashes stored on the network associated with the specified coldke
 
 #### Usage
 ```bash
-ftcli retrieve list [options]
+filetao retrieve list [options]
 ```
 
 #### Options
@@ -324,17 +324,17 @@ ftcli retrieve list [options]
 
 ### Storing Data
 ```bash
-ftcli store put --filepath ./example.txt --wallet.name mywallet --wallet.hotkey myhotkey
+filetao store put --filepath ./example.txt --wallet.name mywallet --wallet.hotkey myhotkey
 ```
 
 ### Retrieving Data
 ```bash
-ftcli retrieve get --data_hash 123456789 --storage_basepath ./retrieved --wallet.name mywallet --wallet.hotkey myhotkey
+filetao retrieve get --data_hash 123456789 --storage_basepath ./retrieved --wallet.name mywallet --wallet.hotkey myhotkey
 ```
 
 ### Listing Data
 ```bash
-ftcli retrieve list --wallet.name mywallet
+filetao retrieve list --wallet.name mywallet
 ```
 
 ![list](assets/list.png)
@@ -345,7 +345,7 @@ ftcli retrieve list --wallet.name mywallet
 If you are running a validator and have a locally running instance of Redis, you may use this command to view the miner statistics gathered. This command will display a list of all hotkeys and their associated statistics, such as `total successes`, `attempts` vs `successes` for each category, `tier`, `current storage`, and `total storage limit`.
 
 ```bash
-ftcli miner stats --index 0
+filetao miner stats --index 0
 ```
 ![stats](assets/miner_stats.png)
 
