@@ -116,7 +116,7 @@ async def forward(self):
         chunk_hash_map = await get_all_chunk_hashes(self.database)
 
         # Log the statistics, storage, and hashmap to wandb.
-        if not self.config.wandb.off:
+        if not self.config.wandb.off and self.wandb is not None:
             with open(self.config.neuron.miner_stats_path, "w") as file:
                 json.dump(stats, file)
 

@@ -150,15 +150,15 @@ def scale_rewards(
     process_times = [proc_time for _, proc_time in sorted_axon_times]
 
     # Apply logarithmic scaling to data sizes
-    bt.logging.debug(f"Unnormalized data sizes: {data_sizes}")
-    log_data_sizes = np.log1p(data_sizes)
-    normalized_log_data_sizes = log_data_sizes / torch.sum(torch.tensor(log_data_sizes))
-    bt.logging.debug(f"Normalized data sizes: {normalized_log_data_sizes}")
+    bt.logging.trace(f"Unnormalized data sizes: {data_sizes}")
+    log_data_sizes_np = np.log1p(data_sizes)
+    bt.logging.trace(f"Logarithmically scaled data sizes: {log_data_sizes_np}")
+    log_data_sizes = torch.tensor(log_data_sizes_np)
+    normalized_log_data_sizes = log_data_sizes / torch.sum(log_data_sizes)
+    bt.logging.trace(f"Normalized data sizes: {normalized_log_data_sizes}")
 
     # Scale initial rewards by normalized data sizes
-    data_size_scaled_rewards = rewards.to(device) * torch.tensor(
-        normalized_log_data_sizes
-    ).to(device)
+    data_size_scaled_rewards = rewards.to(device) * normalized_log_data_sizes.to(device)
 
     # Normalize the response times
     normalized_times = sigmoid_normalize(process_times, timeout)
@@ -179,7 +179,7 @@ def scale_rewards(
 
     # Final normalization if needed
     rescale_factor = torch.sum(rewards) / torch.sum(time_scaled_rewards)
-    bt.logging.debug(f"Rescale factor: {rescale_factor}")
+    bt.logging.trace(f"Rescale factor: {rescale_factor}")
     scaled_rewards = [reward * rescale_factor for reward in time_scaled_rewards]
 
     return scaled_rewards

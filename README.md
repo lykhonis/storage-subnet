@@ -33,6 +33,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Examples](#examples)
    - [General Options](#general-options)
    - [Notes](#notes)
+1. [Storage API](#storage-api)
 1. [What is a Decentralized Storage Network (DSN)?](#what-is-a-decentralized-storage-network-dsn)
    - [Role of a Miner (Prover)](#role-of-a-miner-prover)
    - [Role of a Validator (Verifier)](#role-of-a-validator-verifier)
@@ -277,7 +278,7 @@ This command encrypts and stores data on the Bittensor network.
 
 #### Usage
 ```bash
-ftcli store put --filepath <path-to-data> [options]
+filetao store put --filepath <path-to-data> [options]
 ```
 
 #### Options
@@ -296,7 +297,7 @@ This command retrieves previously stored data from the Bittensor network.
 
 #### Usage
 ```bash
-ftcli retrieve get --data_hash <hash> [options]
+filetao retrieve get --data_hash <hash> [options]
 ```
 
 #### Options
@@ -312,7 +313,7 @@ Lists all data hashes stored on the network associated with the specified coldke
 
 #### Usage
 ```bash
-ftcli retrieve list [options]
+filetao retrieve list [options]
 ```
 
 #### Options
@@ -323,17 +324,17 @@ ftcli retrieve list [options]
 
 ### Storing Data
 ```bash
-ftcli store put --filepath ./example.txt --wallet.name mywallet --wallet.hotkey myhotkey
+filetao store put --filepath ./example.txt --wallet.name mywallet --wallet.hotkey myhotkey
 ```
 
 ### Retrieving Data
 ```bash
-ftcli retrieve get --data_hash 123456789 --storage_basepath ./retrieved --wallet.name mywallet --wallet.hotkey myhotkey
+filetao retrieve get --data_hash 123456789 --storage_basepath ./retrieved --wallet.name mywallet --wallet.hotkey myhotkey
 ```
 
 ### Listing Data
 ```bash
-ftcli retrieve list --wallet.name mywallet
+filetao retrieve list --wallet.name mywallet
 ```
 
 ![list](assets/list.png)
@@ -344,7 +345,7 @@ ftcli retrieve list --wallet.name mywallet
 If you are running a validator and have a locally running instance of Redis, you may use this command to view the miner statistics gathered. This command will display a list of all hotkeys and their associated statistics, such as `total successes`, `attempts` vs `successes` for each category, `tier`, `current storage`, and `total storage limit`.
 
 ```bash
-ftcli miner stats --index 0
+filetao miner stats --index 0
 ```
 ![stats](assets/miner_stats.png)
 
@@ -352,15 +353,83 @@ ftcli miner stats --index 0
 - `--index <id>`: (Optional) Integer index of the Redis database (default: 0)
 
 
-## General Options
-- `--help`: Displays help information about CLI commands and options.
-
-## Notes
+### Notes
 - Ensure your wallet is configured and accessible.
 - File paths should be absolute or relative to your current directory.
 - Data hashes are unique identifiers for your stored data on the Bittensor network.
 
 For detailed instructions and more information, visit the [Bittensor Documentation](https://docs.bittensor.com).
+
+
+## Storage API
+In addition to the command-line interface, FileTao can be accessed via the bittensor subnets python API.
+
+The subnets API requires two abstract functions to be implemented: `prepare_synapse`, and `process_responses`. This allows for all subnets to be queried through exposed axons, typically on the validator side.
+
+To instantiate the API for any given request type (`store` or `retrieve`), you only need a bittensor `wallet`.
+```python
+# Import the API handler you wish to use
+from storage import StoreUserAPI
+
+# Load the wallet desired
+wallet = bt.wallet(name="sn21", hotkey="query")
+
+# Instantiate the API handler object
+store = StoreUserAPI(wallet)
+```
+
+### API Storing Data
+Here is a complete example to store data on `FileTao` programmatically.
+
+```python
+import bittensor as bt
+from storage import StoreUserAPI
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+store = StoreUserAPI(wallet)
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Store data on the decentralized network!
+cid = await store(
+   metagraph=metagraph,
+   # add any arguments for the `StoreUser` synapse
+   data=b"some data", # Any data (must be bytes) to store
+   encrypt=True, # encrpyt the data using the bittensor wallet provided
+   ttl=60 * 60 * 24 * 30,
+   encoding="utf-8",
+   uid=None, # query a specific validator UID if desired
+)
+
+print(cid)
+> QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g
+```
+
+> NOTE: Make sure you store the CID of your data, otherwise you will not be able to retrieve it!
+
+### API Retrieving Data 
+```python
+from storage import RetrieveUserAPI
+
+# Fetch the content-identifier for your data to retrieve
+cid = "QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g"
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Instantiate the API with wallet
+retrieve_handler = RetrieveUserAPI(wallet)
+
+# Get the data back from the decentralized network!
+data = await retrieve_handler(metagraph=metagraph, cid=cid)
+print(data)
+> b"\x12 K\x1b\x80\x9cr\xce\x0e\xf8\xd8\x15\x`"...
+```
 
 
 ## What is a Decentralized Storage Network (DSN)?
@@ -739,6 +808,24 @@ When should you run the migration script?:
 - if you want to specify a different --database.directory
 - if your data has moved but your redis index has not reflected this change
 
+**NOTE:** Please ensure you manually save a backup of the redis database.
+
+Run:
+```
+# Enter the redis cli
+redis-cli -a $REDIS_PASSWORD
+
+# Run the save command manually and exit the redis session
+SAVE
+exit
+
+# Make a backup of the dump
+sudo cp /var/lib/redis/dump.rdb /var/lib/redis/dump.bak.rdb
+```
+
+It is wise to do this **before** running migration in case any unexpected issues arise.
+
+
 ```bash
 bash scripts/migrate_database_directory.sh <OLD_PATH> <NEW_PATH> <DATABASE_INDEX>
 ```
@@ -970,6 +1057,29 @@ This is done in two stages:
 2. Cleanup
 
 Both scripts are labeled with the prefix `01` and `02` in order to distinguish the proper order to run.
+
+## Backup
+Please ensure you run the following to enter an authenticated session for redis:
+```bash
+redis-cli -a $REDIS_PASSWORD 
+```
+
+Then run save inside the session:
+
+```bash
+127.0.0.1:6379> SAVE
+> OK
+
+exit # exit the session to terminal
+```
+
+Finally, go to where the dump.rdb file is (`/var/lib/redis`` by default), and copy it as a backup **before** commencing the schema migration:
+
+```bash
+sudo cp /var/lib/redis/dump.rdb /var/lib/redis/dump.bak.rdb
+```
+
+> Shoutout to shr1ftyy for his step!
 
 ## Usage
 

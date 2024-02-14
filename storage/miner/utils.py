@@ -271,7 +271,7 @@ def update_storage_stats(self):
     bt.logging.info(f"Free memory: {self.free_memory} bytes")
     self.current_storage_usage = get_directory_size(self.config.database.directory)
     bt.logging.info(f"Miner storage usage: {self.current_storage_usage} bytes")
-    self.percent_disk_usage = self.current_storage_usage / self.free_memory
+    self.percent_disk_usage = self.current_storage_usage / (self.free_memory + self.current_storage_usage)
     bt.logging.info(f"Miner % disk usage : {100 * self.percent_disk_usage:.3f}%")
 
 
@@ -288,9 +288,12 @@ def load_request_log(request_log_path: str) -> dict:
     This method loads the request log from disk if it exists. If not, it returns an empty dictionary.
     """
     if os.path.exists(request_log_path):
-        print("path to log: ", request_log_path)
-        with open(request_log_path, "r") as f:
-            request_log = json.load(f)
+        try:
+            with open(request_log_path, "r") as f:
+                request_log = json.load(f)
+        except Exception as e:
+            bt.logging.error(f"Error loading request log: {e}. Resetting.")
+            request_log = {}
     else:
         request_log = {}
     return request_log

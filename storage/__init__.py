@@ -51,7 +51,7 @@ class StorageVersion:
         )
 
 
-__version__ = "1.5.6"
+__version__ = "1.6.0"
 version = StorageVersion.from_string(__version__)
 __spec_version__ = version.to_spec_version()
 
@@ -60,3 +60,5 @@ from . import protocol
 from . import validator
 from . import miner
 from . import cli
+from .api.registry import StoreUserAPI, RetrieveUserAPI
+from .api.subnets_api import APIRegistry, register_handler, SubnetsAPI

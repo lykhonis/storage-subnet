@@ -73,7 +73,11 @@ setup(
     author_email="ifrit98@gmail.com",
     license="MIT",
     python_requires=">=3.9,<3.11",
-    scripts=["bin/ftcli"],
+    entry_points={
+        "console_scripts": [
+            "filetao=storage.cli.cli:filetao"
+        ]
+    },
     install_requires=requirements,
     extras_require={"dev": extra_requirements_dev},
     classifiers=[

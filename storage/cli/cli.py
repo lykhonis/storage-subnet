@@ -38,9 +38,11 @@ ALIAS_TO_COMMAND = {
     "s": "store",
     "r": "retrieve",
     "m": "miner",
+    "n": "run",
     "retrieve": "retrieve",
     "store": "store",
     "miner": "miner",
+    "run": "run",
 }
 
 COMMANDS = {
@@ -217,3 +219,8 @@ class cli:
         else:
             print(f":cross_mark:[red]Unknown command: {self.config.command}[/red]")
             sys.exit()
+
+
+def filetao():
+    args = sys.argv[1:]
+    cli(args=args).run()

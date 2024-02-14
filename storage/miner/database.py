@@ -78,7 +78,11 @@ async def convert_to_new_format(
         f"Converting chunk {chunk_hash} to new format with hotkey {hotkey}"
     )
     old_md = await r.hgetall(chunk_hash)
-    old_hotkey = old_md.pop(b"hotkey")
+    try:
+        old_hotkey = old_md.pop(b"hotkey")
+    except KeyError:
+        bt.logging.trace(f"Key not found in metadata {old_md}. New format.")
+        return
     new_md = {k.decode("utf-8"): v.decode("utf-8") for k, v in old_md.items()}
     if hotkey is not None:
         if hotkey != old_hotkey:
@@ -246,7 +250,10 @@ async def safe_remove_all_old_keys(r):
         r (redis.Redis): The Redis connection instance.
     """
     async for key in r.scan_iter("*"):
-        await safe_remove_old_keys(r, key)
+        try:
+            await safe_remove_old_keys(r, key)
+        except Exception as e:
+            bt.logging.error(f"Could not remove old key {key} with error: {e}")
 
 
 async def convert_all_to_hotkey_format(r: "aioredis.Strictredis"):
