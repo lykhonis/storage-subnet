@@ -23,8 +23,10 @@ import asyncio
 import subprocess
 import bittensor as bt
 
+from pprint import pformat
 from substrateinterface import SubstrateInterface
 from scalecodec import ScaleBytes
+from scalecodec.exceptions import RemainingScaleBytesNotEmptyException
 
 from .utils import update_storage_stats, run_async_in_sync_context
 from .database import convert_all_to_hotkey_format
@@ -105,10 +107,17 @@ def runtime_call(
 
     # Decode result
     result_obj = substrate.runtime_config.create_scale_object(runtime_call_def["type"])
-    result_obj.decode(
-        ScaleBytes(result_data["result"]),
-        check_remaining=substrate.config.get("strict_scale_decode"),
-    )
+    try:
+        result_obj.decode(
+            ScaleBytes(result_data["result"]),
+            check_remaining=substrate.config.get("strict_scale_decode"),
+        )
+    except RemainingScaleBytesNotEmptyException:
+        bt.logging.error(f"BytesNotEmptyException: result_data could not be decoded {result_data}")
+        result_obj = "Dry run failed. Could not decode result."
+    except Exception as e:
+        bt.logging.error(f"Exception: result_data could not be decoded {e} {result_data}")
+        result_obj = "Dry run failed. Could not decode result."
 
     return result_obj
 
