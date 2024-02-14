@@ -316,7 +316,8 @@ class neuron:
                 bt.logging.info(
                     "KeyboardInterrupt caught, gracefully closing the wandb run..."
                 )
-                self.wandb.finish()
+                if self.wandb is not None:
+                    self.wandb.finish()
 
         # After all we have to ensure subtensor connection is closed properly
         finally:

@@ -82,7 +82,8 @@ def init_wandb(self, reinit=False):
 
 def reinit_wandb(self):
     """Reinitializes wandb, rolling over the run."""
-    self.wandb.finish()
+    if self.wandb is not None:
+        self.wandb.finish()
     init_wandb(self, reinit=True)
 
 
@@ -205,6 +206,6 @@ def log_event(self, event):
         logger.log("EVENTS", "events", **event.__dict__)
 
     # Log the event to wandb
-    if not self.config.wandb.off:
+    if not self.config.wandb.off and self.wandb is not None:
         wandb_event = EventSchema.from_dict(event.__dict__)
         self.wandb.log(asdict(wandb_event))
