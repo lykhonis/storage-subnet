@@ -64,10 +64,49 @@ def set_weights_for_validator(
     """
     # Calculate the average reward for each uid across non-zero values.
     # Replace any NaN values with 0.
-    raw_weights = torch.nn.functional.normalize(moving_averaged_scores, p=1, dim=0)
+    nan_idxs = torch.where(torch.isnan(moving_averaged_scores))[0]
+    moving_averaged_scores_no_nan = torch.where(
+        torch.isnan(moving_averaged_scores),
+        torch.zeros_like(moving_averaged_scores),
+        moving_averaged_scores
+    )
+    # Gather negative indices
+    neg_idxs = torch.where(moving_averaged_scores_no_nan < 0)[0]
+
+    # Ensure positive
+    minimum = min(moving_averaged_scores_no_nan)
+
+    # Replace nan with min
+    moving_averaged_scores_no_nan[nan_idxs] = minimum.clone()
+
+    # Make all values positive
+    if minimum < 0:
+        positive_moving_averaged_scores = moving_averaged_scores_no_nan - minimum
+    else:
+        positive_moving_averaged_scores = moving_averaged_scores_no_nan
+    bt.logging.debug(f"Positive scores", positive_moving_averaged_scores)
+
+    # Push all orinally negative indices to zero
+    positive_moving_averaged_scores[neg_idxs] = 0
+
+    # Normalize, ensuring no division by zero or NaNs occur
+    sum_scores = positive_moving_averaged_scores.sum()
+    bt.logging.info(f"Score sum: {sum_scores}")
+    if sum_scores > 0:
+        raw_weights = torch.nn.functional.normalize(positive_moving_averaged_scores, p=1, dim=0)
+    else:
+        raw_weights = torch.zeros_like(positive_moving_averaged_scores)
+
+    # Doubly ensure raw_weights does not contain NaNs (this should not happen after normalization, but as an extra precaution)
+    raw_weights = torch.where(
+        torch.isnan(raw_weights),
+        torch.zeros_like(raw_weights),
+        raw_weights,
+    )
 
     bt.logging.debug("raw_weights", raw_weights)
     bt.logging.debug("raw_weight_uids", metagraph.uids.to("cpu"))
+
     # Process the raw weights to final_weights via subtensor limitations.
     (
         processed_weight_uids,
