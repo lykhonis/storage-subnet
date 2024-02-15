@@ -49,6 +49,11 @@ services:
       dockerfile: Dockerfile.redis
     container_name: redis
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
     command:
       - redis-server
       - /etc/redis/redis.conf
