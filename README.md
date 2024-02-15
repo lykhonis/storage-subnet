@@ -56,7 +56,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Running the API](#running-the-api)
    - [(Optional) Setup WandB](#setup-wandb)
 1. [Local Subtensor](#local-subtensor)
-1. [Database Migration](#database-migration)
+1. [Database Migration](#database-schema-migration)
 
 # Storage CLI Interface
 
@@ -739,6 +739,8 @@ FileTao is made up of both miners and validators, both of which are responsible 
 
 ### Running a miner
 You can run a miner in your base environment like so:
+
+> NOTE: When registering a miner, it is *highly* recommended to not reuse hotkeys. Best practice is to always use a new hotkey when registering on SN21.
 
 ```bash
 python neurons/miner.py --wallet.name <NAME> --wallet.hotkey <HOTKEY> --logging.debug
