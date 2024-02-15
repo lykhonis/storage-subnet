@@ -17,7 +17,8 @@ services:
     links:
       - redis
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     volumes:
       - ${USERHOME}/.bittensor/wallets:/root/.bittensor/wallets
       - .:/install
