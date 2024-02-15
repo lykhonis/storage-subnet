@@ -8,7 +8,8 @@ RUN mkdir /etc/redis/ && \
     mkdir /var/run/redis/
 
 COPY $REDIS_CONF /etc/redis/
+RUN mv /etc/redis/*.conf /etc/redis/redis.conf
 
-RUN chown redis:redis /etc/redis/redis.conf && \
+RUN chown -R redis:redis /etc/redis/ && \
     chown -R redis:redis /var/lib/redis/ && \
     chown redis:redis /var/run/redis
