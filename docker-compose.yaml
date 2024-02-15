@@ -50,7 +50,7 @@ services:
     container_name: redis
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping -a ${REDIS_PASSWORD} | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
       interval: 1s
       timeout: 3s
       retries: 5
