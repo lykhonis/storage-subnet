@@ -90,7 +90,7 @@ def set_weights_for_validator(
     bt.logging.debug("uint_uids", uint_uids)
 
     # Set the weights on chain via our subtensor connection.
-    success, message = set_weights(
+    success = set_weights(
         subtensor=subtensor,
         wallet=wallet,
         netuid=netuid,
@@ -105,4 +105,4 @@ def set_weights_for_validator(
     if success is True:
         bt.logging.info("set_weights on chain successfully!")
     else:
-        bt.logging.error(f"set_weights failed {message}")
+        bt.logging.error(f"set_weights failed.")
