@@ -3,6 +3,8 @@ FROM redis:latest
 ARG REDIS_CONF
 ENV REDIS_CONF=$REDIS_CONF
 
+RUN mkdir /etc/redis/
+RUN echo ${REDIS_CONF} > /data/debug.txt 
 #COPY $REDIS_CONF /etc/redis/redis.conf
 
 #RUN chown redis /etc/redis/redis.conf && \
