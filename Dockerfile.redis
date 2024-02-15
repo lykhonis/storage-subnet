@@ -3,6 +3,9 @@ FROM redis:latest
 ARG REDIS_CONF
 ENV REDIS_CONF=$REDIS_CONF
 
+RUN useradd -s /bin/bash redis
+USER redis
+
 RUN mkdir /etc/redis/ && \
     mkdir /var/log/redis/ && \
     mkdir /var/lib/redis/
