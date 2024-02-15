@@ -50,7 +50,6 @@ services:
     container_name: redis
     restart: always
     command:
-      - runuser -u redis
       - redis-server
       - /etc/redis/redis.conf
     ports:
