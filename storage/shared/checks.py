@@ -67,6 +67,9 @@ async def _check_data_persistence(redis_conf_path, port):
     # Retrieve data from Redis
     value = await new_redis.get("testkey")
 
+    # Clean up
+    await new_reids.delete("testkey")
+
     await new_redis.aclose()
     del new_redis
 
