@@ -67,7 +67,7 @@ async def _check_data_persistence(redis_conf_path, host, port, passwd):
 
     # Reconnect to Redis
     assert port is not None, "Redis server port not found after restart"
-    new_redis = aioredis.StrictRedis(port=port, db=0, password=redis_password)
+    new_redis = aioredis.StrictRedis(port=port, db=0, password=passwd)
 
     # Retrieve data from Redis
     value = await new_redis.get("testkey")
