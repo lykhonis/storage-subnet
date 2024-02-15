@@ -3,7 +3,7 @@ FROM redis:latest
 ARG REDIS_CONF
 ENV REDIS_CONF=$REDIS_CONF
 
-COPY $REDIS_CONF /etc/redis/redis.conf
+#COPY $REDIS_CONF /etc/redis/redis.conf
 
-RUN chown redis /etc/redis/redis.conf && \
-    chgrp redis /etc/redis/redis.conf
+#RUN chown redis /etc/redis/redis.conf && \
+#    chgrp redis /etc/redis/redis.conf
