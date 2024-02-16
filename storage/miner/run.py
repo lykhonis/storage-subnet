@@ -205,8 +205,7 @@ def run(self):
                     last_extrinsic_hash = None
                     checked_extrinsics_count = 0
 
-        # new_epoch = ((current_block + netuid + 1) % (tempo + 1) == 0)
-        new_epoch = (current_block + netuid + 1) % 3 == 0
+        new_epoch = ((current_block + netuid + 1) % (tempo + 1) == 0)
         if new_epoch or should_retry:
             bt.logging.info("Saving request log")
             try:
