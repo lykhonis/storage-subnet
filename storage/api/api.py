@@ -26,15 +26,13 @@ from storage.protocol import StoreUser, RetrieveUser
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import encrypt_data, decrypt_data_with_private_key
 
-from .subnets_api import APIRegistry, register_handler, SubnetsAPI
+from bittensor.subnets import SubnetsAPI
 
 
-@register_handler("store_user")
 class StoreUserAPI(SubnetsAPI):
     def __init__(self, wallet: "bt.wallet"):
         super().__init__(wallet)
         self.netuid = 21
-        self.name = "store_user"
 
     def prepare_synapse(
         self, data: bytes, encrypt=False, ttl=60 * 60 * 24 * 30, encoding="utf-8"
@@ -85,7 +83,6 @@ class StoreUserAPI(SubnetsAPI):
         return stored_cid
 
 
-@register_handler("retrieve_user")
 class RetrieveUserAPI(SubnetsAPI):
     def __init__(self, wallet: "bt.wallet"):
         super().__init__(wallet)
