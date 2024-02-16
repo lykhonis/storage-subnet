@@ -108,10 +108,7 @@ def runtime_call(
     # Decode result
     result_obj = substrate.runtime_config.create_scale_object(runtime_call_def["type"])
     try:
-        result_obj.decode(
-            ScaleBytes(result_data["result"]),
-            check_remaining=substrate.config.get("strict_scale_decode"),
-        )
+        result_obj.decode(ScaleBytes(result_data["result"]), check_remaining=False)
     except RemainingScaleBytesNotEmptyException:
         bt.logging.error(f"BytesNotEmptyException: result_data could not be decoded {result_data}")
         result_obj = "Dry run failed. Could not decode result."
@@ -208,7 +205,9 @@ def run(self):
                     last_extrinsic_hash = None
                     checked_extrinsics_count = 0
 
-        if ((current_block + netuid + 1) % (tempo + 1) == 0) or should_retry:
+        # new_epoch = ((current_block + netuid + 1) % (tempo + 1) == 0)
+        new_epoch = (current_block + netuid + 1) % 3 == 0
+        if new_epoch or should_retry:
             bt.logging.info("Saving request log")
             try:
                 with open(self.config.miner.request_log_path, "w") as f:
@@ -243,7 +242,7 @@ def run(self):
                     params=["InBlock", extrinsic, block_hash],
                     block_hash=block_hash,
                 )
-                bt.logging.debug(dry_run)
+                bt.logging.trace(f"Dry run result: {dry_run}")
 
                 try:
                     response = substrate.submit_extrinsic(
