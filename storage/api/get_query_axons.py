@@ -1,3 +1,5 @@
+import torch
+import random
 import bittensor as bt
 
 
@@ -43,7 +45,7 @@ async def ping_uids(dendrite, metagraph, uids, timeout=3):
     return successful_uids, failed_uids
 
 
-async def get_query_api_nodes(wallet, metagraph, n=0.1, timeout=3):
+async def get_query_api_nodes(dendrite, metagraph, n=0.1, timeout=3):
     """
     Fetches the available API nodes to query for the particular subnet.
 
@@ -74,7 +76,7 @@ async def get_query_api_nodes(wallet, metagraph, n=0.1, timeout=3):
     return query_uids
 
 
-async def get_query_api_axons(wallet, metagraph, n=0.1, timeout=3, uid=None):
+async def get_query_api_axons(wallet, metagraph, n=0.1, timeout=3, uids=None):
     """
     Retrieves the axons of query API nodes based on their availability and stake.
 
@@ -83,15 +85,15 @@ async def get_query_api_axons(wallet, metagraph, n=0.1, timeout=3, uid=None):
         metagraph (bittensor.metagraph): The metagraph instance containing network information.
         n (float, optional): The fraction of top nodes to consider based on stake. Defaults to 0.1.
         timeout (int, optional): The timeout in seconds for pinging nodes. Defaults to 3.
-        uid (int, optional): The specific UID of the API node to query. Defaults to None.
+        uids (Union[List[int], int], optional): The specific UID(s) of the API node(s) to query. Defaults to None.
 
     Returns:
         list: A list of axon objects for the available API nodes.
     """
     dendrite = bt.dendrite(wallet=wallet)
 
-    if uid is not None:
-        query_uids = [uid]
+    if uids is not None:
+        query_uids = [uids] if isinstance(uids, int) else uids
     else:
         query_uids = await get_query_api_nodes(dendrite, metagraph, n=n, timeout=timeout)
     return [metagraph.axons[uid] for uid in query_uids]

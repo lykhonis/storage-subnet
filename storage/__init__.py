@@ -60,5 +60,6 @@ from . import protocol
 from . import validator
 from . import miner
 from . import cli
-from .api.registry import StoreUserAPI, RetrieveUserAPI
-from .api.subnets_api import APIRegistry, register_handler, SubnetsAPI
+from .api.store import StoreUserAPI
+from .api.retrieve import RetrieveUserAPI
+from .api.get_query_axons import get_query_api_axons
