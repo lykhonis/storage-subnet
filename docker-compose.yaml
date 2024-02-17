@@ -1,17 +1,17 @@
 version: '3.8'
 
 volumes:
-  redis-data:
+  redis-prod-data:
 
 services:
   common: &common
-    #image: noimage
+    #image: noimageyet
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8091:8091"
+      - "${FILETAO_EXTERNAL_PORT}:8091"
     expose:
       - "8091"
     links:
@@ -20,15 +20,14 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ${USERHOME}/.bittensor/wallets:/root/.bittensor/wallets
+      - ${BT_WALLETS_BASE_PATH}/.bittensor/wallets:/root/.bittensor/wallets
       - .:/install
       - ${REDIS_CONF}:/etc/redis/redis.conf
 
-  filetao-prod:
+  filetao-prod: &filetao-prod
     <<: *common
     build:
       target: filetao-prod
-    container_name: filetao-prod
     command:
       - /bin/bash
       - -c
@@ -38,9 +37,21 @@ services:
           --wallet.hotkey ${FILETAO_HOTKEY} \
           --netuid ${FILETAO_NETUID} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
-          --wandb.off --logging.debug \
           --database.host redis \
-          --database.redis_password ${REDIS_PASSWORD}
+          --database.redis_password ${REDIS_PASSWORD} \
+          ${FILETAO_EXTRA_OPTIONS}
+
+  filetao-miner-prod:
+    <<: *filetao-prod
+    container_name: filetao-miner-prod
+
+  filetao-validator-prod:
+    <<: *filetao-prod
+    container_name: filetao-validator-prod
+
+  filetao-api-prod:
+    <<: *filetao-prod
+    container_name: filetao-api-prod
 
   redis:
     build:
@@ -48,7 +59,7 @@ services:
       args:
         REDIS_CONF: ${REDIS_CONF}
       dockerfile: Dockerfile.redis
-    container_name: redis
+    container_name: filetao-redis
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
@@ -61,5 +72,5 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/var/lib/redis
+      - redis-prod-data:/var/lib/redis
       #- ${REDIS_CONF}:/etc/redis/redis.conf
