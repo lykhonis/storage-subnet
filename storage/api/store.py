@@ -20,13 +20,12 @@
 import torch
 import base64
 import bittensor as bt
-from bittensor.subnets import SubnetsAPI
 from abc import ABC, abstractmethod
 from typing import Any, List, Union
 from storage.protocol import StoreUser
 from storage.validator.cid import generate_cid_string
 from storage.validator.encryption import encrypt_data
-
+from storage.api import SubnetsAPI
 
 
 class StoreUserAPI(SubnetsAPI):

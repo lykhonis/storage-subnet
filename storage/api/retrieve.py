@@ -20,10 +20,10 @@
 import torch
 import base64
 import bittensor as bt
-from bittensor.subnets import SubnetsAPI
 from typing import Any, List, Union
 from storage.protocol import RetrieveUser
 from storage.validator.encryption import decrypt_data_with_private_key
+from storage.api import SubnetsAPI
 
 
 class RetrieveUserAPI(SubnetsAPI):
