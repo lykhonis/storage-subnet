@@ -34,7 +34,7 @@ def set_weights(
     wandb_on: bool = False,
     wait_for_inclusion: bool = False,
     wait_for_finalization: bool = False,
-) -> bool:
+) -> Tuple[bool, str]:
     """
     Sets the miner's weights on the Bittensor network.
 
@@ -71,7 +71,7 @@ def set_weights(
     """
     try:
         # --- Set weights.
-        success = subtensor.set_weights(
+        success, message = subtensor.set_weights(
             wallet=wallet,
             netuid=netuid,
             uids=uids,
@@ -83,9 +83,9 @@ def set_weights(
         if wandb_on:
             wandb.log({"set_weights": 1})
 
-        return success
+        return success, message
     except Exception as e:
         if wandb_on:
             wandb.log({"set_weights": 0})
         bt_logging.error(f"Failed to set weights on chain with exception: { e }")
-        return False
+        return False, message
