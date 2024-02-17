@@ -241,14 +241,14 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
     challenge_successes = int(
         await database.hget(stats_key, "challenge_successes") or 0
     )
-    challenge_attempts = int(await database.hget(stats_key, "challenge_attempts") or 0)
+    challenge_attempts  = int(await database.hget(stats_key, "challenge_attempts") or 0)
     retrieval_successes = int(await database.hget(stats_key, "retrieve_successes") or 0)
-    retrieval_attempts = int(await database.hget(stats_key, "retrieve_attempts") or 0)
-    store_successes = int(await database.hget(stats_key, "store_successes") or 0)
-    store_attempts = int(await database.hget(stats_key, "store_attempts") or 0)
-    total_successes = int(await database.hget(stats_key, "total_successes") or 0)
+    retrieval_attempts  = int(await database.hget(stats_key, "retrieve_attempts") or 0)
+    store_successes     = int(await database.hget(stats_key, "store_successes") or 0)
+    store_attempts      = int(await database.hget(stats_key, "store_attempts") or 0)
+    total_successes     = int(await database.hget(stats_key, "total_successes") or 0)
 
-    total_current_attempts = challenge_attempts + retrieval_attempts + store_attempts
+    total_current_attempts  = challenge_attempts + retrieval_attempts + store_attempts
     total_current_successes = (
         challenge_successes + retrieval_successes + store_successes
     )
@@ -263,25 +263,25 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
 
     # Use the lower bounds of the intervals to determine the tier
     if (
-        current_wilson_score >= SUPER_SAIYAN_SUCCESS_RATE
+        current_wilson_score >= SUPER_SAIYAN_WILSON_SCORE
         and total_successes >= SUPER_SAIYAN_TIER_TOTAL_SUCCESSES
     ):
         bt.logging.trace(f"Setting {stats_key} to Super Saiyan tier.")
         tier = "Super Saiyan"
     elif (
-        current_wilson_score >= DIAMOND_SUCCESS_RATE
+        current_wilson_score >= DIAMOND_WILSON_SCORE
         and total_successes >= DIAMOND_TIER_TOTAL_SUCCESSES
     ):
         bt.logging.trace(f"Setting {stats_key} to Diamond tier.")
         tier = "Diamond"
     elif (
-        current_wilson_score >= GOLD_SUCCESS_RATE
+        current_wilson_score >= GOLD_WILSON_SCORE
         and total_successes >= GOLD_TIER_TOTAL_SUCCESSES
     ):
         bt.logging.trace(f"Setting {stats_key} to Gold tier.")
         tier = "Gold"
     elif (
-        current_wilson_score >= SILVER_SUCCESS_RATE
+        current_wilson_score >= SILVER_WILSON_SCORE
         and total_successes >= SILVER_TIER_TOTAL_SUCCESSES
     ):
         bt.logging.trace(f"Setting {stats_key} to Silver tier.")
