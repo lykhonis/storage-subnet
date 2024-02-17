@@ -1120,9 +1120,13 @@ Appendonly is sufficient for proper database persistence and RDB has introduced 
 
 Please run:
 ```bash
-bash ./scripts/redis/disable_rdb.sh
+bash ./scripts/redis/disable_rdb.sh 
 ```
 
 This will remove the `save` argument for RDB in the `etc/reids/redis.conf` file. 
 
-> NOTE: Please ensure to change the path to your redis.conf file if it is differen from the default.
+Please ensure to path the path to your redis.conf file if it is differen from the default:
+```bash
+REDIS_PATH="/path/to/redis.conf"
+bash ./scripts/redis/disable_rdb.sh $REDIS_PATH
+```
