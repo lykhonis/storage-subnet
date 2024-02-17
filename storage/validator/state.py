@@ -172,7 +172,7 @@ def load_state(self):
             "monitor_lookup", {uid: 0 for uid in self.metagraph.uids.tolist()}
         )
         if list(self.monitor_lookup.keys()) != self.metagraph.uids.tolist():
-            bt.logging.warning(
+            bt.logging.info(
                 "Monitor lookup keys do not match metagraph uids. Populating new monitor_lookup with zeros"
             )
             self.monitor_lookup = {
@@ -182,8 +182,8 @@ def load_state(self):
         bt.logging.info(f"Loaded monitor_lookup: {self.monitor_lookup}")
         # Check to ensure that the size of the neruon weights matches the metagraph size.
         if neuron_weights.shape != (self.metagraph.n,):
-            bt.logging.warning(
-                f"Neuron weights shape {neuron_weights.shape} does not match metagraph n {self.metagraph.n}"
+            bt.logging.info(
+                f"Neuron weights shape {neuron_weights.shape} does not match metagraph n {self.metagraph.n.item()}"
                 "Populating new moving_averaged_scores IDs with zeros"
             )
             self.moving_averaged_scores[: len(neuron_weights)] = neuron_weights.to(
