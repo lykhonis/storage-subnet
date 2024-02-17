@@ -57,6 +57,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [(Optional) Setup WandB](#setup-wandb)
 1. [Local Subtensor](#local-subtensor)
 1. [Database Migration](#database-schema-migration)
+1. [Disable RDB](#disable-rdb)
 
 # Storage CLI Interface
 
@@ -1108,7 +1109,20 @@ python scripts/redis/schema_migration/02_clean.py --redis_password=mysecretpassw
 ```
 This cleans up any lingering old keys left after conversion.
 
-## Important Notes
+#### Important Notes
 
 - Ensure that the Redis database is accessible and that the provided credentials are correct.
 - It's recommended to back up your Redis database before performing the schema conversion to prevent data loss.
+
+
+## Disable RDB
+Appendonly is sufficient for proper database persistence and RDB has introduced overhead that creates `closed connection` errors with `async` operations. Therefore we now recommend disabling this feature and have provided a convnenience script to do this.
+
+Please run:
+```bash
+bash ./scripts/redis/disable_rdb.sh
+```
+
+This will remove the `save` argument for RDB in the `etc/reids/redis.conf` file. 
+
+> NOTE: Please ensure to change the path to your redis.conf file if it is differen from the default.
