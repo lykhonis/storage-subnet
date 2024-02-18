@@ -5,6 +5,9 @@ ARG REDIS_BACKUP
 ENV REDIS_CONF=$REDIS_CONF
 ENV REDIS_BACKUP=$REDIS_BACKUP
 
+RUN useradd -m redis
+USER redis
+
 RUN mkdir /etc/redis/ && \
     mkdir /var/lib/redis/  && \
     mkdir /var/run/redis/
