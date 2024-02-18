@@ -75,6 +75,7 @@ services:
       context: .
       args:
         REDIS_CONF: ${REDIS_CONF}
+        REDIS_BACKUP: ${REDIS_BACKUP}
       dockerfile: Dockerfile.redis
     container_name: filetao-redis
     restart: always
