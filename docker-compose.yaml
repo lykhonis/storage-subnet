@@ -2,6 +2,12 @@ version: '3.8'
 
 volumes:
   redis-prod-data:
+    name: "filetao-data"
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${REDIS_DATA_PATH}'
 
 services:
   common: &common
