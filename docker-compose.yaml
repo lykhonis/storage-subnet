@@ -48,10 +48,26 @@ services:
   filetao-validator-prod:
     <<: *filetao-prod
     container_name: filetao-validator-prod
+    depends_on:
+      - filetao-api-prod
 
   filetao-api-prod:
     <<: *filetao-prod
     container_name: filetao-api-prod
+    ports:
+      - "${FILETAO_API_EXTERNAL_PORT}:8091"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        filetao run api \
+          --wallet.name ${FILETAO_WALLET}  \
+          --wallet.hotkey ${FILETAO_HOTKEY} \
+          --netuid ${FILETAO_NETUID} \
+          --subtensor.network ${FILETAO_SUBTENSOR} \
+          --database.host redis \
+          --database.redis_password ${REDIS_PASSWORD} \
+          ${FILETAO_EXTRA_OPTIONS}
 
   redis:
     build:

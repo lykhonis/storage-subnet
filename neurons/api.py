@@ -159,7 +159,7 @@ class neuron:
         self.my_subnet_uid = self.metagraph.hotkeys.index(
             self.wallet.hotkey.ss58_address
         )
-        bt.logging.info(f"Running validator on uid: {self.my_subnet_uid}")
+        bt.logging.info(f"Running validator (api) on uid: {self.my_subnet_uid}")
 
         bt.logging.debug("serving ip to chain...")
         try:
