@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.0 / 2024-02-18
+
+## What's Changed
+* Release/1.6.0 by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/142
+* fix weights so nans don't populate weights on new validators by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/145
+* revamp rewards for miner tiers, compute tiers every 2 epochs to build trust by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/146
+* new storage api format by @ifrit98 in https://github.com/ifrit98/storage-subnet/pull/147
+* Update README.md by @dougsillars in https://github.com/ifrit98/storage-subnet/pull/148
+
+## New Contributors
+* @dougsillars made their first contribution in https://github.com/ifrit98/storage-subnet/pull/148
+
+**Full Changelog**: https://github.com/ifrit98/storage-subnet/compare/v1.6.0...v2.0.0
+
+
 ## 1.6.0 / 2024-02-13
 
 ## What's Changed
