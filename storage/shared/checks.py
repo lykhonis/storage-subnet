@@ -5,23 +5,19 @@ import re
 import os
 from redis import asyncio as aioredis
 
-from storage.shared.utils import is_running_in_docker
 
-
-async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redis_host: str = "localhost", redis_password: str = "nopasswd"):
+async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf"):
     redis_port = 6379
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, "requirepass")
-    await _check_redis_connection(redis_conf_path, redis_host, redis_port, redis_password)
-    if not is_running_in_docker:
-        await _check_data_persistence(redis_conf_path, redis_host, redis_port, redis_password)
+    await _check_redis_connection(redis_conf_path, redis_port)
+    await _check_data_persistence(redis_conf_path, redis_port)
 
 
 def _check_redis_config(path):
-    cmd = ["test", "-f", path] if is_running_in_docker() else ["sudo", "test", "-f", path]
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(["sudo", "test", "-f", path], check=True)
     except subprocess.CalledProcessError:
         raise AssertionError(f"Redis config file path: '{path}' does not exist.")
 
@@ -29,45 +25,44 @@ def _check_redis_config(path):
 def _check_redis_settings(redis_conf_path):
     settings_to_check = [
         ("appendonly", ["appendonly yes"]),
-        ("save", ['save ""']),
+        ("save", ["save 900 1", "save 300 10", "save 60 10000"]),
     ]
 
     for setting, expected_values in settings_to_check:
         _check_redis_setting(redis_conf_path, setting, expected_values)
 
 
-async def _check_redis_connection(redis_conf_path, host, port, passwd):
+async def _check_redis_connection(redis_conf_path, port):
+    redis_password = _get_redis_password(redis_conf_path)
+
     assert port is not None, "Redis server port not found"
     try:
         client = aioredis.StrictRedis(
-            host=host,
-            port=port, db=0,
-            password=passwd, socket_connect_timeout=1
+            port=port, db=0, password=redis_password, socket_connect_timeout=1
         )
         await client.ping()
     except Exception as e:
         assert False, f"Redis connection failed. ConnectionError'{e}'"
 
 
-async def _check_data_persistence(redis_conf_path, host, port, passwd):
+async def _check_data_persistence(redis_conf_path, port):
+    redis_password = _get_redis_password(redis_conf_path)
+
     assert port is not None, "Redis server port not found"
-    client = aioredis.StrictRedis(host=host, port=port, db=0, password=passwd)
+    client = aioredis.StrictRedis(port=port, db=0, password=redis_password)
 
     # Insert data into Redis
     await client.set("testkey", "Hello, Redis!")
 
     # Restart Redis server
-    cmd = ["systemctl", "restart", "redis-server.service"] if is_running_in_docker() else [
-        "sudo", "systemctl", "restart", "redis-server.service"
-    ]
-    subprocess.run(cmd, check=True)
+    subprocess.run(["sudo", "systemctl", "restart", "redis-server.service"], check=True)
 
     # Wait a bit to ensure Redis has restarted
     await asyncio.sleep(5)
 
     # Reconnect to Redis
     assert port is not None, "Redis server port not found after restart"
-    new_redis = aioredis.StrictRedis(port=port, db=0, password=passwd)
+    new_redis = aioredis.StrictRedis(port=port, db=0, password=redis_password)
 
     # Retrieve data from Redis
     value = await new_redis.get("testkey")
@@ -100,13 +95,25 @@ def _assert_setting_exists(file_path, setting):
 
 def _get_redis_setting(file_path, setting):
     """Retrieve specific settings from the Redis configuration file."""
-    cmd = ["grep", f"^{setting}", file_path] if is_running_in_docker() else [
-        "sudo", "grep", f"^{setting}", file_path
-    ]
     try:
         result = subprocess.check_output(
-            cmd, text=True
+            ["sudo", "grep", f"^{setting}", file_path], text=True
         )
         return result.strip().split("\n")
     except subprocess.CalledProcessError:
         return None
+
+
+def _get_redis_password(redis_conf_path):
+    try:
+        cmd = f"sudo grep -Po '^requirepass \K.*' {redis_conf_path}"
+        result = subprocess.run(
+            cmd, shell=True, text=True, capture_output=True, check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        assert False, f"Command failed: {e}"
+    except Exception as e:
+        assert False, f"An error occurred: {e}"
+
+    return None
