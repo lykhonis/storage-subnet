@@ -38,7 +38,7 @@ class BaseCID(object):
         :param str multihash: the multihash
         """
 
-        if version not in (1):
+        if version not in (1,):
             raise ValueError(
                 "version should be 1, {} was provided".format(version)
             )
