@@ -2,7 +2,7 @@ version: '3.8'
 
 volumes:
   redis-prod-data:
-    name: "filetao-data"
+    name: "filetao-redis-data"
 
 services:
   common: &common
