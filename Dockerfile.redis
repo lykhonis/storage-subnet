@@ -1,16 +1,13 @@
 FROM redis:7.2.4-alpine
 
 ARG REDIS_CONF
-ARG REDIS_BACKUP
 ENV REDIS_CONF=$REDIS_CONF
-ENV REDIS_BACKUP=$REDIS_BACKUP
 
 RUN mkdir /etc/redis/ && \
     mkdir /var/lib/redis/  && \
     mkdir /var/run/redis/
 
 COPY $REDIS_CONF /etc/redis/
-COPY $REDIS_BACKUP /var/lib/redis/
 RUN mv /etc/redis/*.conf /etc/redis/redis.conf
 
 RUN chown -R redis:redis /etc/redis/ && \
