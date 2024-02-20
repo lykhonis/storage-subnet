@@ -1,7 +1,7 @@
 # The MIT License (MIT)
 # Copyright © 2021 Yuma Rao
 # Copyright © 2023 Opentensor Foundation
-# Copyright © 2023 Opentensor Technologies Inc
+# Copyright © 2024 Philantrope
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -22,19 +22,16 @@ import base64
 import bittensor as bt
 from abc import ABC, abstractmethod
 from typing import Any, List, Union
-from storage.protocol import StoreUser, RetrieveUser
+from storage.protocol import StoreUser
 from storage.validator.cid import generate_cid_string
-from storage.validator.encryption import encrypt_data, decrypt_data_with_private_key
+from storage.validator.encryption import encrypt_data
+from storage.api import SubnetsAPI
 
-from .subnets_api import APIRegistry, register_handler, SubnetsAPI
 
-
-@register_handler("store_user")
 class StoreUserAPI(SubnetsAPI):
     def __init__(self, wallet: "bt.wallet"):
         super().__init__(wallet)
         self.netuid = 21
-        self.name = "store_user"
 
     def prepare_synapse(
         self, data: bytes, encrypt=False, ttl=60 * 60 * 24 * 30, encoding="utf-8"
@@ -83,50 +80,3 @@ class StoreUserAPI(SubnetsAPI):
             stored_cid = ""
 
         return stored_cid
-
-
-@register_handler("retrieve_user")
-class RetrieveUserAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.wallet"):
-        super().__init__(wallet)
-        self.netuid = 21
-
-    def prepare_synapse(self, cid: str) -> RetrieveUser:
-        synapse = RetrieveUser(data_hash=cid)
-        return synapse
-
-    def process_responses(self, responses: List[Union["bt.Synapse", Any]]) -> bytes:
-        success = False
-        decrypted_data = b""
-        for response in responses:
-            bt.logging.trace(f"response: {response.dendrite.dict()}")
-            if response.dendrite.status_code != 200 or response.encrypted_data is None:
-                continue
-
-            # Decrypt the response
-            bt.logging.trace(f"encrypted_data: {response.encrypted_data[:100]}")
-            encrypted_data = base64.b64decode(response.encrypted_data)
-            bt.logging.debug(f"encryption_payload: {response.encryption_payload}")
-            if (
-                response.encryption_payload is None
-                or response.encryption_payload == ""
-                or response.encryption_payload == "{}"
-            ):
-                bt.logging.warning("No encryption payload found. Unencrypted data.")
-                decrypted_data = encrypted_data
-            else:
-                decrypted_data = decrypt_data_with_private_key(
-                    encrypted_data,
-                    response.encryption_payload,
-                    bytes(self.wallet.coldkey.private_key.hex(), "utf-8"),
-                )
-            bt.logging.trace(f"decrypted_data: {decrypted_data[:100]}")
-            success = True
-            break
-
-        if success:
-            bt.logging.info(f"Returning retrieved data: {decrypted_data[:100]}")
-        else:
-            bt.logging.error("Failed to retrieve data.")
-
-        return decrypted_data

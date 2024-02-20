@@ -25,7 +25,7 @@ def _check_redis_config(path):
 def _check_redis_settings(redis_conf_path):
     settings_to_check = [
         ("appendonly", ["appendonly yes"]),
-        ("save", ["save 900 1", "save 300 10", "save 60 10000"]),
+        ("save", ['save ""']),
     ]
 
     for setting, expected_values in settings_to_check:
@@ -66,6 +66,9 @@ async def _check_data_persistence(redis_conf_path, port):
 
     # Retrieve data from Redis
     value = await new_redis.get("testkey")
+
+    # Clean up
+    await new_redis.delete("testkey")
 
     await new_redis.aclose()
     del new_redis

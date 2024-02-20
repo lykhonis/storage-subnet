@@ -22,6 +22,7 @@ import time
 import bittensor as bt
 from typing import Optional, Dict, Any, Union, List
 from redis import asyncio as aioredis
+from traceback import print_exception
 
 
 async def store_chunk_metadata(
@@ -143,19 +144,32 @@ async def update_seed_info(
 
     This function updates the seed information for the specified chunk hash.
     """
-    # Check if we are legacy and convert if necessary
-    if await is_old_version(r, chunk_hash, hotkey):
-        await convert_to_new_format(r, chunk_hash, hotkey)
-    # Grab the meta dict
-    metadata = await r.hget(chunk_hash, hotkey)
-    # Convert to dict
-    metadata = json.loads(metadata)
-    # Update the seed value
-    metadata["seed"] = seed
-    # Convert back to string
-    metadata = json.dumps(metadata)
-    # Store the updated metadata
-    await r.hset(chunk_hash, hotkey, metadata)
+    try:
+        # Check if we are legacy and convert if necessary
+        if await is_old_version(r, chunk_hash, hotkey):
+            await convert_to_new_format(r, chunk_hash, hotkey)
+        # Grab the meta dict
+        metadata = await r.hget(chunk_hash, hotkey)
+        # Store the metadata if it does not exist for some reason
+        if metadata is None:
+            metadata = {
+                "filepath": "",            # Unknown filepath, will attempt reconstruction on load
+                "size": str(0),            # Unknown size
+                "seed": seed,              # Store seed directly
+                "ttl": 60 * 60 * 24 * 30,  # Default to 30 days
+                "generated": time.time(),
+            }
+        else:
+            # Convert to dict
+            metadata = json.loads(metadata)
+        # Update the seed value
+        metadata["seed"] = seed
+        # Convert back to string
+        metadata = json.dumps(metadata)
+        # Store the updated metadata
+        await r.hset(chunk_hash, hotkey, metadata)
+    except BaseException as e:
+        print_exception(e)
 
 
 async def is_old_version(

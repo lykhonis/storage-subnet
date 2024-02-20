@@ -22,7 +22,7 @@ Currently supporting `python>=3.9,<3.11`.
 1. [Installation](#installation)
    - [Install Redis](#install-redis)
    - [Install PM2](#install-pm2)
-1. [Network Stats](#network-stats)
+1. [Storage API](#storage-api)
 1. [Storage CLI Interface](#storage-cli-interface)
    - [Overview](#overview)
    - [Prerequisites](#prerequisites)
@@ -33,7 +33,7 @@ Currently supporting `python>=3.9,<3.11`.
    - [Examples](#examples)
    - [General Options](#general-options)
    - [Notes](#notes)
-1. [Storage API](#storage-api)
+1. [Miner Stats](#miner-stats)
 1. [What is a Decentralized Storage Network (DSN)?](#what-is-a-decentralized-storage-network-dsn)
    - [Role of a Miner (Prover)](#role-of-a-miner-prover)
    - [Role of a Validator (Verifier)](#role-of-a-validator-verifier)
@@ -56,60 +56,8 @@ Currently supporting `python>=3.9,<3.11`.
    - [Running the API](#running-the-api)
    - [(Optional) Setup WandB](#setup-wandb)
 1. [Local Subtensor](#local-subtensor)
-1. [Database Migration](#database-migration)
-
-# Storage CLI Interface
-
-## Overview
-The Storage CLI provides a user-friendly command-line interface for storing and retrieving data on the Bittensor network. It simplifies the process of data encryption, storage, and retrieval, ensuring security and ease of use. This tool is ideal for users who need to manage data securely on a decentralized network.
-
-The FileTao storage cli uses IPFS content identifiers (`CIDs`) to identify storage on the network. This has several advantages over using simple hashes of the data, as a way of providing a more robust and verifiable way of identifying and retrieving data. 
-
-Unlike simple hashes, which only represent the content, CIDs in IPFS (InterPlanetary File System) are more comprehensive. They contain not only a hash of the content but also information about the hashing algorithm and encoding used. This makes CIDs self-describing and ensures that the data retrieved is exactly what was stored, without any alterations.
-
-The benefits of using CIDs in the FileTao Storage CLI on Bittensor include:
-
-1. Content Addressing: CIDs allow for content-based addressing rather than location-based addressing. This means that the content itself, rather than its location on a specific server, is used to reference and access the data. This approach is inherently more secure and decentralized.
-1. Version Control and Deduplication: Since CIDs change with even the slightest alteration in the content, they naturally support version control. Moreover, the use of CIDs facilitates deduplication, as the same content stored multiple times will have the same CID, saving space and reducing redundancy on the network.
-1. Network Efficiency: Using CIDs improves network efficiency in data retrieval. Since the CID contains information about the content, it allows the network to fetch data from the nearest node that stores it, rather than relying on a central server, thus speeding up the data retrieval process.
-1. Future-Proofing: The CID system is designed to be future-proof. As new hashing algorithms and encodings emerge, CIDs can adapt to include this new information without disrupting the existing system. This ensures long-term viability of the storage system on the Bittensor network.
-1. Immutable and Tamper-Proof: The use of CIDs ensures immutability and tamper-proofing of data. Since the CID is a unique identifier for a specific version of the content, any changes in the content result in a different CID. This makes it easy to verify the integrity of the data and detect any unauthorized modifications.
-
-CIDs can also be generated using the FileTao repo directly that have parity with IPFS out-of-the box. You can generate both CIDv0 and CIDv1 by calling `make_cid(data: Union[str,bytes], version: int)`
-
-```python
-from storage.validator.cid import make_cid
-
-# Generate CID objects
-cid0 = make_cid("abc", 0)
-cid0
-> CIDv0(version=0, codec=dag-pb, multihash=b'QmQpeUrxtQE5N2SVog1Z..')
-
-cid1 = make_cid("abc", 1)
-cid1
-> CIDv1(version=1, codec=sha2-256, multihash=b'bafkreif2pall7dybz7v..')
-
-# Get the multihash out
-multihash = make_cid("abc", 0).multihash
-multihash
-> b'QmQpeUrxtQE5N2SVog1ZCxd7c7RN4fBNQu5aLwkk5RY9ER'
-
-from storage.validator.cid import decode_cid
-# Decode a CIDv1 object to get the original data hash, produced by `sha256` (CIDv1)
-decoded_hash = decode_cid(cid1)
-decoded_hash
-> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
-
-expected_hash = hashlib.sha256("abc".encode()).digest()
-expected_hash
-> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
-
-decoded_hash == expected_hash
-> True
-```
-
-## Prerequisites
-Before using the Storage CLI, ensure that Bittensor is installed and your wallet (hotkey and coldkey) is properly configured.
+1. [Database Migration](#database-schema-migration)
+1. [Disable RDB](#disable-rdb)
 
 
 ## Installation
@@ -267,6 +215,128 @@ Once this completes, install pm2 globally
 sudo npm install pm2 -g
 ```
 
+## Storage API
+In addition to the command-line interface, FileTao can be accessed via the bittensor subnets python API.
+
+The subnets API requires two abstract functions to be implemented: `prepare_synapse`, and `process_responses`. This allows for all subnets to be queried through exposed axons, typically on the validator side.
+
+To instantiate the API for any given request type (`store` or `retrieve`), you only need a bittensor `wallet`.
+```python
+# Import the API handler you wish to use
+from storage import StoreUserAPI
+
+# Load the wallet desired
+wallet = bt.wallet(name="sn21", hotkey="query")
+
+# Instantiate the API handler object
+store = StoreUserAPI(wallet)
+```
+
+### API Storing Data
+Here is a complete example to store data on `FileTao` programmatically.
+
+```python
+import bittensor as bt
+from storage import StoreUserAPI
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+store = StoreUserAPI(wallet)
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Store data on the decentralized network!
+cid = await store(
+   metagraph=metagraph,
+   # add any arguments for the `StoreUser` synapse
+   data=b"some data", # Any data (must be bytes) to store
+   encrypt=True, # encrpyt the data using the bittensor wallet provided
+   ttl=60 * 60 * 24 * 30,
+   encoding="utf-8",
+   uid=None, # query a specific validator UID if desired
+)
+
+print(cid)
+> QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g
+```
+
+> NOTE: Make sure you store the CID of your data, otherwise you will not be able to retrieve it!
+
+### API Retrieving Data 
+```python
+from storage import RetrieveUserAPI
+
+# Fetch the content-identifier for your data to retrieve
+cid = "QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g"
+
+# Load the handler given desired wallet for querying
+wallet = bt.wallet()
+
+# Fetch the subnet 21 validator set via metagraph
+metagraph = bt.metagraph(netuid=21)
+
+# Instantiate the API with wallet
+retrieve_handler = RetrieveUserAPI(wallet)
+
+# Get the data back from the decentralized network!
+data = await retrieve_handler(metagraph=metagraph, cid=cid)
+print(data)
+> b"\x12 K\x1b\x80\x9cr\xce\x0e\xf8\xd8\x15\x`"...
+```
+
+## Storage CLI Interface
+
+The Storage CLI provides a user-friendly command-line interface for storing and retrieving data on the Bittensor network. It simplifies the process of data encryption, storage, and retrieval, ensuring security and ease of use. This tool is ideal for users who need to manage data securely on a decentralized network.
+
+The FileTao storage cli uses IPFS content identifiers (`CIDs`) to identify storage on the network. This has several advantages over using simple hashes of the data, as a way of providing a more robust and verifiable way of identifying and retrieving data. 
+
+Unlike simple hashes, which only represent the content, CIDs in IPFS (InterPlanetary File System) are more comprehensive. They contain not only a hash of the content but also information about the hashing algorithm and encoding used. This makes CIDs self-describing and ensures that the data retrieved is exactly what was stored, without any alterations.
+
+The benefits of using CIDs in the FileTao Storage CLI on Bittensor include:
+
+1. Content Addressing: CIDs allow for content-based addressing rather than location-based addressing. This means that the content itself, rather than its location on a specific server, is used to reference and access the data. This approach is inherently more secure and decentralized.
+1. Version Control and Deduplication: Since CIDs change with even the slightest alteration in the content, they naturally support version control. Moreover, the use of CIDs facilitates deduplication, as the same content stored multiple times will have the same CID, saving space and reducing redundancy on the network.
+1. Network Efficiency: Using CIDs improves network efficiency in data retrieval. Since the CID contains information about the content, it allows the network to fetch data from the nearest node that stores it, rather than relying on a central server, thus speeding up the data retrieval process.
+1. Future-Proofing: The CID system is designed to be future-proof. As new hashing algorithms and encodings emerge, CIDs can adapt to include this new information without disrupting the existing system. This ensures long-term viability of the storage system on the Bittensor network.
+1. Immutable and Tamper-Proof: The use of CIDs ensures immutability and tamper-proofing of data. Since the CID is a unique identifier for a specific version of the content, any changes in the content result in a different CID. This makes it easy to verify the integrity of the data and detect any unauthorized modifications.
+
+CIDs can also be generated using the FileTao repo directly that have parity with IPFS out-of-the box. You can generate both CIDv0 and CIDv1 by calling `make_cid(data: Union[str,bytes], version: int)`
+
+```python
+from storage.validator.cid import make_cid
+
+# Generate CID objects
+cid0 = make_cid("abc", 0)
+cid0
+> CIDv0(version=0, codec=dag-pb, multihash=b'QmQpeUrxtQE5N2SVog1Z..')
+
+cid1 = make_cid("abc", 1)
+cid1
+> CIDv1(version=1, codec=sha2-256, multihash=b'bafkreif2pall7dybz7v..')
+
+# Get the multihash out
+multihash = make_cid("abc", 0).multihash
+multihash
+> b'QmQpeUrxtQE5N2SVog1ZCxd7c7RN4fBNQu5aLwkk5RY9ER'
+
+from storage.validator.cid import decode_cid
+# Decode a CIDv1 object to get the original data hash, produced by `sha256` (CIDv1)
+decoded_hash = decode_cid(cid1)
+decoded_hash
+> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
+
+expected_hash = hashlib.sha256("abc".encode()).digest()
+expected_hash
+> b'\xbax\x16\xbf\x8f\x01\xcf\xeaAA@\xde]\xae"#\xb0\x03a\xa3\x96\x17z\x9c\xb4\x10\xffa\xf2\x00\x15\xad'
+
+decoded_hash == expected_hash
+> True
+```
+
+### Prerequisites
+Before using the Storage CLI, ensure that Bittensor is installed and your wallet (hotkey and coldkey) is properly configured.
+
 
 ## Commands
 
@@ -340,7 +410,7 @@ filetao retrieve list --wallet.name mywallet
 ![list](assets/list.png)
 
 
-### Miner statistics
+## Miner statistics
 
 If you are running a validator and have a locally running instance of Redis, you may use this command to view the miner statistics gathered. This command will display a list of all hotkeys and their associated statistics, such as `total successes`, `attempts` vs `successes` for each category, `tier`, `current storage`, and `total storage limit`.
 
@@ -349,7 +419,7 @@ filetao miner stats --index 0
 ```
 ![stats](assets/miner_stats.png)
 
-#### Options
+### Options
 - `--index <id>`: (Optional) Integer index of the Redis database (default: 0)
 
 
@@ -359,77 +429,6 @@ filetao miner stats --index 0
 - Data hashes are unique identifiers for your stored data on the Bittensor network.
 
 For detailed instructions and more information, visit the [Bittensor Documentation](https://docs.bittensor.com).
-
-
-## Storage API
-In addition to the command-line interface, FileTao can be accessed via the bittensor subnets python API.
-
-The subnets API requires two abstract functions to be implemented: `prepare_synapse`, and `process_responses`. This allows for all subnets to be queried through exposed axons, typically on the validator side.
-
-To instantiate the API for any given request type (`store` or `retrieve`), you only need a bittensor `wallet`.
-```python
-# Import the API handler you wish to use
-from storage import StoreUserAPI
-
-# Load the wallet desired
-wallet = bt.wallet(name="sn21", hotkey="query")
-
-# Instantiate the API handler object
-store = StoreUserAPI(wallet)
-```
-
-### API Storing Data
-Here is a complete example to store data on `FileTao` programmatically.
-
-```python
-import bittensor as bt
-from storage import StoreUserAPI
-
-# Load the handler given desired wallet for querying
-wallet = bt.wallet()
-store = StoreUserAPI(wallet)
-
-# Fetch the subnet 21 validator set via metagraph
-metagraph = bt.metagraph(netuid=21)
-
-# Store data on the decentralized network!
-cid = await store(
-   metagraph=metagraph,
-   # add any arguments for the `StoreUser` synapse
-   data=b"some data", # Any data (must be bytes) to store
-   encrypt=True, # encrpyt the data using the bittensor wallet provided
-   ttl=60 * 60 * 24 * 30,
-   encoding="utf-8",
-   uid=None, # query a specific validator UID if desired
-)
-
-print(cid)
-> QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g
-```
-
-> NOTE: Make sure you store the CID of your data, otherwise you will not be able to retrieve it!
-
-### API Retrieving Data 
-```python
-from storage import RetrieveUserAPI
-
-# Fetch the content-identifier for your data to retrieve
-cid = "QmTPqcLhVnCtjoYuCZwPzfXcFrUviiPComTepHfEEaGf7g"
-
-# Load the handler given desired wallet for querying
-wallet = bt.wallet()
-
-# Fetch the subnet 21 validator set via metagraph
-metagraph = bt.metagraph(netuid=21)
-
-# Instantiate the API with wallet
-retrieve_handler = RetrieveUserAPI(wallet)
-
-# Get the data back from the decentralized network!
-data = await retrieve_handler(metagraph=metagraph, cid=cid)
-print(data)
-> b"\x12 K\x1b\x80\x9cr\xce\x0e\xf8\xd8\x15\x`"...
-```
 
 
 ## What is a Decentralized Storage Network (DSN)?
@@ -739,6 +738,8 @@ FileTao is made up of both miners and validators, both of which are responsible 
 
 ### Running a miner
 You can run a miner in your base environment like so:
+
+> NOTE: When registering a miner, it is *highly* recommended to not reuse hotkeys. Best practice is to always use a new hotkey when registering on SN21.
 
 ```bash
 python neurons/miner.py --wallet.name <NAME> --wallet.hotkey <HOTKEY> --logging.debug
@@ -1106,7 +1107,24 @@ python scripts/redis/schema_migration/02_clean.py --redis_password=mysecretpassw
 ```
 This cleans up any lingering old keys left after conversion.
 
-## Important Notes
+#### Important Notes
 
 - Ensure that the Redis database is accessible and that the provided credentials are correct.
 - It's recommended to back up your Redis database before performing the schema conversion to prevent data loss.
+
+
+## Disable RDB
+Appendonly is sufficient for proper database persistence and RDB has introduced overhead that creates `closed connection` errors with `async` operations. Therefore we now recommend disabling this feature and have provided a convnenience script to do this.
+
+Please run:
+```bash
+bash ./scripts/redis/disable_rdb.sh 
+```
+
+This will remove the `save` argument for RDB in the `etc/reids/redis.conf` file. 
+
+Please ensure to path the path to your redis.conf file if it is differen from the default:
+```bash
+REDIS_PATH="/path/to/redis.conf"
+bash ./scripts/redis/disable_rdb.sh $REDIS_PATH
+```

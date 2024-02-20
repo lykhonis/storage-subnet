@@ -935,7 +935,7 @@ class miner:
         bt.logging.trace("entering compute_subsequent_commitment()")
         commitment, proof = compute_subsequent_commitment(
             encrypted_data_bytes,
-            previous_seed=data.get("seed").encode(),
+            previous_seed=data.get("seed", "").encode(),
             new_seed=synapse.seed.encode(),
             verbose=self.config.miner.verbose,
         )
