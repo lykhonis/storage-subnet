@@ -10,6 +10,8 @@
     - `FILETAO_NETUID`: Net UID of the bittensor subnet to connect.
     - `FILETAO_SUBTENSOR`: Subtensor network to connect.
     - `FILETAO_EXTERNAL_PORT`: Port to be used externally (in the host) by the neuron's container.
+    - `FILETAO_API_EXTERNAL_PORT`: Port to be used externally (in the host) by the api neuron's container
+    - `FILETAO_MINER_DATA_DIR`: Host data directory to be mapped to the neuron's container (used in the miner neuron)
     - `FILETAO_EXTRA_OPTIONS`: Extra options to be added, not specified in the rest of the ENVVARs, like `--wandb.off` or `--logging.debug`.
 - Since some of env vars could be shared between containers, if you run validator or miner or the api in the same host, we recommend you to have 2 environment files:
     - common.env
