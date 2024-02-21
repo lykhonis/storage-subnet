@@ -88,6 +88,6 @@ services:
       - redis-server
       - /etc/redis/redis.conf
     expose:
-      - "6379"
+      - "6379:6379"
     volumes:
       - redis-prod-data:/var/lib/redis
