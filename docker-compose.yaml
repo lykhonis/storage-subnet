@@ -43,6 +43,9 @@ services:
     <<: *filetao-prod
     container_name: filetao-miner-prod
     volumes:
+      - ${BT_WALLETS_BASE_PATH}/.bittensor/wallets:/root/.bittensor/wallets
+      - .:/install
+      - ${REDIS_CONF}:/etc/redis/redis.conf
       - ${FILETAO_MINER_DATA_DIR}:~/.data/
 
   filetao-validator-prod:
