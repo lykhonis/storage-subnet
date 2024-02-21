@@ -36,7 +36,7 @@ services:
           --wallet.name ${FILETAO_WALLET}  \
           --wallet.hotkey ${FILETAO_HOTKEY} \
           --netuid ${FILETAO_NETUID} \
-          --axon.ip ${FILETAO_EXTERNAL_PORT} \
+          --axon.external_port ${FILETAO_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
           --database.redis_password ${REDIS_PASSWORD} \
@@ -55,8 +55,6 @@ services:
   filetao-api-prod:
     <<: *filetao-prod
     container_name: filetao-api-prod
-    ports:
-      - "${FILETAO_API_EXTERNAL_PORT}:${FILETAO_API_EXTERNAL_PORT}"
     command:
       - /bin/bash
       - -c
@@ -65,7 +63,7 @@ services:
           --wallet.name ${FILETAO_WALLET}  \
           --wallet.hotkey ${FILETAO_HOTKEY} \
           --netuid ${FILETAO_NETUID} \
-          --axon.ip ${FILETAO_API_EXTERNAL_PORT} \
+          --axon.external_port ${FILETAO_API_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
           --database.redis_password ${REDIS_PASSWORD} \
