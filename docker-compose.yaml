@@ -32,6 +32,7 @@ services:
           --wallet.name ${FILETAO_WALLET}  \
           --wallet.hotkey ${FILETAO_HOTKEY} \
           --netuid ${FILETAO_NETUID} \
+          --axon.port ${FILETAO_EXTERNAL_PORT} \
           --axon.external_port ${FILETAO_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
@@ -59,6 +60,7 @@ services:
           --wallet.name ${FILETAO_WALLET}  \
           --wallet.hotkey ${FILETAO_HOTKEY} \
           --netuid ${FILETAO_NETUID} \
+          --axon.port ${FILETAO_EXTERNAL_PORT} \
           --axon.external_port ${FILETAO_API_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
