@@ -46,7 +46,7 @@ services:
       - ${BT_WALLETS_BASE_PATH}/.bittensor/wallets:/root/.bittensor/wallets
       - .:/install
       - ${REDIS_CONF}:/etc/redis/redis.conf
-      - ${FILETAO_MINER_DATA_DIR}:~/.data/
+      - ${FILETAO_MINER_DATA_DIR}:/root/.data/
 
   filetao-validator-prod:
     <<: *filetao-prod
