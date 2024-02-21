@@ -15,8 +15,6 @@ services:
       - "${FILETAO_EXTERNAL_PORT}:${FILETAO_EXTERNAL_PORT}"
     expose:
       - "${FILETAO_EXTERNAL_PORT}"
-    links:
-      - redis
     depends_on:
       redis:
         condition: service_healthy
@@ -29,6 +27,7 @@ services:
     <<: *common
     build:
       target: filetao-prod
+    network_mode: host
     command:
       - /bin/bash
       - -c
@@ -39,7 +38,7 @@ services:
           --netuid ${FILETAO_NETUID} \
           --axon.ip ${FILETAO_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
-          --database.host redis \
+          --database.host localhost \
           --database.redis_password ${REDIS_PASSWORD} \
           ${FILETAO_EXTRA_OPTIONS}
 
@@ -68,7 +67,7 @@ services:
           --netuid ${FILETAO_NETUID} \
           --axon.ip ${FILETAO_API_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
-          --database.host redis \
+          --database.host localhost \
           --database.redis_password ${REDIS_PASSWORD} \
           ${FILETAO_EXTRA_OPTIONS}
 
