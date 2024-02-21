@@ -42,6 +42,8 @@ services:
   filetao-miner-prod:
     <<: *filetao-prod
     container_name: filetao-miner-prod
+    volumes:
+      - ${FILETAO_MINER_DATA_DIR}:~/.data/
 
   filetao-validator-prod:
     <<: *filetao-prod
