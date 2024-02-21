@@ -36,6 +36,7 @@ services:
           --axon.external_port ${FILETAO_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
+          --database.port ${REDIS_PORT} \
           --database.redis_password ${REDIS_PASSWORD} \
           ${FILETAO_EXTRA_OPTIONS}
 
@@ -69,6 +70,7 @@ services:
           --axon.external_port ${FILETAO_API_EXTERNAL_PORT} \
           --subtensor.network ${FILETAO_SUBTENSOR} \
           --database.host localhost \
+          --database.port ${REDIS_PORT} \
           --database.redis_password ${REDIS_PASSWORD} \
           ${FILETAO_EXTRA_OPTIONS}
 
@@ -89,6 +91,6 @@ services:
       - redis-server
       - /etc/redis/redis.conf
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - redis-prod-data:/var/lib/redis
