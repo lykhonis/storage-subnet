@@ -81,7 +81,7 @@ services:
     container_name: filetao-redis
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} -p ${REDIS_PORT} ping | grep PONG"]
       interval: 1s
       timeout: 3s
       retries: 5
@@ -89,6 +89,6 @@ services:
       - redis-server
       - /etc/redis/redis.conf
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis-prod-data:/var/lib/redis
