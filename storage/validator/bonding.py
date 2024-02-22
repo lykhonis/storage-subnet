@@ -326,9 +326,13 @@ async def compute_tier(stats_key: str, database: aioredis.Redis, confidence=0.95
 
     current_limit = await database.hget(stats_key, "storage_limit")
     if current_limit is None:
-        current_limit = STORAGE_LIMIT_BRONZE # Ensure field exists
+        current_limit = STORAGE_LIMIT_BRONZE
+        await database.hset(stats_key, "storage_limit", current_limit) # Ensure field exists
+    else:
+        current_limit = int(current_limit.decode())
+
     bt.logging.trace(f"Current storage limit for {stats_key}: {current_limit}")
-    if current_limit.decode() != storage_limit:
+    if current_limit != storage_limit:
         await database.hset(stats_key, "storage_limit", storage_limit)
         bt.logging.trace(
             f"Storage limit for {stats_key} set from {current_limit} -> {storage_limit} bytes."
