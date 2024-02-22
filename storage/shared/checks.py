@@ -8,8 +8,12 @@ from redis import asyncio as aioredis
 from storage.shared.utils import is_running_in_docker
 
 
-async def check_environment(redis_conf_path: str = "/etc/redis/redis.conf", redis_host: str = "localhost", redis_password: str = "nopasswd"):
-    redis_port = 6379
+async def check_environment(
+    redis_conf_path: str = "/etc/redis/redis.conf",
+    redis_host: str = "localhost",
+    redis_port: int = 6379,
+    redis_password: str = "nopasswd"
+):
     _check_redis_config(redis_conf_path)
     _check_redis_settings(redis_conf_path)
     _assert_setting_exists(redis_conf_path, "requirepass")

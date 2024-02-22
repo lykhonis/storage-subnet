@@ -84,6 +84,7 @@ class neuron:
             asyncio.run(check_environment(
                 self.config.database.redis_conf_path,
                 self.config.database.host,
+                self.config.database.port,
                 redis_password
             ))
         except AssertionError as e:
