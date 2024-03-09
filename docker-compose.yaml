@@ -10,6 +10,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        WANDB_API_KEY: ${WANDB_API_KEY}
     restart: always
     depends_on:
       redis:
@@ -81,7 +83,7 @@ services:
     container_name: filetao-redis
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping"]
       interval: 1s
       timeout: 3s
       retries: 5
