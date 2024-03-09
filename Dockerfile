@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=python:3.10.12-slim
+ARG BASE_IMAGE=python:3.9-slim
 FROM $BASE_IMAGE AS builder-prod
 
 # This is being set so that no interactive components are allowed when updating.
@@ -23,7 +23,7 @@ RUN python -m pip install --prefix=/install .
 #
 FROM $BASE_IMAGE AS filetao-prod
 
-ARG NEURON_TYPE=miner
+ARG NEURON_TYPE=validator
 ARG WANDB_API_KEY
 
 COPY --from=builder-prod /install/bin/ /usr/local/bin
