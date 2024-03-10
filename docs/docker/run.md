@@ -1,3 +1,2 @@
-- sudo ~/subtensor/scripts/run/subtensor.sh -e docker --network mainnet --node-type lite
-- docker compose --env-file .env up --build filetao-validator-prod -d
-- docker compose --env-file .env up --build filetao-api-prod -d
+- sudo ./scripts/run/subtensor.sh -e docker --network mainnet --node-type lite
+- docker compose --env-file .env up --build filetao-miner-prod -d
