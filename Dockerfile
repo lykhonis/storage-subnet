@@ -23,7 +23,7 @@ RUN python -m pip install --prefix=/install .
 #
 FROM $BASE_IMAGE AS filetao-prod
 
-ARG NEURON_TYPE=validator
+ARG NEURON_TYPE=miner
 ARG WANDB_API_KEY
 
 COPY --from=builder-prod /install/bin/ /usr/local/bin
